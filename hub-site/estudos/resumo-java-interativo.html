@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java · Resumo POO — AEDS II</title>
+<style>
+:root{
+  --ink:#0d0f14;          /* deep near-black, cooled */
+  --ink-2:#141821;
+  --panel:#161b26;
+  --panel-2:#1b2130;
+  --line:#28303f;
+  --line-soft:#212836;
+  --fg:#e7e9ee;
+  --fg-dim:#a5adbd;
+  --fg-faint:#6d7688;
+  /* Java "café" palette — roasted bean, crema, steam */
+  --bean:#c98a4b;         /* roasted amber */
+  --bean-deep:#a9663a;
+  --crema:#e8c9a0;
+  --steam:#6fb4c9;        /* cool steam accent */
+  --leaf:#7fae5f;         /* island green, used sparingly */
+  --rose:#d98a9e;
+  --code-bg:#10141d;
+  --shadow:0 18px 50px -24px rgba(0,0,0,.7);
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,'Fira Code',Menlo,Consolas,monospace;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--ink);color:var(--fg);
+  font-family:var(--sans);font-size:16px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 500px at 82% -8%, rgba(201,138,75,.10), transparent 60%),
+    radial-gradient(700px 500px at 5% 110%, rgba(111,180,201,.07), transparent 55%);
+}
+a{color:inherit;text-decoration:none}
+
+/* ---------- Layout ---------- */
+.shell{display:grid;grid-template-columns:296px minmax(0,1fr);min-height:100vh;position:relative;z-index:1}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:linear-gradient(180deg,var(--ink-2),#0e1119);
+  border-right:1px solid var(--line);
+  padding:26px 16px 40px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+}
+.sidebar::-webkit-scrollbar{width:8px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+.brand{display:flex;align-items:center;gap:13px;padding:0 8px 20px;margin-bottom:12px;border-bottom:1px solid var(--line-soft)}
+.cup{flex:none;width:42px;height:42px}
+.brand-txt h1{font-size:15px;letter-spacing:.14em;margin:0;font-weight:700;text-transform:uppercase}
+.brand-txt p{margin:2px 0 0;font-size:11px;color:var(--fg-faint);letter-spacing:.06em}
+.brand-txt b{color:var(--bean)}
+
+.search{position:relative;margin:6px 4px 18px}
+.search input{
+  width:100%;background:var(--panel);border:1px solid var(--line);
+  color:var(--fg);border-radius:11px;padding:11px 12px 11px 38px;
+  font-family:var(--sans);font-size:13.5px;outline:none;transition:border-color .18s,box-shadow .18s;
+}
+.search input:focus{border-color:var(--bean);box-shadow:0 0 0 3px rgba(201,138,75,.16)}
+.search input::placeholder{color:var(--fg-faint)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--fg-faint)}
+.search .clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--fg-faint);cursor:pointer;font-size:15px;display:none;padding:4px}
+
+.nav{display:flex;flex-direction:column;gap:1px}
+.navlink{
+  display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:9px;
+  color:var(--fg-dim);font-size:13.5px;line-height:1.35;transition:background .15s,color .15s;
+  border:1px solid transparent;
+}
+.navlink:hover{background:var(--panel);color:var(--fg)}
+.navlink.active{background:linear-gradient(90deg,rgba(201,138,75,.16),rgba(201,138,75,.03));color:var(--fg);border-color:rgba(201,138,75,.28)}
+.navlink.active .navnum{background:var(--bean);color:#1a1206;border-color:var(--bean)}
+.navnum{flex:none;width:23px;height:23px;display:grid;place-items:center;font-family:var(--mono);
+  font-size:11.5px;font-weight:600;color:var(--bean);background:var(--panel-2);
+  border:1px solid var(--line);border-radius:7px;transition:all .15s}
+.navnum--flag{color:var(--crema)}
+.navtext{flex:1}
+.navlink.hidden{display:none}
+.nav-empty{display:none;padding:14px 12px;color:var(--fg-faint);font-size:13px;text-align:center}
+
+.progress-wrap{margin:4px 4px 18px}
+.progress-label{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--fg-faint);margin-bottom:7px}
+.progress-track{height:5px;background:var(--panel-2);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--bean-deep),var(--bean),var(--crema));border-radius:99px;transition:width .25s}
+
+/* ---------- Main ---------- */
+.main{min-width:0;padding:0 0 120px}
+.hero{
+  position:relative;overflow:hidden;
+  padding:64px 56px 46px;border-bottom:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(201,138,75,.05),transparent 70%);
+}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--bean);margin-bottom:20px}
+.hero-eyebrow::before{content:"";width:26px;height:1px;background:var(--bean)}
+.hero h2{
+  font-size:clamp(34px,5vw,56px);line-height:1.02;margin:0 0 18px;font-weight:800;letter-spacing:-.02em;
+}
+.hero h2 .accent{
+  background:linear-gradient(120deg,var(--crema),var(--bean) 55%,var(--steam));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{max-width:660px;color:var(--fg-dim);font-size:16.5px;margin:0}
+.hero-flow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:30px;font-family:var(--mono);font-size:13px}
+.chip{padding:7px 13px;border-radius:9px;background:var(--panel);border:1px solid var(--line);color:var(--fg-dim)}
+.chip b{color:var(--crema);font-weight:600}
+.arrow{color:var(--bean);font-size:16px}
+.hero-steam{position:absolute;right:52px;top:50%;transform:translateY(-50%);opacity:.85;pointer-events:none}
+@media(max-width:1100px){.hero-steam{display:none}}
+
+.content{padding:14px 56px 0;max-width:1180px}
+
+/* ---------- Sections ---------- */
+.section{border-bottom:1px solid var(--line-soft);padding:34px 0 8px;scroll-margin-top:16px}
+.section.collapsed .section-body{display:none}
+.section-head{display:flex;align-items:center;gap:16px;margin-bottom:20px;cursor:pointer;user-select:none}
+.section-num{flex:none;width:38px;height:38px;display:grid;place-items:center;
+  font-family:var(--mono);font-size:15px;font-weight:700;color:var(--bean);
+  background:var(--panel-2);border:1px solid var(--line);border-radius:11px}
+.section-title{font-size:24px;font-weight:700;margin:0;flex:1;letter-spacing:-.01em}
+.section-toggle{flex:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel);color:var(--fg-dim);font-size:19px;line-height:1;cursor:pointer;transition:all .15s}
+.section-toggle:hover{border-color:var(--bean);color:var(--bean)}
+.section.collapsed .section-toggle{transform:rotate(0)}
+.section-body{animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- Prose ---------- */
+.section-body p{margin:0 0 15px;color:#d3d7e0}
+.section-body strong{color:#fff;font-weight:650}
+.section-body ul,.section-body ol{margin:0 0 17px;padding-left:4px;list-style:none}
+.section-body ol{counter-reset:li}
+.section-body ul li,.section-body ol li{position:relative;padding-left:26px;margin-bottom:8px;color:#d3d7e0}
+.section-body ul li::before{content:"";position:absolute;left:6px;top:11px;width:6px;height:6px;
+  border-radius:2px;background:var(--bean);transform:rotate(45deg)}
+.section-body ol li{counter-increment:li}
+.section-body ol li::before{content:counter(li);position:absolute;left:0;top:1px;
+  font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bean);
+  width:18px;height:18px;display:grid;place-items:center;background:var(--panel-2);
+  border:1px solid var(--line);border-radius:6px}
+
+/* inline code */
+code{font-family:var(--mono);font-size:.86em;background:rgba(111,180,201,.10);
+  color:var(--crema);padding:2px 6px;border-radius:6px;border:1px solid rgba(111,180,201,.14)}
+
+/* blockquote */
+blockquote{margin:0 0 18px;padding:15px 20px;border-left:3px solid var(--bean);
+  background:linear-gradient(90deg,rgba(201,138,75,.09),transparent);
+  border-radius:0 12px 12px 0;color:var(--crema);font-size:15px}
+blockquote code{background:rgba(201,138,75,.14);color:#fff;border-color:transparent}
+
+/* ---------- Code blocks ---------- */
+.code{position:relative;margin:0 0 20px;border:1px solid var(--line);border-radius:13px;
+  background:var(--code-bg);overflow:hidden;box-shadow:var(--shadow)}
+.code::before{content:attr(data-lang);position:absolute;top:0;left:0;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--fg-faint);padding:8px 13px;border-bottom:1px solid var(--line-soft);
+  border-right:1px solid var(--line-soft);border-radius:0 0 9px 0;background:rgba(255,255,255,.02)}
+.code[data-lang="java"]::before{color:var(--bean)}
+.code[data-lang="bash"]::before{color:var(--leaf)}
+.code .copy{position:absolute;top:6px;right:8px;z-index:2;border:1px solid var(--line);
+  background:var(--panel);color:var(--fg-faint);font-family:var(--mono);font-size:11px;
+  padding:5px 10px;border-radius:7px;cursor:pointer;transition:all .15s;opacity:0}
+.code:hover .copy{opacity:1}
+.code .copy:hover{border-color:var(--bean);color:var(--bean)}
+.code .copy.done{color:var(--leaf);border-color:var(--leaf)}
+.code pre{margin:0;padding:38px 18px 18px;overflow-x:auto;scrollbar-width:thin}
+.code pre::-webkit-scrollbar{height:8px}
+.code pre::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+.code code{background:none;border:0;padding:0;color:#cfd6e4;font-size:13px;line-height:1.7}
+/* token colors */
+.code .k{color:#e08c5a;font-weight:600}      /* keyword — roasted */
+.code .t{color:#6fb4c9}                        /* type — steam */
+.code .s{color:#9bc27f}                         /* string — leaf */
+.code .c{color:#5b6577;font-style:italic}       /* comment */
+.code .n{color:#d98a9e}                          /* number — rose */
+.code .an{color:var(--crema)}                    /* annotation */
+
+/* ---------- Tables ---------- */
+.tablewrap{margin:0 0 20px;border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{background:var(--panel-2);text-align:left;padding:12px 16px;font-weight:600;
+  color:var(--crema);font-size:12.5px;letter-spacing:.03em;border-bottom:1px solid var(--line)}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--line-soft);color:#d3d7e0;vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(255,255,255,.018)}
+td code,th code{font-size:12.5px}
+
+/* ---------- Checklist ---------- */
+.checklist{padding-left:0!important}
+.checklist li{padding-left:0!important;margin-bottom:0!important}
+.checklist li::before{display:none!important}
+.checklist label{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:10px;
+  cursor:pointer;transition:background .15s;border:1px solid transparent}
+.checklist label:hover{background:var(--panel)}
+.checklist input{appearance:none;flex:none;width:20px;height:20px;margin-top:1px;border:1.5px solid var(--line);
+  border-radius:6px;background:var(--panel-2);cursor:pointer;position:relative;transition:all .15s}
+.checklist input:checked{background:var(--bean);border-color:var(--bean)}
+.checklist input:checked::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;
+  color:#1a1206;font-size:13px;font-weight:800}
+.checklist input:checked + span{color:var(--fg-faint);text-decoration:line-through}
+.checklist span{color:#d3d7e0;font-size:14.5px;line-height:1.5}
+
+/* ---------- Search highlight & no-result ---------- */
+mark{background:rgba(201,138,75,.32);color:#fff;border-radius:3px;padding:0 2px}
+.section.filtered-out{display:none}
+.global-empty{display:none;padding:60px 20px;text-align:center;color:var(--fg-faint)}
+.global-empty.show{display:block}
+.global-empty b{color:var(--crema);display:block;font-size:18px;margin-bottom:6px}
+
+/* ---------- Top bar (mobile) ---------- */
+.topbar{display:none;position:sticky;top:0;z-index:40;align-items:center;gap:12px;
+  padding:12px 16px;background:rgba(14,17,25,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .cup{width:30px;height:30px}
+.topbar b{font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+.burger{margin-left:auto;width:38px;height:38px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel);color:var(--fg);font-size:17px;cursor:pointer}
+
+.backtop{position:fixed;right:22px;bottom:22px;z-index:50;width:46px;height:46px;border-radius:13px;
+  border:1px solid var(--line);background:var(--panel);color:var(--bean);font-size:19px;cursor:pointer;
+  box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s,transform .15s}
+.backtop.show{opacity:1;pointer-events:auto}
+.backtop:hover{transform:translateY(-2px);border-color:var(--bean)}
+
+/* ---------- Responsive ---------- */
+@media(max-width:960px){
+  .shell{grid-template-columns:1fr}
+  .topbar{display:flex}
+  .sidebar{position:fixed;left:0;top:0;z-index:60;width:300px;transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
+  .sidebar.open{transform:translateX(0)}
+  .scrim{display:none;position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.55)}
+  .scrim.show{display:block}
+  .hero{padding:40px 22px 32px}
+  .content{padding:14px 22px 0}
+}
+@media(max-width:520px){
+  .hero-flow{font-size:11px}
+  .section-title{font-size:20px}
+  .content{padding:10px 15px 0}
+  .hero{padding:34px 18px 26px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<!-- CUP SVG (defs reused) -->
+<svg width="0" height="0" style="position:absolute"><defs>
+<g id="cupg">
+  <path d="M8 15 h26 v13 a11 11 0 0 1 -11 11 h-4 a11 11 0 0 1 -11 -11 z" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M34 18 h4 a6 6 0 0 1 0 12 h-3" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M15 4 c-2 3 2 5 0 8 M21 3 c-2 3 2 5 0 8 M27 4 c-2 3 2 5 0 8" fill="none" stroke="var(--steam)" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+</g>
+</defs></svg>
+
+<div class="topbar">
+  <svg class="cup" viewBox="0 0 48 44"><use href="#cupg"/></svg>
+  <b>Java · POO</b>
+  <button class="burger" id="burger">☰</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="cup" viewBox="0 0 48 44"><use href="#cupg"/></svg>
+      <div class="brand-txt">
+        <h1>Java · POO</h1>
+        <p>Resumo <b>AEDS&nbsp;II</b> · interativo</p>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Leitura</span><span id="progpct">0%</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progfill"></div></div>
+    </div>
+
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input id="search" type="search" placeholder="Buscar no resumo…" autocomplete="off">
+      <button class="clr" id="clr" aria-label="limpar">✕</button>
+    </div>
+
+    <nav class="nav" id="nav">
+<a href="#sec-1-o-que-muda-de-c-para-java" class="navlink" data-target="sec-1-o-que-muda-de-c-para-java"><span class="navnum">1</span><span class="navtext">O QUE MUDA DE C++ PARA JAVA</span></a>
+<a href="#sec-2-classes-e-objetos" class="navlink" data-target="sec-2-classes-e-objetos"><span class="navnum">2</span><span class="navtext">CLASSES E OBJETOS</span></a>
+<a href="#sec-3-encapsulamento" class="navlink" data-target="sec-3-encapsulamento"><span class="navnum">3</span><span class="navtext">ENCAPSULAMENTO</span></a>
+<a href="#sec-4-getters-e-setters" class="navlink" data-target="sec-4-getters-e-setters"><span class="navnum">4</span><span class="navtext">GETTERS E SETTERS</span></a>
+<a href="#sec-5-construtores-e-sobrecarga" class="navlink" data-target="sec-5-construtores-e-sobrecarga"><span class="navnum">5</span><span class="navtext">CONSTRUTORES E SOBRECARGA</span></a>
+<a href="#sec-6-sobrecarga-sobrescrita" class="navlink" data-target="sec-6-sobrecarga-sobrescrita"><span class="navnum">6</span><span class="navtext">SOBRECARGA × SOBRESCRITA</span></a>
+<a href="#sec-7-heran-a" class="navlink" data-target="sec-7-heran-a"><span class="navnum">7</span><span class="navtext">HERANÇA</span></a>
+<a href="#sec-8-polimorfismo" class="navlink" data-target="sec-8-polimorfismo"><span class="navnum">8</span><span class="navtext">POLIMORFISMO</span></a>
+<a href="#sec-9-mem-ria-e-refer-ncias" class="navlink" data-target="sec-9-mem-ria-e-refer-ncias"><span class="navnum">9</span><span class="navtext">MEMÓRIA E REFERÊNCIAS</span></a>
+<a href="#sec-10-c-pia-de-objeto-clone" class="navlink" data-target="sec-10-c-pia-de-objeto-clone"><span class="navnum">10</span><span class="navtext">CÓPIA DE OBJETO — clone()</span></a>
+<a href="#sec-11-passagem-de-par-metros" class="navlink" data-target="sec-11-passagem-de-par-metros"><span class="navnum">11</span><span class="navtext">PASSAGEM DE PARÂMETROS</span></a>
+<a href="#sec-12-operadores-e-express-es-n-o-h-sobrecarga" class="navlink" data-target="sec-12-operadores-e-express-es-n-o-h-sobrecarga"><span class="navnum">12</span><span class="navtext">OPERADORES E EXPRESSÕES (não há sobrecarga)</span></a>
+<a href="#sec-13-generics-o-template-do-java" class="navlink" data-target="sec-13-generics-o-template-do-java"><span class="navnum">13</span><span class="navtext">GENERICS (o "template" do Java)</span></a>
+<a href="#sec-14-tratamento-de-exce-es" class="navlink" data-target="sec-14-tratamento-de-exce-es"><span class="navnum">14</span><span class="navtext">TRATAMENTO DE EXCEÇÕES</span></a>
+<a href="#sec-15-interfaces" class="navlink" data-target="sec-15-interfaces"><span class="navnum">15</span><span class="navtext">INTERFACES</span></a>
+<a href="#sec-16-entrada-e-sa-da-myio" class="navlink" data-target="sec-16-entrada-e-sa-da-myio"><span class="navnum">16</span><span class="navtext">ENTRADA E SAÍDA (MyIO)</span></a>
+<a href="#sec-17-arrays-e-strings" class="navlink" data-target="sec-17-arrays-e-strings"><span class="navnum">17</span><span class="navtext">ARRAYS E STRINGS</span></a>
+<a href="#sec-18-recursividade" class="navlink" data-target="sec-18-recursividade"><span class="navnum">18</span><span class="navtext">RECURSIVIDADE</span></a>
+<a href="#sec-19-tads-nativos-list-stack-queue" class="navlink" data-target="sec-19-tads-nativos-list-stack-queue"><span class="navnum">19</span><span class="navtext">TADs NATIVOS (List, Stack, Queue)</span></a>
+<a href="#sec-20-padr-es-que-caem-na-prova-equival-ncias" class="navlink" data-target="sec-20-padr-es-que-caem-na-prova-equival-ncias"><span class="navnum">20</span><span class="navtext">PADRÕES QUE CAEM NA PROVA (equivalências)</span></a>
+<a href="#sec-checklist-de-v-spera" class="navlink" data-target="sec-checklist-de-v-spera"><span class="navnum navnum--flag">★</span><span class="navtext">CHECKLIST DE VÉSPERA</span></a>
+    </nav>
+    <div class="nav-empty" id="navEmpty">Nada encontrado</div>
+  </aside>
+
+  <main class="main">
+    <header class="hero">
+      <svg class="hero-steam" width="120" height="150" viewBox="0 0 120 150">
+        <path d="M40 150 c-10 -30 10 -40 0 -70 M60 150 c-12 -32 12 -44 0 -78 M80 150 c-10 -30 10 -40 0 -70"
+              fill="none" stroke="var(--steam)" stroke-width="2.4" stroke-linecap="round" opacity=".28"/>
+      </svg>
+      <span class="hero-eyebrow">Segundo período · estruturas de dados</span>
+      <h2>Da <span class="accent">POO</span> em C++<br>para o mundo <span class="accent">Java</span></h2>
+      <p>O mesmo caminho dos seus resumos manuscritos — classes, herança, polimorfismo, exceções — traduzido para Java, com a sintaxe conferida na teoria da disciplina.</p>
+      <div class="hero-flow">
+        <span class="chip"><b>.java</b></span>
+        <span class="arrow">→</span>
+        <span class="chip">javac</span>
+        <span class="arrow">→</span>
+        <span class="chip"><b>bytecode</b></span>
+        <span class="arrow">→</span>
+        <span class="chip">JVM</span>
+        <span class="arrow">→</span>
+        <span class="chip">execução</span>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+<section class="section" id="sec-1-o-que-muda-de-c-para-java" data-index="0">
+  <header class="section-head">
+    <span class="section-num">1</span>
+    <h2 class="section-title">O QUE MUDA DE C++ PARA JAVA</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <div class="tablewrap"><table><thead><tr><th>C++</th><th>Java</th></tr></thead><tbody><tr><td><code>cout</code> / <code>cin</code></td><td><code>System.out.println</code> / <code>Scanner</code> (na disciplina: <code>MyIO</code>)</td></tr><tr><td><code>new</code> / <code>delete</code></td><td>só <code>new</code> (o <strong>Garbage Collector</strong> libera sozinho)</td></tr><tr><td><code>.cpp</code> / <code>.hpp</code></td><td>um único <code>.java</code> por classe pública</td></tr><tr><td><code>nullptr</code></td><td><code>null</code></td></tr><tr><td>ponteiro explícito (<code>*</code>, <code>-&gt;</code>)</td><td><strong>toda</strong> variável de objeto <strong>já é</strong> referência</td></tr><tr><td><code>#include</code></td><td><code>import</code></td></tr><tr><td>compila para código de máquina</td><td>compila para <strong>bytecode</strong> → roda na <strong>JVM</strong></td></tr><tr><td><code>struct</code> / <code>class</code></td><td>só <code>class</code></td></tr><tr><td><code>bool</code></td><td><code>boolean</code></td></tr><tr><td>sobrecarga de operadores</td><td><strong>não existe</strong> em Java</td></tr><tr><td><code>template&lt;typename T&gt;</code></td><td><strong>generics</strong>: <code>&lt;T&gt;</code></td></tr><tr><td>destrutor <code>~Classe()</code></td><td>não há (GC cuida da memória)</td></tr></tbody></table></div>
+<p><strong>Compilar e executar (dois passos):</strong></p>
+<div class="code" data-lang="bash"><button class="copy" title="Copiar">copiar</button><pre><code>javac Programa.java     # gera Programa.class (bytecode)
+java  Programa          # a JVM interpreta o bytecode  (sem .java e sem .class)</code></pre></div>
+<ul><li><code>javac</code> → <strong>bytecode</strong>; a <strong>JVM</strong> interpreta → multiplataforma, porém mais lento.</li><li><strong>JIT (Just-In-Time)</strong> traduz trechos quentes para código nativo e acelera.</li><li>Java é <strong>case-sensitive</strong>; o arquivo tem o <strong>mesmo nome da classe pública</strong>.</li><li>Todo programa começa em <code>public static void main(String[] args)</code>.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-2-classes-e-objetos" data-index="1">
+  <header class="section-head">
+    <span class="section-num">2</span>
+    <h2 class="section-title">CLASSES E OBJETOS</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Uma <strong>classe</strong> é a descrição de um conjunto de <strong>propriedades</strong> e <strong>comportamentos</strong> comuns (é um <strong>tipo</strong>). Um <strong>objeto</strong> é uma <strong>instância</strong> concreta dessa classe.</blockquote>
+<p><strong>Forma geral (pseudocódigo, igual ao manuscrito):</strong></p>
+<div class="code" data-lang="text"><button class="copy" title="Copiar">copiar</button><pre><code>classe &lt;nome&gt; : &lt;superclasse&gt; (&lt;projeto&gt;)
+    &lt;visibilidade&gt;:
+        &lt;tipo&gt; &lt;atributo&gt;
+    &lt;visibilidade&gt;:
+        &lt;tipo&gt; &lt;metodo&gt;
+fim classe ! &lt;nome&gt; !</code></pre></div>
+<p><strong>Em Java:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Positivo</span> {
+    <span class="k">public</span> <span class="k">int</span> valor;
+}   <span class="c">// fim classe Positivo</span></code></pre></div>
+<p><strong>Instanciação e acesso:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Positivo</span> p1 = <span class="k">new</span> <span class="t">Positivo</span>();   <span class="c">// sempre com new (não existe objeto na &quot;stack&quot;)</span>
+p1.valor = <span class="n">10</span>;                  <span class="c">// acesso sempre por ponto (não existe -&gt;)</span></code></pre></div>
+<blockquote>Não há <code>delete</code>: quando nenhuma referência aponta mais para o objeto, o <strong>Garbage Collector</strong> o remove automaticamente.</blockquote>
+  </div>
+</section>
+<section class="section" id="sec-3-encapsulamento" data-index="2">
+  <header class="section-head">
+    <span class="section-num">3</span>
+    <h2 class="section-title">ENCAPSULAMENTO</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Restringe o acesso aos atributos e fornece métodos exclusivos para ler e alterar valores.</p>
+<div class="tablewrap"><table><thead><tr><th>Visibilidade</th><th>Quem acessa</th></tr></thead><tbody><tr><td><code>public</code></td><td>de qualquer lugar</td></tr><tr><td><code>private</code></td><td>só a própria classe</td></tr><tr><td><code>protected</code></td><td>a classe <strong>e suas subclasses</strong> (e o mesmo pacote)</td></tr></tbody></table></div>
+<p><strong>Regra prática:</strong> atributos <code>private</code>, métodos <code>public</code>.</p>
+<p>Diferença de sintaxe para o C++: em Java o modificador vem <strong>antes de cada membro</strong>, não em blocos <code>public:</code> / <code>private:</code>.</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Componente</span> {
+    <span class="k">private</span> <span class="k">int</span> valor;    <span class="c">// modificador por membro</span>
+    <span class="k">private</span> <span class="k">int</span> erro;
+
+    <span class="k">public</span> <span class="k">void</span> atribuir(<span class="k">int</span> novo) { ... }
+}</code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-4-getters-e-setters" data-index="3">
+  <header class="section-head">
+    <span class="section-num">4</span>
+    <h2 class="section-title">GETTERS E SETTERS</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <ul><li>Utilizados para <strong>validar dados antes de gravar</strong>.</li><li>O <code>this</code> do Java é útil para dar ênfase ou desfazer ambiguidade quando o parâmetro tem o mesmo nome do atributo (mesma ideia do <code>this</code> do C++).</li></ul>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Componente</span> {
+    <span class="k">private</span> <span class="k">int</span> valor;
+    <span class="k">private</span> <span class="k">int</span> erro;
+
+    <span class="k">public</span> <span class="k">void</span> atribuir(<span class="k">int</span> novo) {
+        <span class="k">int</span> result = <span class="n">0</span>;                 <span class="c">// padrão da disciplina (aqui só ilustra o fluxo)</span>
+        <span class="k">if</span> (novo &gt; <span class="n">0</span>) {
+            <span class="k">this</span>.valor = novo;          <span class="c">// Java usa this.  (ponto), não this-&gt;</span>
+            <span class="k">this</span>.erro  = <span class="n">0</span>;
+        } <span class="k">else</span> {
+            <span class="k">this</span>.valor = <span class="n">0</span>;
+            <span class="k">this</span>.erro  = <span class="n">1</span>;
+        }   <span class="c">// fim if</span>
+    }   <span class="c">// fim atribuir</span>
+
+    <span class="k">public</span> <span class="k">int</span> extrairValor() {
+        <span class="k">int</span> result = <span class="k">this</span>.valor;
+        <span class="k">return</span> result;
+    }   <span class="c">// fim extrairValor</span>
+}   <span class="c">// fim classe Componente</span></code></pre></div>
+<p><strong>get/set padrão:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">public</span> <span class="k">double</span> getSalario()               { <span class="k">return</span> salario; }        <span class="c">// sem parâmetro</span>
+<span class="k">public</span> <span class="k">void</span>   setSalario(<span class="k">double</span> salario) { <span class="k">this</span>.salario = salario; } <span class="c">// void, recebe novo</span></code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-5-construtores-e-sobrecarga" data-index="4">
+  <header class="section-head">
+    <span class="section-num">5</span>
+    <h2 class="section-title">CONSTRUTORES E SOBRECARGA</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p><strong>Construtor:</strong></p>
+<ul><li>Método que tem <strong>sempre o mesmo nome da classe</strong>.</li><li>Chamado na <strong>instanciação</strong> (<code>new</code>), para inicializar o objeto.</li><li><strong>Sem tipo de retorno</strong> (nem <code>void</code>).</li><li>É sempre <strong>público</strong>.</li></ul>
+<p><strong>Sobrecarga de construtores:</strong> permitida quando as listas de parâmetros são distintas (em quantidade e/ou tipo).</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Positivo</span> {
+    <span class="k">private</span> <span class="k">int</span> valor;
+    <span class="k">private</span> <span class="k">int</span> erro;
+
+    <span class="c">// ex1: construtor padrão</span>
+    <span class="k">public</span> <span class="t">Positivo</span>() {
+        <span class="k">this</span>.valor = <span class="n">0</span>;
+        <span class="k">this</span>.erro  = <span class="n">0</span>;
+    }   <span class="c">// fim Positivo</span>
+
+    <span class="c">// ex2: construtor parametrizado</span>
+    <span class="k">public</span> <span class="t">Positivo</span>(<span class="k">int</span> inicial) {
+        <span class="k">this</span>.valor = inicial;
+        <span class="k">this</span>.erro  = <span class="n">0</span>;
+    }   <span class="c">// fim Positivo</span>
+
+    <span class="c">// ex3: construtor de cópia (em Java feito &quot;na mão&quot; — ver seção 10)</span>
+    <span class="k">public</span> <span class="t">Positivo</span>(<span class="t">Positivo</span> inicial) {
+        <span class="k">this</span>.valor = inicial.valor;
+        <span class="k">this</span>.erro  = inicial.erro;
+    }   <span class="c">// fim Positivo</span>
+}   <span class="c">// fim classe Positivo</span></code></pre></div>
+<p>**<code>static</code> (membros estáticos):**</p>
+<ul><li>Chamados <strong>sem instanciar objeto</strong> (ex.: <code>MyIO.println(...)</code>, <code>Math.pow(...)</code>).</li><li>Um <strong>atributo estático é compartilhado por todos os objetos</strong> (uma única cópia).</li><li><strong>Métodos estáticos só acessam membros estáticos.</strong></li></ul>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Ponto</span> {
+    <span class="k">static</span> <span class="k">int</span> nextID = <span class="n">0</span>;   <span class="c">// compartilhado</span>
+    <span class="k">int</span> id;
+    <span class="k">public</span> <span class="t">Ponto</span>() { id = nextID++; }   <span class="c">// cada objeto recebe um id único</span>
+}</code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-6-sobrecarga-sobrescrita" data-index="5">
+  <header class="section-head">
+    <span class="section-num">6</span>
+    <h2 class="section-title">SOBRECARGA × SOBRESCRITA</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <div class="tablewrap"><table><thead><tr><th></th><th>Definição</th></tr></thead><tbody><tr><td><strong>Sobrecarga</strong> (*overload*)</td><td>vários métodos de <strong>mesmo nome</strong> com <strong>listas de parâmetros diferentes</strong>, <strong>na mesma classe</strong></td></tr><tr><td><strong>Sobrescrita</strong> (*override*)</td><td>redefinir, <strong>numa subclasse</strong>, um método com a <strong>mesma assinatura</strong> da superclasse → isso já é <strong>polimorfismo</strong></td></tr></tbody></table></div>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="c">// Sobrecarga: mesma classe, parâmetros diferentes</span>
+<span class="k">double</span> dist(<span class="t">Ponto</span> p)            { ... }
+<span class="k">double</span> dist(<span class="k">double</span> x, <span class="k">double</span> y) { ... }
+
+<span class="c">// Sobrescrita: subclasse redefine método da superclasse</span>
+<span class="k">class</span> <span class="t">Cachorro</span> <span class="k">extends</span> <span class="t">Animal</span> {
+    <span class="an">@Override</span>
+    <span class="k">public</span> <span class="t">String</span> falar() { <span class="k">return</span> <span class="s">&quot;Au au&quot;</span>; }   <span class="c">// @Override documenta a intenção</span>
+}</code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-7-heran-a" data-index="6">
+  <header class="section-head">
+    <span class="section-num">7</span>
+    <h2 class="section-title">HERANÇA</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Agrupar o que é comum numa <strong>superclasse</strong> e reaproveitar nas <strong>subclasses</strong>.</blockquote>
+<p><strong>Notação:</strong> em Java usa-se <code>extends</code> (no lugar do <code>:</code> do C++).</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> Sub <span class="k">extends</span> Super { ... }</code></pre></div>
+<p><strong>Três formas (iguais ao manuscrito):</strong></p>
+<div class="tablewrap"><table><thead><tr><th>Forma</th><th>O que faz</th></tr></thead><tbody><tr><td><strong>Especificação (interface)</strong></td><td>a superclasse descreve o que a subclasse deve conter, não adiciona nada</td></tr><tr><td><strong>Extensão (herança escrita)</strong></td><td>a subclasse <strong>acrescenta</strong> atributos ou métodos à definição original</td></tr><tr><td><strong>Combinação (herança polimórfica)</strong></td><td>herda a interface e <strong>redefine</strong> ou introduz novos elementos</td></tr></tbody></table></div>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Animal</span> {
+    <span class="k">protected</span> <span class="t">String</span> nome;
+
+    <span class="k">public</span> <span class="t">Animal</span>(<span class="t">String</span> nome) { <span class="k">this</span>.nome = nome; }
+
+    <span class="k">public</span> <span class="t">String</span> falar() {
+        <span class="t">String</span> result = <span class="s">&quot;...&quot;</span>;
+        <span class="k">return</span> result;
+    }   <span class="c">// fim falar</span>
+}   <span class="c">// fim classe Animal</span>
+
+<span class="k">class</span> <span class="t">Cachorro</span> <span class="k">extends</span> <span class="t">Animal</span> {
+    <span class="k">public</span> <span class="t">Cachorro</span>(<span class="t">String</span> nome) {
+        <span class="k">super</span>(nome);            <span class="c">// super(...) chama o construtor da superclasse</span>
+    }   <span class="c">// fim Cachorro</span>
+
+    <span class="an">@Override</span>
+    <span class="k">public</span> <span class="t">String</span> falar() {
+        <span class="t">String</span> result = <span class="s">&quot;Au au&quot;</span>;
+        <span class="k">return</span> result;
+    }   <span class="c">// fim falar</span>
+}   <span class="c">// fim classe Cachorro</span></code></pre></div>
+<ul><li><code>super(...)</code> → chama o <strong>construtor</strong> da superclasse.</li><li><code>super.metodo()</code> → chama a versão <strong>da superclasse</strong> de um método sobrescrito.</li><li><strong>Obs:</strong> a classe <code>Exception</code> faz o papel da &quot;classe <code>Erro</code>&quot; — é a superclasse de onde se herda o tratamento de erro (ver seção 14).</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-8-polimorfismo" data-index="7">
+  <header class="section-head">
+    <span class="section-num">8</span>
+    <h2 class="section-title">POLIMORFISMO</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Classes derivadas invocam métodos de <strong>mesma assinatura</strong> da classe original, mas com <strong>comportamentos diferentes</strong>, especializados em cada uma e abstraídos dos detalhes internos.</blockquote>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Animal</span>[] animais = <span class="k">new</span> <span class="t">Animal</span>[<span class="n">2</span>];
+animais[<span class="n">0</span>] = <span class="k">new</span> <span class="t">Cachorro</span>(<span class="s">&quot;Rex&quot;</span>);
+animais[<span class="n">1</span>] = <span class="k">new</span> <span class="t">Gato</span>(<span class="s">&quot;Mimi&quot;</span>);
+
+<span class="k">for</span> (<span class="k">int</span> x = <span class="n">0</span>; x &lt; animais.length; x = x + <span class="n">1</span>) {
+    <span class="t">MyIO</span>.println(animais[x].falar());   <span class="c">// cada um responde do seu jeito</span>
+}   <span class="c">// fim for</span></code></pre></div>
+<p><strong>Diferença para o C++:</strong> em Java <strong>todo método é virtual por padrão</strong> — não precisa da palavra <code>virtual</code>. Para <strong>impedir</strong> a sobrescrita, usa-se <code>final</code>. Para exigir que a subclasse implemente, usa-se <code>abstract</code> (método sem corpo em classe <code>abstract</code>).</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">abstract</span> <span class="k">class</span> <span class="t">Forma</span> {
+    <span class="k">public</span> <span class="k">abstract</span> <span class="k">double</span> area();   <span class="c">// método abstrato: subclasse é obrigada a implementar</span>
+}</code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-9-mem-ria-e-refer-ncias" data-index="8">
+  <header class="section-head">
+    <span class="section-num">9</span>
+    <h2 class="section-title">MEMÓRIA E REFERÊNCIAS</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Em Java, <strong>toda variável de array ou de objeto é uma referência (ponteiro)</strong>: guarda o <strong>endereço</strong> onde o conteúdo está, não o conteúdo em si.</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">int</span>[] vet = <span class="k">new</span> <span class="k">int</span>[<span class="n">5</span>];   <span class="c">// vet guarda o ENDEREÇO do array, não os 5 valores</span>
+<span class="t">Cliente</span> c = <span class="k">new</span> <span class="t">Cliente</span>(); <span class="c">// c guarda o ENDEREÇO do objeto, não o objeto</span></code></pre></div>
+<p><strong>Vocabulário (equivalências com o manuscrito de ponteiros):</strong></p>
+<div class="tablewrap"><table><thead><tr><th>C++</th><th>Java</th></tr></thead><tbody><tr><td><code>new Contato()</code> cria na heap e devolve endereço</td><td>igual — mas <strong>tudo</strong> vai para a heap</td></tr><tr><td><code>p3-&gt;getNome()</code></td><td><code>p3.getNome()</code> (sempre ponto)</td></tr><tr><td><code>*ponteiro</code> (objeto apontado)</td><td>não existe desreferência explícita</td></tr><tr><td><code>if (p != nullptr)</code></td><td><code>if (c != null)</code></td></tr><tr><td><code>delete p</code></td><td>não existe — <strong>Garbage Collector</strong></td></tr><tr><td><code>using ref_Contato = Contato*</code></td><td>não se aplica</td></tr></tbody></table></div>
+<p><strong>Aliasing (dois nomes para o mesmo objeto):</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Cliente</span> c1 = <span class="k">new</span> <span class="t">Cliente</span>(<span class="n">1</span>, <span class="s">&quot;aa&quot;</span>);
+<span class="t">Cliente</span> c2 = c1;            <span class="c">// c2 recebe O ENDEREÇO de c1 (NÃO é cópia!)</span>
+c2.setCodigo(<span class="n">3</span>);
+<span class="c">// c1 e c2 mostram (3,&quot;aa&quot;) — é o MESMO objeto</span></code></pre></div>
+<p>**Pegadinha clássica — <code>==</code> entre objetos compara ENDEREÇOS:**</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Hora</span> h1 = <span class="k">new</span> <span class="t">Hora</span>(<span class="n">12</span>, <span class="n">30</span>, <span class="n">30</span>);
+<span class="t">Hora</span> h2 = <span class="k">new</span> <span class="t">Hora</span>(<span class="n">12</span>, <span class="n">30</span>, <span class="n">30</span>);
+<span class="k">if</span> (h1 == h2)  ...            <span class="c">// FALSO: são dois new -&gt; endereços diferentes</span>
+<span class="c">// Para comparar CONTEÚDO, escreve-se um método equals()</span></code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-10-c-pia-de-objeto-clone" data-index="9">
+  <header class="section-head">
+    <span class="section-num">10</span>
+    <h2 class="section-title">CÓPIA DE OBJETO — clone()</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Reserva <strong>área nova</strong> e copia <strong>valor por valor</strong>. Serve para criar um novo objeto duplicando os dados do original.</blockquote>
+<p>Em C++ isso era o <strong>construtor de cópia</strong>. Em Java, como <code>c2 = c1</code> só cria <strong>alias</strong>, a cópia de verdade é feita por um método <code>clone()</code>:</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">public</span> <span class="t">Cliente</span> clone() {
+    <span class="t">Cliente</span> result = <span class="k">new</span> <span class="t">Cliente</span>();   <span class="c">// objeto novo (endereço novo)</span>
+    result.codigo = <span class="k">this</span>.codigo;      <span class="c">// copia campo a campo</span>
+    result.nome   = <span class="k">this</span>.nome;
+    <span class="k">return</span> result;
+}   <span class="c">// fim clone</span></code></pre></div>
+<ul><li><code>c2 = c1</code>          → <strong>alias</strong> (mesmo objeto).</li><li><code>c2 = c1.clone()</code>  → <strong>cópia</strong> (objetos distintos, mesmos atributos).</li><li>Em laços: <code>vet[i] = c1.clone()</code> cria um objeto novo por posição; <code>vet[i] = c1</code> faria todas as posições apontarem para o <strong>mesmo</strong> objeto.</li></ul>
+<blockquote><strong>Java não tem a &quot;Regra dos Três&quot; do C++</strong> (destrutor / construtor de cópia / <code>operator=</code>), porque não há destrutor nem sobrecarga de <code>=</code>. O que resta do conceito é: se o objeto tem referências internas, o <code>clone()</code> precisa clonar essas referências também (senão vira cópia rasa).</blockquote>
+  </div>
+</section>
+<section class="section" id="sec-11-passagem-de-par-metros" data-index="10">
+  <header class="section-head">
+    <span class="section-num">11</span>
+    <h2 class="section-title">PASSAGEM DE PARÂMETROS</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Java (como C) tem <strong>sempre passagem por valor</strong>. O detalhe é o que está no &quot;valor&quot;:</p>
+<ul><li><strong>Tipo primitivo</strong> → copia o valor; alterações no método <strong>não saem</strong>.</li></ul>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">static</span> <span class="k">void</span> alterar(<span class="k">int</span> a) { a = <span class="n">10</span>; }   <span class="c">// não muda o original</span></code></pre></div>
+<ul><li><strong>Array/objeto</strong> → o valor copiado é o <strong>endereço</strong>. Então: 1. dá para <strong>alterar o conteúdo</strong> da área (a alteração &quot;sai&quot; do método); 2. mas <strong>reapontar</strong> o parâmetro (<code>b = new int[5]</code>) <strong>não afeta</strong> quem chamou.</li></ul>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">static</span> <span class="k">void</span> mexer(<span class="k">int</span>[] b) {
+    <span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; b.length; i++) b[i] *= <span class="n">5</span>;  <span class="c">// ALTERA o array original</span>
+    b = <span class="k">new</span> <span class="k">int</span>[<span class="n">5</span>];                                 <span class="c">// só a cópia local reaponta</span>
+}</code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-12-operadores-e-express-es-n-o-h-sobrecarga" data-index="11">
+  <header class="section-head">
+    <span class="section-num">12</span>
+    <h2 class="section-title">OPERADORES E EXPRESSÕES (não há sobrecarga)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote><strong>Java não permite sobrecarga de operadores.</strong> Onde no C++ você faria <code>operator==</code>, <code>operator+</code>, <code>operator[]</code>, em Java você escreve <strong>métodos comuns</strong>.</blockquote>
+<div class="tablewrap"><table><thead><tr><th>Intenção (C++)</th><th>Em Java</th></tr></thead><tbody><tr><td><code>operator==</code></td><td>método <code>boolean equals(Object o)</code></td></tr><tr><td><code>operator+</code></td><td>método <code>Array somar(Array outro)</code></td></tr><tr><td><code>operator[]</code></td><td><code>array[i]</code> já existe para arrays; em classe própria vira <code>get(i)</code>/<code>set(i)</code></td></tr><tr><td><code>operator=</code></td><td>não há — <code>=</code> sempre copia a referência</td></tr></tbody></table></div>
+<p><strong>Operadores da linguagem:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code>+  -  *  /  %          <span class="c">// aritméticos (32/3 = 10 inteiro; 32%3 = 2)</span>
+== != &lt; &gt; &lt;= &gt;=        <span class="c">// relacionais</span>
+&amp;&amp; || !                <span class="c">// lógicos  (equivalem a AND/OR/NOT da disciplina)</span>
+++ --                  <span class="c">// x++ usa e depois incrementa; ++x incrementa antes</span></code></pre></div>
+<p><strong>Comparação de conteúdo (o &quot;operator==&quot; traduzido):</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">public</span> <span class="k">boolean</span> equals(<span class="t">Array</span> outro) {
+    <span class="k">boolean</span> result = <span class="k">false</span>;
+
+    <span class="k">if</span> (length == outro.length) {
+        result = <span class="k">true</span>;
+
+        <span class="k">int</span> x = <span class="n">0</span>;
+        <span class="k">while</span> (x &lt; length &amp;&amp; result) {          <span class="c">// sem break, com flag result</span>
+            result = result &amp;&amp; (data[x] == outro.data[x]);
+            x = x + <span class="n">1</span>;
+        }   <span class="c">// fim while</span>
+    }   <span class="c">// fim if</span>
+
+    <span class="k">return</span> result;
+}   <span class="c">// fim equals</span></code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-13-generics-o-template-do-java" data-index="12">
+  <header class="section-head">
+    <span class="section-num">13</span>
+    <h2 class="section-title">GENERICS (o "template" do Java)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Um <strong>generic</strong> é uma classe onde você define a lógica <strong>uma vez</strong> e o tipo concreto é escolhido só na hora de criar o objeto. É o equivalente Java dos <strong>templates</strong> de C++.</blockquote>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Array</span>&lt;<span class="t">T</span>&gt; {                 <span class="c">// &lt;T&gt; no lugar de template&lt;typename T&gt;</span>
+    <span class="k">private</span> <span class="k">int</span> length;
+    <span class="k">private</span> <span class="t">T</span>[] data;
+
+    <span class="c">// ...</span>
+}   <span class="c">// fim classe Array</span></code></pre></div>
+<p><strong>Uso:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Array</span>&lt;<span class="t">Integer</span>&gt; a = <span class="k">new</span> <span class="t">Array</span>&lt;&gt;();
+<span class="t">Array</span>&lt;<span class="t">Double</span>&gt;  b = <span class="k">new</span> <span class="t">Array</span>&lt;&gt;();
+<span class="t">Array</span>&lt;<span class="t">String</span>&gt;  c = <span class="k">new</span> <span class="t">Array</span>&lt;&gt;();</code></pre></div>
+<p><strong>Diferenças importantes para o C++:</strong></p>
+<ul><li>Generics só aceitam <strong>tipos-referência</strong> (<code>Integer</code>, <code>Double</code>, <code>String</code>), não primitivos (<code>int</code>, <code>double</code>) → usa-se o *wrapper* correspondente.</li><li><strong>Não</strong> existe separação <code>.hpp</code>/<code>.cpp</code>: tudo fica no mesmo <code>.java</code>.</li><li>Não é preciso o &quot;Obs: templates ficam no .hpp&quot; do C++ — em Java não há essa regra.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-14-tratamento-de-exce-es" data-index="13">
+  <header class="section-head">
+    <span class="section-num">14</span>
+    <h2 class="section-title">TRATAMENTO DE EXCEÇÕES</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Além de atributos e métodos, toda classe deveria ter seu próprio <strong>tratamento de erro</strong> e o seu construtor padrão para ser instanciada.</blockquote>
+<p><strong>Exceção</strong> = evento que ocorre na execução e <strong>desvia o fluxo normal</strong> (divisão por zero, arquivo inexistente, índice inválido → <code>ArrayIndexOutOfBoundsException</code>, etc.).</p>
+<p><strong>try / catch / finally:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">try</span> {
+    <span class="c">// código que pode falhar; ao dar exceção, ESTE bloco para na hora</span>
+} <span class="k">catch</span> (ClasseDaExcecao e) {
+    <span class="c">// executado só se houver a exceção</span>
+} <span class="k">finally</span> {
+    <span class="c">// executado SEMPRE (tenha havido exceção ou não) — ideal para &quot;limpeza&quot;</span>
+}</code></pre></div>
+<p><strong>Múltiplos catch</strong> (um por tipo de exceção):</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">try</span> {
+    <span class="t">Integer</span> i = <span class="t">Integer</span>.valueOf(args[<span class="n">0</span>]);
+} <span class="k">catch</span> (<span class="t">NumberFormatException</span> e) {
+    <span class="t">MyIO</span>.println(<span class="s">&quot;Erro de formatacao!&quot;</span>);
+} <span class="k">catch</span> (<span class="t">ArrayIndexOutOfBoundsException</span> e) {
+    <span class="t">MyIO</span>.println(<span class="s">&quot;Erro na passagem de parametros!&quot;</span>);
+} <span class="k">finally</span> {
+    <span class="t">MyIO</span>.println(<span class="s">&quot;FIM DE PROGRAMA!&quot;</span>);
+}   <span class="c">// fim try</span></code></pre></div>
+<p><strong>Os três nomes parecidos:</strong></p>
+<div class="tablewrap"><table><thead><tr><th>Palavra</th><th>Onde aparece</th><th>Função</th></tr></thead><tbody><tr><td><code>try/catch/finally</code></td><td>corpo do método</td><td><strong>tratar</strong> a exceção aqui</td></tr><tr><td><code>throws</code></td><td>assinatura do método</td><td><strong>repassar</strong> a responsabilidade a quem chamou</td></tr><tr><td><code>throw</code></td><td>corpo do método</td><td><strong>lançar</strong> (criar) uma exceção</td></tr></tbody></table></div>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="c">// throws: repassa</span>
+<span class="k">public</span> <span class="k">void</span> metodo() <span class="k">throws</span> <span class="t">Exception</span> { ... }
+
+<span class="c">// throw: lança</span>
+<span class="k">public</span> <span class="k">static</span> <span class="k">void</span> metodo(<span class="k">int</span> i) <span class="k">throws</span> <span class="t">Exception</span> {
+    <span class="k">if</span> (i % <span class="n">2</span> == <span class="n">1</span>) {
+        <span class="k">throw</span> <span class="k">new</span> <span class="t">Exception</span>(<span class="s">&quot;Valor impar&quot;</span>);
+    }   <span class="c">// fim if</span>
+}   <span class="c">// fim metodo</span></code></pre></div>
+<p><strong>Herança de erro (o &quot;obs&quot; do manuscrito):</strong> a classe <code>Exception</code> é uma <strong>superclasse</strong>; para criar um erro próprio, herda-se dela.</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">ErroIndice</span> <span class="k">extends</span> <span class="t">Exception</span> {
+    <span class="k">public</span> <span class="t">ErroIndice</span>() {
+        <span class="k">super</span>(<span class="s">&quot;Indice fora dos limites&quot;</span>);   <span class="c">// manda a mensagem para a superclasse</span>
+    }   <span class="c">// fim ErroIndice</span>
+}   <span class="c">// fim classe ErroIndice</span></code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-15-interfaces" data-index="14">
+  <header class="section-head">
+    <span class="section-num">15</span>
+    <h2 class="section-title">INTERFACES</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Uma <strong>interface</strong> define e padroniza <strong>como classes distintas interagem</strong>, <strong>sem especificar detalhes de implementação</strong>. Quem assina o contrato (<code>implements</code>) é obrigado a implementar <strong>todos</strong> os métodos — ou declarar a classe <code>abstract</code>.</blockquote>
+<p>É a &quot;Especificação (interface)&quot; da seção de herança, formalizada:</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">public</span> <span class="k">interface</span> <span class="t">Autenticavel</span> {
+    <span class="k">public</span> <span class="k">abstract</span> <span class="k">boolean</span> autentica(<span class="k">int</span> senha);   <span class="c">// sem corpo</span>
+}
+
+<span class="k">class</span> <span class="t">Gerente</span> <span class="k">extends</span> <span class="t">Funcionario</span> <span class="k">implements</span> <span class="t">Autenticavel</span> {
+    <span class="k">private</span> <span class="k">int</span> senha;
+    <span class="k">public</span> <span class="k">boolean</span> autentica(<span class="k">int</span> senha) {
+        <span class="k">return</span> <span class="k">this</span>.senha == senha;                  <span class="c">// implementa o contrato</span>
+    }
+}</code></pre></div>
+<ul><li>Atributos de interface são implicitamente <strong>públicos, estáticos e finais</strong> (constantes).</li><li>Métodos são <strong>públicos e abstratos</strong>.</li><li>O poder: um método pode receber <strong>qualquer</strong> objeto que implemente a interface (<code>void login(Autenticavel a)</code>), sem saber a classe concreta — polimorfismo puro.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-16-entrada-e-sa-da-myio" data-index="15">
+  <header class="section-head">
+    <span class="section-num">16</span>
+    <h2 class="section-title">ENTRADA E SAÍDA (MyIO)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Na disciplina usa-se a classe <strong>MyIO</strong> (evita as limitações de <code>Scanner</code> e <code>BufferedReader</code>). Métodos <strong>públicos e estáticos</strong> — chama-se <code>MyIO.metodo()</code> sem instanciar.</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">String</span> str  = <span class="t">MyIO</span>.readString(<span class="s">&quot;Entre com uma palavra: &quot;</span>);
+<span class="k">int</span>    i    = <span class="t">MyIO</span>.readInt(<span class="s">&quot;Entre com um inteiro: &quot;</span>);
+<span class="k">double</span> real = <span class="t">MyIO</span>.readDouble(<span class="s">&quot;Entre com um real: &quot;</span>);
+
+<span class="t">MyIO</span>.println(<span class="s">&quot;Resultado: &quot;</span> + i);</code></pre></div>
+<ul><li>Escrita: <code>print</code>, <code>println</code>, <code>printf</code>, <code>pause</code>.</li><li>Leitura: <code>readInt</code>, <code>readDouble</code>, <code>readString</code>, <code>readLine</code>, <code>readChar</code>, <code>readBoolean</code>.</li></ul>
+<p>**Concatenação com <code>+</code>** — cuidado clássico:</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="s">&quot;soma: &quot;</span> + <span class="n">2</span> + <span class="n">3</span>      <span class="c">// -&gt; &quot;soma: 23&quot;  (concatena)</span>
+<span class="s">&quot;soma: &quot;</span> + (<span class="n">2</span> + <span class="n">3</span>)    <span class="c">// -&gt; &quot;soma: 5&quot;   (parênteses somam antes)</span></code></pre></div>
+<p><strong>Redirecionamento</strong> (como o corretor testa): <code>MyIO</code>/<code>System.out</code> escrevem no <strong>dispositivo padrão</strong>, trocável no terminal:</p>
+<div class="code" data-lang="bash"><button class="copy" title="Copiar">copiar</button><pre><code>java Programa &lt; entrada.txt &gt; saida.txt</code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-17-arrays-e-strings" data-index="16">
+  <header class="section-head">
+    <span class="section-num">17</span>
+    <h2 class="section-title">ARRAYS E STRINGS</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p><strong>Arrays:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">int</span>[] vet = <span class="k">new</span> <span class="k">int</span>[n];        <span class="c">// recém-criado começa ZERADO</span>
+<span class="k">double</span>[][] matriz = <span class="k">new</span> <span class="k">double</span>[<span class="n">10</span>][<span class="n">20</span>];
+
+<span class="k">for</span> (<span class="k">int</span> i = <span class="n">0</span>; i &lt; vet.length; i = i + <span class="n">1</span>) {   <span class="c">// .length (sem parênteses!)</span>
+    vet[i] = <span class="t">MyIO</span>.readInt();
+}   <span class="c">// fim for</span></code></pre></div>
+<ul><li>Índices de <code>0</code> a <code>n-1</code>; fora disso → <code>ArrayIndexOutOfBoundsException</code>.</li><li><code>vet.length</code> é <strong>atributo</strong> (array); <code>str.length()</code> é <strong>método</strong> (String).</li></ul>
+<p><strong>Strings</strong> (funcionam como vetor de caracteres, mas <strong>imutáveis</strong>):</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code>str.charAt(pos)    <span class="c">// caractere da posição (NÃO existe charSet: String não muda in place)</span>
+str.length()       <span class="c">// tamanho</span>
+str.equals(outra)  <span class="c">// compara CONTEÚDO (== compararia endereço!)</span>
+str.substring(<span class="n">0</span>,<span class="n">2</span>)
+<span class="t">Integer</span>.parseInt(<span class="s">&quot;42&quot;</span>)   <span class="c">// String -&gt; int</span>
+<span class="t">String</span>.valueOf(<span class="n">42</span>)       <span class="c">// int -&gt; String</span></code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-18-recursividade" data-index="17">
+  <header class="section-head">
+    <span class="section-num">18</span>
+    <h2 class="section-title">RECURSIVIDADE</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Um método é <strong>recursivo</strong> quando chama a si mesmo. Precisa de:</p>
+<ol><li><strong>Chamada recursiva</strong> (problema menor);</li><li><strong>Condição de parada</strong> (caso base).</li></ol>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">int</span> fatorial(<span class="k">int</span> n) {
+    <span class="k">int</span> result = <span class="n">1</span>;
+    <span class="k">if</span> (n &gt; <span class="n">1</span>) {
+        result = n * fatorial(n - <span class="n">1</span>);   <span class="c">// chamada recursiva</span>
+    }   <span class="c">// fim if  (n == 1 -&gt; para)</span>
+    <span class="k">return</span> result;
+}   <span class="c">// fim fatorial</span></code></pre></div>
+<ul><li>Cada chamada tem <strong>suas próprias variáveis locais</strong> (empilhadas); ao terminar, o estado anterior é recuperado.</li><li>Pode ser <strong>direta</strong> (A chama A) ou <strong>indireta</strong> (A chama B que chama A).</li><li><strong>Fibonacci recursivo puro é ineficiente</strong> (recalcula subproblemas); a versão iterativa é bem mais rápida.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-19-tads-nativos-list-stack-queue" data-index="18">
+  <header class="section-head">
+    <span class="section-num">19</span>
+    <h2 class="section-title">TADs NATIVOS (List, Stack, Queue)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Onde no C++ você implementava <strong>célula / pilha / fila</strong> na mão, Java já fornece prontos (todos usam <strong>generics</strong>):</p>
+<p>**List — <code>ArrayList</code>, <code>Vector</code>, <code>LinkedList</code>** (implementam a interface <code>List</code>):</p>
+<div class="tablewrap"><table><thead><tr><th>Característica</th><th>ArrayList / Vector</th><th>LinkedList</th></tr></thead><tbody><tr><td>Implementação</td><td>array redimensionável</td><td>lista duplamente encadeada</td></tr><tr><td><code>get(index)</code></td><td><strong>eficiente</strong></td><td>ineficiente</td></tr><tr><td>Inserir/remover no meio</td><td>ineficiente</td><td><strong>eficiente</strong></td></tr></tbody></table></div>
+<ul><li><code>Vector</code> é <strong>sincronizada</strong> (threads); sem threads, <code>ArrayList</code> é mais rápida.</li></ul>
+<p><strong>Stack (pilha — LIFO):</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Stack</span>&lt;<span class="t">String</span>&gt; pilha = <span class="k">new</span> <span class="t">Stack</span>&lt;<span class="t">String</span>&gt;();
+pilha.push(<span class="s">&quot;A&quot;</span>);            <span class="c">// empilha</span>
+pilha.push(<span class="s">&quot;B&quot;</span>);
+<span class="k">while</span> (pilha.empty() == <span class="k">false</span>) {
+    <span class="t">MyIO</span>.println(pilha.pop());   <span class="c">// desempilha: sai B, depois A (ordem inversa)</span>
+}   <span class="c">// fim while</span></code></pre></div>
+<p>Métodos: <code>push</code>, <code>pop</code>, <code>peek</code> (vê o topo sem remover), <code>empty</code>, <code>search</code>.</p>
+<p><strong>Queue (fila — FIFO):</strong> é uma <strong>interface</strong>, instancia-se com <code>LinkedList</code>:</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Queue</span>&lt;<span class="t">String</span>&gt; fila = <span class="k">new</span> <span class="t">LinkedList</span>&lt;<span class="t">String</span>&gt;();
+fila.add(<span class="s">&quot;A&quot;</span>);
+fila.add(<span class="s">&quot;B&quot;</span>);
+<span class="k">while</span> (fila.isEmpty() == <span class="k">false</span>) {
+    <span class="t">MyIO</span>.println(fila.remove());  <span class="c">// sai na MESMA ordem: A, depois B</span>
+}   <span class="c">// fim while</span></code></pre></div>
+<p>Métodos: <code>add</code>/<code>offer</code> (insere), <code>remove</code>/<code>poll</code> (remove a cabeça), <code>element</code>/<code>peek</code> (consulta a cabeça sem remover).</p>
+  </div>
+</section>
+<section class="section" id="sec-20-padr-es-que-caem-na-prova-equival-ncias" data-index="19">
+  <header class="section-head">
+    <span class="section-num">20</span>
+    <h2 class="section-title">PADRÕES QUE CAEM NA PROVA (equivalências)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <div class="tablewrap"><table><thead><tr><th>Padrão (C++)</th><th>Em Java</th></tr></thead><tbody><tr><td>Construtor padrão</td><td>igual — inicializa tudo em zero/<code>null</code></td></tr><tr><td>Construtor parametrizado com <code>new</code> + cópia</td><td>igual, sem <code>new</code> para primitivos</td></tr><tr><td>Setter com restrição (<code>if</code> valida)</td><td>igual — com <code>this.</code> (ponto)</td></tr><tr><td><code>to_string()</code> com <code>while</code> + concatenação</td><td><code>toString()</code> retornando <code>String</code></td></tr><tr><td><code>save()</code> com <code>fstream</code></td><td><code>Arq.openWrite</code> / <code>Arq.println</code> (um valor por linha)</td></tr><tr><td>Comparação de objetos com <code>while</code> + flag</td><td>método <code>equals(...)</code>, mesma lógica</td></tr><tr><td>Destrutor com <code>delete</code></td><td><strong>não existe</strong> — Garbage Collector</td></tr><tr><td>Sobrecarga de operadores</td><td><strong>não existe</strong> — vira método comum</td></tr><tr><td><code>template&lt;typename T&gt;</code></td><td><code>class Nome&lt;T&gt;</code> (generics, só tipos-referência)</td></tr></tbody></table></div>
+  </div>
+</section>
+<section class="section" id="sec-checklist-de-v-spera" data-index="20">
+  <header class="section-head">
+    <span class="section-num">★</span>
+    <h2 class="section-title">CHECKLIST DE VÉSPERA</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <ul class="checklist"><li><label><input type="checkbox"><span><code>javac</code> gera <strong>bytecode</strong>; a <strong>JVM</strong> interpreta (multiplataforma, mais lento); JIT acelera.</span></label></li><li><label><input type="checkbox"><span>Arquivo <code>.java</code> = <strong>mesmo nome da classe</strong>; execução começa no <code>main</code>.</span></label></li><li><label><input type="checkbox"><span>Objeto <strong>sempre</strong> com <code>new</code>; acesso <strong>sempre</strong> por ponto; <strong>não</strong> há <code>delete</code> (GC).</span></label></li><li><label><input type="checkbox"><span>Variáveis de objeto/array são <strong>referências</strong> (guardam ENDEREÇOS).</span></label></li><li><label><input type="checkbox"><span><code>c2 = c1</code> → <strong>alias</strong>; cópia real → <code>clone()</code>; <code>==</code> entre objetos compara <strong>endereço</strong>.</span></label></li><li><label><input type="checkbox"><span>Passagem <strong>sempre por valor</strong>; para objeto, o valor é o endereço (altera conteúdo, não reaponta).</span></label></li><li><label><input type="checkbox"><span><strong>Não</strong> há sobrecarga de operadores → vira <strong>método</strong> (<code>equals</code>, <code>somar</code>, ...).</span></label></li><li><label><input type="checkbox"><span>Herança com <code>extends</code>; construtor da super com <code>super(...)</code>; todo método é virtual por padrão.</span></label></li><li><label><input type="checkbox"><span><code>interface</code> = contrato sem implementação; <code>implements</code> obriga a implementar tudo.</span></label></li><li><label><input type="checkbox"><span>Exceções: <code>try/catch/finally</code> trata, <code>throws</code> repassa, <code>throw new</code> lança; <code>finally</code> roda sempre.</span></label></li><li><label><input type="checkbox"><span>Generics <code>&lt;T&gt;</code> = templates, mas só tipos-referência (<code>Integer</code>, não <code>int</code>).</span></label></li><li><label><input type="checkbox"><span><code>Stack</code>: <code>push/pop/peek/empty</code> (LIFO). <code>Queue</code> (via <code>LinkedList</code>): <code>add/remove/peek</code> (FIFO).</span></label></li></ul>
+  </div>
+</section>
+      <div class="global-empty" id="globalEmpty">
+        <b>Nenhum resultado</b>
+        Tente outro termo — por exemplo “herança”, “clone” ou “try”.
+      </div>
+    </div>
+  </main>
+</div>
+
+<button class="backtop" id="backtop" aria-label="voltar ao topo">↑</button>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s,c){return (c||document).querySelector(s)};
+  var $$=function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
+
+  /* ---- Copy buttons ---- */
+  $$('.code .copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var code=btn.parentElement.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        var t=btn.textContent;btn.textContent='copiado ✓';btn.classList.add('done');
+        setTimeout(function(){btn.textContent=t;btn.classList.remove('done')},1400);
+      });
+    });
+  });
+
+  /* ---- Section collapse ---- */
+  $$('.section-head').forEach(function(head){
+    head.addEventListener('click',function(e){
+      if(e.target.closest('a'))return;
+      var sec=head.closest('.section');
+      sec.classList.toggle('collapsed');
+      var tog=head.querySelector('.section-toggle');
+      tog.textContent=sec.classList.contains('collapsed')?'+':'–';
+    });
+  });
+
+  /* ---- Active nav on scroll (scrollspy) ---- */
+  var sections=$$('.section');
+  var links=$$('.navlink');
+  var byId={};
+  links.forEach(function(l){byId[l.dataset.target]=l});
+  var spy=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        var id=en.target.id;
+        links.forEach(function(l){l.classList.remove('active')});
+        if(byId[id])byId[id].classList.add('active');
+        // keep active nav in view
+        if(byId[id]){var r=byId[id];r.scrollIntoView({block:'nearest'});}
+      }
+    });
+  },{rootMargin:'-15% 0px -70% 0px',threshold:0});
+  sections.forEach(function(s){spy.observe(s)});
+
+  /* ---- Reading progress ---- */
+  var main=$('.main');
+  var progfill=$('#progfill'),progpct=$('#progpct');
+  function updateProgress(){
+    var h=document.documentElement;
+    var scrolled=h.scrollTop||document.body.scrollTop;
+    var max=h.scrollHeight-h.clientHeight;
+    var pct=max>0?Math.min(100,Math.round(scrolled/max*100)):0;
+    progfill.style.width=pct+'%';progpct.textContent=pct+'%';
+    $('#backtop').classList.toggle('show',scrolled>500);
+  }
+  window.addEventListener('scroll',updateProgress,{passive:true});
+  updateProgress();
+
+  /* ---- Back to top ---- */
+  $('#backtop').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+
+  /* ---- Mobile drawer ---- */
+  var sidebar=$('#sidebar'),scrim=$('#scrim');
+  function openNav(){sidebar.classList.add('open');scrim.classList.add('show')}
+  function closeNav(){sidebar.classList.remove('open');scrim.classList.remove('show')}
+  $('#burger').addEventListener('click',openNav);
+  scrim.addEventListener('click',closeNav);
+  links.forEach(function(l){l.addEventListener('click',closeNav)});
+
+  /* ---- Search ---- */
+  var search=$('#search'),clr=$('#clr'),navEmpty=$('#navEmpty'),globalEmpty=$('#globalEmpty');
+  var origHTML={};
+  sections.forEach(function(s){origHTML[s.id]=s.querySelector('.section-body').innerHTML});
+  var titleOrig={};
+  sections.forEach(function(s){titleOrig[s.id]=s.querySelector('.section-title').innerHTML});
+
+  function clearMarks(){
+    sections.forEach(function(s){
+      s.querySelector('.section-body').innerHTML=origHTML[s.id];
+      s.querySelector('.section-title').innerHTML=titleOrig[s.id];
+    });
+    // reattach copy handlers
+    $$('.code .copy').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var code=btn.parentElement.querySelector('code').innerText;
+        navigator.clipboard.writeText(code).then(function(){
+          var t=btn.textContent;btn.textContent='copiado ✓';btn.classList.add('done');
+          setTimeout(function(){btn.textContent=t;btn.classList.remove('done')},1400);
+        });
+      });
+    });
+  }
+  function esc(t){return t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+
+  function highlightNode(node,rx){
+    $$('*',node).forEach(function(el){
+      // skip code blocks to avoid breaking token spans? Search should still find in code — but marking inside spans is messy.
+    });
+    walk(node,rx);
+  }
+  function walk(node,rx){
+    for(var i=0;i<node.childNodes.length;i++){
+      var c=node.childNodes[i];
+      if(c.nodeType===3){
+        var m=c.nodeValue.match(rx);
+        if(m){
+          var span=document.createElement('span');
+          span.innerHTML=c.nodeValue.replace(rx,function(x){return '<mark>'+x+'</mark>'});
+          c.parentNode.replaceChild(span,c);
+          i+=span.childNodes.length-1;
+        }
+      }else if(c.nodeType===1 && c.tagName!=='MARK'){
+        walk(c,rx);
+      }
+    }
+  }
+
+  var t;
+  function doSearch(){
+    var q=search.value.trim();
+    clr.style.display=q?'block':'none';
+    clearMarks();
+    if(!q){
+      sections.forEach(function(s){s.classList.remove('filtered-out','collapsed')});
+      links.forEach(function(l){l.classList.remove('hidden')});
+      navEmpty.style.display='none';globalEmpty.classList.remove('show');
+      return;
+    }
+    var rx=new RegExp(esc(q),'gi');
+    var anyVisible=false,anyNav=false;
+    sections.forEach(function(s){
+      var txt=s.innerText;
+      var hit=rx.test(txt);rx.lastIndex=0;
+      var link=byId[s.id];
+      if(hit){
+        s.classList.remove('filtered-out','collapsed');
+        walk(s.querySelector('.section-body'),rx);rx.lastIndex=0;
+        walk(s.querySelector('.section-title'),rx);rx.lastIndex=0;
+        if(link)link.classList.remove('hidden');
+        anyVisible=true;anyNav=true;
+      }else{
+        s.classList.add('filtered-out');
+        if(link)link.classList.add('hidden');
+      }
+    });
+    navEmpty.style.display=anyNav?'none':'block';
+    globalEmpty.classList.toggle('show',!anyVisible);
+  }
+  search.addEventListener('input',function(){clearTimeout(t);t=setTimeout(doSearch,120)});
+  clr.addEventListener('click',function(){search.value='';doSearch();search.focus()});
+  // keyboard: "/" focuses search
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&document.activeElement!==search){e.preventDefault();search.focus()}
+    if(e.key==='Escape'&&document.activeElement===search){search.value='';doSearch();search.blur()}
+  });
+
+  /* ---- Expand/collapse all via double-click on hero ---- */
+})();
+</script>
+</body>
+</html>

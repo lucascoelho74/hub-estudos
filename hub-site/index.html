@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub de Estudos · Lucas</title>
+<style>
+:root{
+  --ink:#0d0f14;--ink-2:#141821;--panel:#161b26;--panel-2:#1b2130;
+  --line:#28303f;--line-soft:#212836;--fg:#e7e9ee;--fg-dim:#a5adbd;--fg-faint:#6d7688;
+  --bean:#c98a4b;--bean-deep:#a9663a;--crema:#e8c9a0;--steam:#6fb4c9;--leaf:#7fae5f;
+  --shadow:0 18px 50px -24px rgba(0,0,0,.7);
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(900px 500px at 82% -8%,rgba(201,138,75,.10),transparent 60%),radial-gradient(700px 500px at 5% 110%,rgba(111,180,201,.07),transparent 55%)}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 22px 100px}
+a{text-decoration:none;color:inherit}
+.top{display:flex;align-items:center;gap:14px;padding:30px 4px 0}
+.cup{flex:none;width:44px;height:44px}
+.top h1{font-size:17px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700}
+.top p{margin:2px 0 0;font-size:12px;color:var(--fg-faint);letter-spacing:.05em}
+.top b{color:var(--bean)}
+.hero{padding:48px 4px 26px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--bean);margin-bottom:18px}
+.hero .eyebrow::before{content:"";width:26px;height:1px;background:var(--bean)}
+.hero h2{font-size:clamp(30px,5vw,50px);line-height:1.04;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+.hero h2 .accent{background:linear-gradient(120deg,var(--crema),var(--bean) 55%,var(--steam));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{max-width:600px;color:var(--fg-dim);margin:0;font-size:16.5px}
+.toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:24px}
+.search{position:relative;flex:1;min-width:220px}
+.search input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:13px 14px 13px 42px;font-family:var(--sans);font-size:14.5px;outline:none;transition:border-color .18s,box-shadow .18s}
+.search input:focus{border-color:var(--bean);box-shadow:0 0 0 3px rgba(201,138,75,.16)}
+.search input::placeholder{color:var(--fg-faint)}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--fg-faint)}
+.count{font-family:var(--mono);font-size:13px;color:var(--fg-faint);padding:0 4px}
+.count b{color:var(--crema)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;height:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;transition:transform .16s,border-color .16s,box-shadow .16s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--bean),var(--steam));opacity:0;transition:opacity .16s}
+.card:hover{transform:translateY(-3px);border-color:rgba(201,138,75,.4);box-shadow:var(--shadow)}
+.card:hover::before{opacity:1}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-badge{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--bean);background:rgba(201,138,75,.1);border:1px solid rgba(201,138,75,.25);padding:3px 9px;border-radius:6px}
+.card-title{font-size:18px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em;line-height:1.25}
+.card-desc{font-size:13.5px;color:var(--fg-dim);margin:0 0 18px;flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-open{font-family:var(--mono);font-size:12.5px;color:var(--crema)}
+.card:hover .card-open{color:var(--bean)}
+.empty{display:none;text-align:center;padding:70px 20px;color:var(--fg-faint)}
+.empty.show{display:block}
+.empty b{display:block;color:var(--crema);font-size:19px;margin-bottom:8px}
+.empty code{font-family:var(--mono);font-size:13px;background:var(--panel-2);border:1px solid var(--line);padding:3px 9px;border-radius:6px;color:var(--crema)}
+.footer{margin-top:44px;padding-top:22px;border-top:1px solid var(--line-soft);text-align:center;color:var(--fg-faint);font-size:12.5px;line-height:1.8}
+.footer code{font-family:var(--mono);background:var(--panel-2);border:1px solid var(--line);padding:2px 7px;border-radius:5px;color:var(--fg-dim)}
+@media(max-width:520px){.hero{padding:34px 4px 22px}.grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<g id="cupg">
+  <path d="M8 15 h26 v13 a11 11 0 0 1 -11 11 h-4 a11 11 0 0 1 -11 -11 z" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M34 18 h4 a6 6 0 0 1 0 12 h-3" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M15 4 c-2 3 2 5 0 8 M21 3 c-2 3 2 5 0 8 M27 4 c-2 3 2 5 0 8" fill="none" stroke="var(--steam)" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+</g>
+</defs></svg>
+
+<div class="wrap">
+  <div class="top">
+    <svg class="cup" viewBox="0 0 48 44"><use href="#cupg"/></svg>
+    <div>
+      <h1>Hub de Estudos</h1>
+      <p>Ciência da Computação · <b>Lucas</b></p>
+    </div>
+  </div>
+
+  <header class="hero">
+    <span class="eyebrow">material interativo</span>
+    <h2>Seus resumos e <span class="accent">ferramentas</span><br>de estudo, num lugar só</h2>
+    <p>Abra qualquer estudo abaixo. Para compartilhar, é só mandar o link — seus amigos conseguem ler tudo.</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input id="busca" type="search" placeholder="Buscar estudo…" autocomplete="off">
+    </div>
+    <div class="count"><b id="contador">0</b> estudo(s)</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty" id="empty">
+    <b>Nenhum estudo listado ainda</b>
+    Adicione o arquivo em <code>estudos/</code> e registre no <code>estudos.json</code>.
+  </div>
+
+  <div class="footer">
+    Site estático no GitHub Pages · leitura aberta para compartilhar.<br>
+    Para adicionar um estudo: suba o <code>.html</code> e acrescente uma linha no <code>estudos.json</code>.
+  </div>
+</div>
+
+<script>
+(function(){
+  var grid=document.getElementById('grid');
+  var empty=document.getElementById('empty');
+  var contador=document.getElementById('contador');
+  var busca=document.getElementById('busca');
+  var todos=[];
+
+  function esc(s){var d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
+
+  function render(lista){
+    grid.innerHTML='';
+    lista.forEach(function(it){
+      var a=document.createElement('a');
+      a.className='card';
+      a.href='estudos/'+encodeURIComponent(it.arquivo);
+      a.dataset.busca=((it.titulo||'')+' '+(it.descricao||'')).toLowerCase();
+      a.innerHTML=
+        '<div class="card-top"><span class="card-badge">HTML</span></div>'+
+        '<h3 class="card-title">'+esc(it.titulo||it.arquivo)+'</h3>'+
+        '<p class="card-desc">'+esc(it.descricao||'Material de estudo.')+'</p>'+
+        '<span class="card-open">abrir estudo →</span>';
+      grid.appendChild(a);
+    });
+    contador.textContent=lista.length;
+    empty.classList.toggle('show',lista.length===0);
+  }
+
+  function filtrar(){
+    var q=busca.value.trim().toLowerCase();
+    if(!q){render(todos);return;}
+    render(todos.filter(function(it){
+      return ((it.titulo||'')+' '+(it.descricao||'')).toLowerCase().indexOf(q)>=0;
+    }));
+  }
+  busca.addEventListener('input',filtrar);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&document.activeElement!==busca){e.preventDefault();busca.focus();}
+    if(e.key==='Escape'){busca.value='';filtrar();busca.blur();}
+  });
+
+  // carrega a lista de estudos
+  fetch('estudos.json?v='+Date.now())
+    .then(function(r){ if(!r.ok) throw new Error('sem json'); return r.json(); })
+    .then(function(data){ todos=Array.isArray(data)?data:[]; render(todos); })
+    .catch(function(){ todos=[]; render(todos);
+      empty.querySelector('b').textContent='Não consegui carregar a lista';
+    });
+})();
+</script>
+</body>
+</html>
