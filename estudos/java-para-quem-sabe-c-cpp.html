@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java · Para quem já sabe C/C++</title>
+<style>
+:root{
+  --ink:#0d0f14;          /* deep near-black, cooled */
+  --ink-2:#141821;
+  --panel:#161b26;
+  --panel-2:#1b2130;
+  --line:#28303f;
+  --line-soft:#212836;
+  --fg:#e7e9ee;
+  --fg-dim:#a5adbd;
+  --fg-faint:#6d7688;
+  /* Java "café" palette — roasted bean, crema, steam */
+  --bean:#c98a4b;         /* roasted amber */
+  --bean-deep:#a9663a;
+  --crema:#e8c9a0;
+  --steam:#6fb4c9;        /* cool steam accent */
+  --leaf:#7fae5f;         /* island green, used sparingly */
+  --rose:#d98a9e;
+  --code-bg:#10141d;
+  --shadow:0 18px 50px -24px rgba(0,0,0,.7);
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,'Fira Code',Menlo,Consolas,monospace;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--ink);color:var(--fg);
+  font-family:var(--sans);font-size:16px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 500px at 82% -8%, rgba(201,138,75,.10), transparent 60%),
+    radial-gradient(700px 500px at 5% 110%, rgba(111,180,201,.07), transparent 55%);
+}
+a{color:inherit;text-decoration:none}
+
+/* ---------- Layout ---------- */
+.shell{display:grid;grid-template-columns:296px minmax(0,1fr);min-height:100vh;position:relative;z-index:1}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:linear-gradient(180deg,var(--ink-2),#0e1119);
+  border-right:1px solid var(--line);
+  padding:26px 16px 40px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+}
+.sidebar::-webkit-scrollbar{width:8px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+.brand{display:flex;align-items:center;gap:13px;padding:0 8px 20px;margin-bottom:12px;border-bottom:1px solid var(--line-soft)}
+.cup{flex:none;width:42px;height:42px}
+.brand-txt h1{font-size:15px;letter-spacing:.14em;margin:0;font-weight:700;text-transform:uppercase}
+.brand-txt p{margin:2px 0 0;font-size:11px;color:var(--fg-faint);letter-spacing:.06em}
+.brand-txt b{color:var(--bean)}
+
+.search{position:relative;margin:6px 4px 18px}
+.search input{
+  width:100%;background:var(--panel);border:1px solid var(--line);
+  color:var(--fg);border-radius:11px;padding:11px 12px 11px 38px;
+  font-family:var(--sans);font-size:13.5px;outline:none;transition:border-color .18s,box-shadow .18s;
+}
+.search input:focus{border-color:var(--bean);box-shadow:0 0 0 3px rgba(201,138,75,.16)}
+.search input::placeholder{color:var(--fg-faint)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--fg-faint)}
+.search .clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--fg-faint);cursor:pointer;font-size:15px;display:none;padding:4px}
+
+.nav{display:flex;flex-direction:column;gap:1px}
+.navlink{
+  display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:9px;
+  color:var(--fg-dim);font-size:13.5px;line-height:1.35;transition:background .15s,color .15s;
+  border:1px solid transparent;
+}
+.navlink:hover{background:var(--panel);color:var(--fg)}
+.navlink.active{background:linear-gradient(90deg,rgba(201,138,75,.16),rgba(201,138,75,.03));color:var(--fg);border-color:rgba(201,138,75,.28)}
+.navlink.active .navnum{background:var(--bean);color:#1a1206;border-color:var(--bean)}
+.navnum{flex:none;width:23px;height:23px;display:grid;place-items:center;font-family:var(--mono);
+  font-size:11.5px;font-weight:600;color:var(--bean);background:var(--panel-2);
+  border:1px solid var(--line);border-radius:7px;transition:all .15s}
+.navnum--flag{color:var(--crema)}
+.navtext{flex:1}
+.navlink.hidden{display:none}
+.nav-empty{display:none;padding:14px 12px;color:var(--fg-faint);font-size:13px;text-align:center}
+
+.progress-wrap{margin:4px 4px 18px}
+.progress-label{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--fg-faint);margin-bottom:7px}
+.progress-track{height:5px;background:var(--panel-2);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--bean-deep),var(--bean),var(--crema));border-radius:99px;transition:width .25s}
+
+/* ---------- Main ---------- */
+.main{min-width:0;padding:0 0 120px}
+.hero{
+  position:relative;overflow:hidden;
+  padding:64px 56px 46px;border-bottom:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(201,138,75,.05),transparent 70%);
+}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--bean);margin-bottom:20px}
+.hero-eyebrow::before{content:"";width:26px;height:1px;background:var(--bean)}
+.hero h2{
+  font-size:clamp(34px,5vw,56px);line-height:1.02;margin:0 0 18px;font-weight:800;letter-spacing:-.02em;
+}
+.hero h2 .accent{
+  background:linear-gradient(120deg,var(--crema),var(--bean) 55%,var(--steam));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{max-width:660px;color:var(--fg-dim);font-size:16.5px;margin:0}
+.hero-flow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:30px;font-family:var(--mono);font-size:13px}
+.chip{padding:7px 13px;border-radius:9px;background:var(--panel);border:1px solid var(--line);color:var(--fg-dim)}
+.chip b{color:var(--crema);font-weight:600}
+.arrow{color:var(--bean);font-size:16px}
+.hero-steam{position:absolute;right:52px;top:50%;transform:translateY(-50%);opacity:.85;pointer-events:none}
+@media(max-width:1100px){.hero-steam{display:none}}
+
+.content{padding:14px 56px 0;max-width:1180px}
+
+/* ---------- Sections ---------- */
+.section{border-bottom:1px solid var(--line-soft);padding:34px 0 8px;scroll-margin-top:16px}
+.section.collapsed .section-body{display:none}
+.section-head{display:flex;align-items:center;gap:16px;margin-bottom:20px;cursor:pointer;user-select:none}
+.section-num{flex:none;width:38px;height:38px;display:grid;place-items:center;
+  font-family:var(--mono);font-size:15px;font-weight:700;color:var(--bean);
+  background:var(--panel-2);border:1px solid var(--line);border-radius:11px}
+.section-title{font-size:24px;font-weight:700;margin:0;flex:1;letter-spacing:-.01em}
+.section-toggle{flex:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel);color:var(--fg-dim);font-size:19px;line-height:1;cursor:pointer;transition:all .15s}
+.section-toggle:hover{border-color:var(--bean);color:var(--bean)}
+.section.collapsed .section-toggle{transform:rotate(0)}
+.section-body{animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- Prose ---------- */
+.section-body p{margin:0 0 15px;color:#d3d7e0}
+.section-body strong{color:#fff;font-weight:650}
+.section-body ul,.section-body ol{margin:0 0 17px;padding-left:4px;list-style:none}
+.section-body ol{counter-reset:li}
+.section-body ul li,.section-body ol li{position:relative;padding-left:26px;margin-bottom:8px;color:#d3d7e0}
+.section-body ul li::before{content:"";position:absolute;left:6px;top:11px;width:6px;height:6px;
+  border-radius:2px;background:var(--bean);transform:rotate(45deg)}
+.section-body ol li{counter-increment:li}
+.section-body ol li::before{content:counter(li);position:absolute;left:0;top:1px;
+  font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bean);
+  width:18px;height:18px;display:grid;place-items:center;background:var(--panel-2);
+  border:1px solid var(--line);border-radius:6px}
+
+/* inline code */
+code{font-family:var(--mono);font-size:.86em;background:rgba(111,180,201,.10);
+  color:var(--crema);padding:2px 6px;border-radius:6px;border:1px solid rgba(111,180,201,.14)}
+
+/* blockquote */
+blockquote{margin:0 0 18px;padding:15px 20px;border-left:3px solid var(--bean);
+  background:linear-gradient(90deg,rgba(201,138,75,.09),transparent);
+  border-radius:0 12px 12px 0;color:var(--crema);font-size:15px}
+blockquote code{background:rgba(201,138,75,.14);color:#fff;border-color:transparent}
+
+/* ---------- Code blocks ---------- */
+.code{position:relative;margin:0 0 20px;border:1px solid var(--line);border-radius:13px;
+  background:var(--code-bg);overflow:hidden;box-shadow:var(--shadow)}
+.code::before{content:attr(data-lang);position:absolute;top:0;left:0;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--fg-faint);padding:8px 13px;border-bottom:1px solid var(--line-soft);
+  border-right:1px solid var(--line-soft);border-radius:0 0 9px 0;background:rgba(255,255,255,.02)}
+.code[data-lang="java"]::before{color:var(--bean)}
+.code[data-lang="bash"]::before{color:var(--leaf)}
+.code .copy{position:absolute;top:6px;right:8px;z-index:2;border:1px solid var(--line);
+  background:var(--panel);color:var(--fg-faint);font-family:var(--mono);font-size:11px;
+  padding:5px 10px;border-radius:7px;cursor:pointer;transition:all .15s;opacity:0}
+.code:hover .copy{opacity:1}
+.code .copy:hover{border-color:var(--bean);color:var(--bean)}
+.code .copy.done{color:var(--leaf);border-color:var(--leaf)}
+.code pre{margin:0;padding:38px 18px 18px;overflow-x:auto;scrollbar-width:thin}
+.code pre::-webkit-scrollbar{height:8px}
+.code pre::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+.code code{background:none;border:0;padding:0;color:#cfd6e4;font-size:13px;line-height:1.7}
+/* token colors */
+.code .k{color:#e08c5a;font-weight:600}      /* keyword — roasted */
+.code .t{color:#6fb4c9}                        /* type — steam */
+.code .s{color:#9bc27f}                         /* string — leaf */
+.code .c{color:#5b6577;font-style:italic}       /* comment */
+.code .n{color:#d98a9e}                          /* number — rose */
+.code .an{color:var(--crema)}                    /* annotation */
+
+/* ---------- Tables ---------- */
+.tablewrap{margin:0 0 20px;border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{background:var(--panel-2);text-align:left;padding:12px 16px;font-weight:600;
+  color:var(--crema);font-size:12.5px;letter-spacing:.03em;border-bottom:1px solid var(--line)}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--line-soft);color:#d3d7e0;vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(255,255,255,.018)}
+td code,th code{font-size:12.5px}
+
+/* ---------- Checklist ---------- */
+.checklist{padding-left:0!important}
+.checklist li{padding-left:0!important;margin-bottom:0!important}
+.checklist li::before{display:none!important}
+.checklist label{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:10px;
+  cursor:pointer;transition:background .15s;border:1px solid transparent}
+.checklist label:hover{background:var(--panel)}
+.checklist input{appearance:none;flex:none;width:20px;height:20px;margin-top:1px;border:1.5px solid var(--line);
+  border-radius:6px;background:var(--panel-2);cursor:pointer;position:relative;transition:all .15s}
+.checklist input:checked{background:var(--bean);border-color:var(--bean)}
+.checklist input:checked::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;
+  color:#1a1206;font-size:13px;font-weight:800}
+.checklist input:checked + span{color:var(--fg-faint);text-decoration:line-through}
+.checklist span{color:#d3d7e0;font-size:14.5px;line-height:1.5}
+
+/* ---------- Search highlight & no-result ---------- */
+mark{background:rgba(201,138,75,.32);color:#fff;border-radius:3px;padding:0 2px}
+.section.filtered-out{display:none}
+.global-empty{display:none;padding:60px 20px;text-align:center;color:var(--fg-faint)}
+.global-empty.show{display:block}
+.global-empty b{color:var(--crema);display:block;font-size:18px;margin-bottom:6px}
+
+/* ---------- Top bar (mobile) ---------- */
+.topbar{display:none;position:sticky;top:0;z-index:40;align-items:center;gap:12px;
+  padding:12px 16px;background:rgba(14,17,25,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .cup{width:30px;height:30px}
+.topbar b{font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+.burger{margin-left:auto;width:38px;height:38px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel);color:var(--fg);font-size:17px;cursor:pointer}
+
+.backtop{position:fixed;right:22px;bottom:22px;z-index:50;width:46px;height:46px;border-radius:13px;
+  border:1px solid var(--line);background:var(--panel);color:var(--bean);font-size:19px;cursor:pointer;
+  box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s,transform .15s}
+.backtop.show{opacity:1;pointer-events:auto}
+.backtop:hover{transform:translateY(-2px);border-color:var(--bean)}
+
+/* ---------- Responsive ---------- */
+@media(max-width:960px){
+  .shell{grid-template-columns:1fr}
+  .topbar{display:flex}
+  .sidebar{position:fixed;left:0;top:0;z-index:60;width:300px;transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
+  .sidebar.open{transform:translateX(0)}
+  .scrim{display:none;position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.55)}
+  .scrim.show{display:block}
+  .hero{padding:40px 22px 32px}
+  .content{padding:14px 22px 0}
+}
+@media(max-width:520px){
+  .hero-flow{font-size:11px}
+  .section-title{font-size:20px}
+  .content{padding:10px 15px 0}
+  .hero{padding:34px 18px 26px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<!-- CUP SVG (defs reused) -->
+<svg width="0" height="0" style="position:absolute"><defs>
+<g id="cupg">
+  <path d="M8 15 h26 v13 a11 11 0 0 1 -11 11 h-4 a11 11 0 0 1 -11 -11 z" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M34 18 h4 a6 6 0 0 1 0 12 h-3" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M15 4 c-2 3 2 5 0 8 M21 3 c-2 3 2 5 0 8 M27 4 c-2 3 2 5 0 8" fill="none" stroke="var(--steam)" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+</g>
+</defs></svg>
+
+<div class="topbar">
+  <svg class="cup" viewBox="0 0 48 44"><use href="#cupg"/></svg>
+  <b>Java · de C/C++</b>
+  <button class="burger" id="burger">☰</button>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="cup" viewBox="0 0 48 44"><use href="#cupg"/></svg>
+      <div class="brand-txt">
+        <h1>Java · de C/C++</h1>
+        <p>Só o que <b>muda</b> · interativo</p>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Leitura</span><span id="progpct">0%</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progfill"></div></div>
+    </div>
+
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input id="search" type="search" placeholder="Buscar no resumo…" autocomplete="off">
+      <button class="clr" id="clr" aria-label="limpar">✕</button>
+    </div>
+
+    <nav class="nav" id="nav">
+<a href="#sec-1-compilacao-e-jvm" class="navlink" data-target="sec-1-compilacao-e-jvm"><span class="navnum">1</span><span class="navtext">COMPILAÇÃO E JVM</span></a>
+<a href="#sec-2-estrutura-minima" class="navlink" data-target="sec-2-estrutura-minima"><span class="navnum">2</span><span class="navtext">ESTRUTURA MÍNIMA DO PROGRAMA</span></a>
+<a href="#sec-3-tipos-primitivos" class="navlink" data-target="sec-3-tipos-primitivos"><span class="navnum">3</span><span class="navtext">TIPOS PRIMITIVOS (tamanhos fixos)</span></a>
+<a href="#sec-4-saida-e-entrada" class="navlink" data-target="sec-4-saida-e-entrada"><span class="navnum">4</span><span class="navtext">SAÍDA E ENTRADA</span></a>
+<a href="#sec-5-operadores-e-controle" class="navlink" data-target="sec-5-operadores-e-controle"><span class="navnum">5</span><span class="navtext">OPERADORES E CONTROLE</span></a>
+<a href="#sec-6-arrays" class="navlink" data-target="sec-6-arrays"><span class="navnum">6</span><span class="navtext">ARRAYS (o que muda)</span></a>
+<a href="#sec-7-strings" class="navlink" data-target="sec-7-strings"><span class="navnum">7</span><span class="navtext">STRINGS (não é char*)</span></a>
+<a href="#sec-8-ponteiros-referencias" class="navlink" data-target="sec-8-ponteiros-referencias"><span class="navnum">8</span><span class="navtext">PONTEIROS → REFERÊNCIAS</span></a>
+<a href="#sec-9-orientacao-a-objetos" class="navlink" data-target="sec-9-orientacao-a-objetos"><span class="navnum">9</span><span class="navtext">ORIENTAÇÃO A OBJETOS</span></a>
+<a href="#sec-10-excecoes" class="navlink" data-target="sec-10-excecoes"><span class="navnum">10</span><span class="navtext">EXCEÇÕES</span></a>
+<a href="#sec-11-estruturas-prontas" class="navlink" data-target="sec-11-estruturas-prontas"><span class="navnum">11</span><span class="navtext">ESTRUTURAS PRONTAS (java.util)</span></a>
+<a href="#sec-resumao" class="navlink" data-target="sec-resumao"><span class="navnum navnum--flag">★</span><span class="navtext">RESUMÃO — relaxa × atenção</span></a>
+    </nav>
+    <div class="nav-empty" id="navEmpty">Nada encontrado</div>
+  </aside>
+
+  <main class="main">
+    <header class="hero">
+      <svg class="hero-steam" width="120" height="150" viewBox="0 0 120 150">
+        <path d="M40 150 c-10 -30 10 -40 0 -70 M60 150 c-12 -32 12 -44 0 -78 M80 150 c-10 -30 10 -40 0 -70"
+              fill="none" stroke="var(--steam)" stroke-width="2.4" stroke-linecap="round" opacity=".28"/>
+      </svg>
+      <span class="hero-eyebrow">Migração · para quem já sabe C / C++</span>
+      <h2>De <span class="accent">C / C++</span><br>para o mundo <span class="accent">Java</span></h2>
+      <p>Resumo de estudo — só o que <strong>muda</strong> em relação a C e C++. Feito para anotar no caderno e começar a programar em Java sem reaprender o que já é igual.</p>
+      <div class="hero-flow">
+        <span class="chip"><b>.java</b></span>
+        <span class="arrow">→</span>
+        <span class="chip">javac</span>
+        <span class="arrow">→</span>
+        <span class="chip"><b>bytecode</b></span>
+        <span class="arrow">→</span>
+        <span class="chip">JVM</span>
+        <span class="arrow">→</span>
+        <span class="chip">execução</span>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+<section class="section" id="sec-1-compilacao-e-jvm" data-index="0">
+  <header class="section-head">
+    <span class="section-num">1</span>
+    <h2 class="section-title">A GRANDE DIFERENÇA: COMPILAÇÃO E JVM</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Em <strong>C/C++</strong> o compilador gera <strong>código de máquina direto</strong> (executável nativo, só roda naquela plataforma). O <strong>Java</strong> faz em <strong>dois passos</strong>:</p>
+<div class="code" data-lang="text"><button class="copy" title="Copiar">copiar</button><pre><code>Programa.java  --(javac)-->  Programa.class (bytecode)  --(java/JVM)-->  execução</code></pre></div>
+<ul><li><code>javac Programa.java</code> gera <strong>bytecode</strong> (<code>.class</code>), não código nativo.</li><li><code>java Programa</code> inicia a <strong>JVM</strong>, que interpreta o bytecode → &quot;escreva uma vez, execute em qualquer lugar&quot;.</li><li><strong>Trade-off:</strong> portável, porém mais lento que nativo.</li><li>O <strong>JIT (Just-In-Time)</strong> compila os trechos &quot;quentes&quot; para nativo em tempo de execução para acelerar.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-2-estrutura-minima" data-index="1">
+  <header class="section-head">
+    <span class="section-num">2</span>
+    <h2 class="section-title">ESTRUTURA MÍNIMA DE UM PROGRAMA</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote>Não existe função solta como em C: <strong>tudo fica dentro de uma classe</strong>.</blockquote>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">ExemploEscrever1</span> {
+    <span class="k">public</span> <span class="k">static</span> <span class="k">void</span> main(<span class="t">String</span>[] args) {
+        <span class="t">System</span>.out.println(<span class="s">&quot;Alo pessoal!!!&quot;</span>);
+    }
+}</code></pre></div>
+<p><strong>O que muda em relação a C/C++:</strong></p>
+<ul><li>O arquivo tem o <strong>mesmo nome da classe</strong>: <code>ExemploEscrever1.java</code>.</li><li>Não tem <code>#include</code>, <code>#define</code> nem preprocessador. Usa-se <code>import java.util.*;</code></li><li>Sem ponteiros <code>*</code> e <code>&amp;</code>, sem <code>malloc</code>/<code>free</code>, sem cabeçalho <code>.h</code>.</li><li>Entrada sempre em <code>public static void main(String[] args)</code> (com <code>String[]</code>, não <code>int argc, char* argv[]</code>).</li><li>Compilar: <code>javac Arquivo.java</code> → executar: <code>java Arquivo</code> (sem extensão).</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-3-tipos-primitivos" data-index="2">
+  <header class="section-head">
+    <span class="section-num">3</span>
+    <h2 class="section-title">TIPOS PRIMITIVOS (tamanhos FIXOS, ao contrário de C)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Em C o tamanho depende da máquina/compilador. Em <strong>Java é sempre o mesmo</strong>:</p>
+<div class="tablewrap"><table><thead><tr><th>Tipo</th><th>Tamanho</th><th>Observação vs C</th></tr></thead><tbody><tr><td><code>boolean</code></td><td>1 bit</td><td>tipo próprio <code>true</code>/<code>false</code> — não é <code>int</code> (em C, 0/≠0)</td></tr><tr><td><code>char</code></td><td>16 bits</td><td><strong>Unicode</strong>, não 8 bits ASCII</td></tr><tr><td><code>byte</code></td><td>8 bits</td><td>inteiro</td></tr><tr><td><code>short</code></td><td>16 bits</td><td>inteiro</td></tr><tr><td><code>int</code></td><td>32 bits</td><td><strong>sempre 32</strong>, não varia</td></tr><tr><td><code>long</code></td><td>64 bits</td><td>inteiro</td></tr><tr><td><code>float</code></td><td>32 bits</td><td>real</td></tr><tr><td><code>double</code></td><td>64 bits</td><td>real</td></tr></tbody></table></div>
+<ul><li><strong>Não existe <code>unsigned</code>.</strong></li><li><code>if (x)</code> só aceita <code>boolean</code> — não dá para usar <code>int</code> como condição (<code>if (n)</code> não compila).</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-4-saida-e-entrada" data-index="3">
+  <header class="section-head">
+    <span class="section-num">4</span>
+    <h2 class="section-title">SAÍDA E ENTRADA (muda tudo)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Não tem <code>printf</code>/<code>scanf</code> como padrão. <strong>Saída:</strong></p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">System</span>.out.println(<span class="s">&quot;Alo&quot;</span> + <span class="s">&quot; pessoal&quot;</span>);   <span class="c">// + concatena</span>
+<span class="t">System</span>.out.println(<span class="s">&quot;Inteiro: &quot;</span> + <span class="n">13</span>);      <span class="c">// converte automatico</span>
+<span class="t">System</span>.out.println(<span class="s">&quot;x+y: &quot;</span> + (x+y));       <span class="c">// parenteses p/ somar antes!</span></code></pre></div>
+<blockquote><strong>Pegadinha:</strong> <code>&quot;soma: &quot; + 2 + 3</code> dá <code>soma: 23</code>; <code>&quot;soma: &quot; + (2 + 3)</code> dá <code>soma: 5</code>.</blockquote>
+<p><strong>Entrada</strong> com <code>Scanner</code> (ou, na disciplina, a classe <code>MyIO</code>):</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">import</span> java.util.*;
+<span class="t">Scanner</span> sc = <span class="k">new</span> <span class="t">Scanner</span>(<span class="t">System</span>.in);
+<span class="k">int</span> n = sc.nextInt();
+
+<span class="c">// MyIO (metodos estaticos, nao precisa instanciar):</span>
+<span class="k">int</span> x = <span class="t">MyIO</span>.readInt(<span class="s">&quot;Digite: &quot;</span>);
+<span class="t">String</span> s = <span class="t">MyIO</span>.readString();
+<span class="t">MyIO</span>.println(<span class="s">&quot;Resultado: &quot;</span> + x);</code></pre></div>
+<p><strong>Redirecionamento</strong> (igual a C no shell): <code>println</code> escreve na saída padrão e <code>readInt</code> lê da entrada padrão — não necessariamente tela/teclado.</p>
+<div class="code" data-lang="bash"><button class="copy" title="Copiar">copiar</button><pre><code>java Programa &lt; in.txt &gt; out.txt</code></pre></div>
+  </div>
+</section>
+<section class="section" id="sec-5-operadores-e-controle" data-index="4">
+  <header class="section-head">
+    <span class="section-num">5</span>
+    <h2 class="section-title">OPERADORES E CONTROLE — idênticos a C</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Aqui você <strong>não precisa reaprender nada</strong>. São iguais a C/C++:</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code>+ - * / %              <span class="c">// aritméticos</span>
+++ --                  <span class="c">// pré/pós incremento</span>
+&lt;&lt; &gt;&gt; &amp; | ^ ~            <span class="c">// bit a bit</span>
+? :                    <span class="c">// ternário</span>
+if / else  while  do-while  for  switch / case / break / default</code></pre></div>
+<ul><li><strong>Divisão inteira trunca</strong> (<code>32/3 = 10</code>).</li><li><code>%</code> (resto) só funciona em <strong>inteiros</strong>.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-6-arrays" data-index="5">
+  <header class="section-head">
+    <span class="section-num">6</span>
+    <h2 class="section-title">ARRAYS (o que muda)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">int</span>[] vet = <span class="k">new</span> <span class="k">int</span>[<span class="n">10</span>];   <span class="c">// aloca com new, nao malloc</span></code></pre></div>
+<ul><li>Alocação com <code>new</code>, sem <code>malloc</code>/<code>sizeof</code>/<code>free</code> (o <strong>garbage collector</strong> limpa).</li><li>Array recém-criado vem <strong>zerado automaticamente</strong>.</li><li>Tem <strong>checagem de limites</strong>: índice inválido lança <code>ArrayIndexOutOfBoundsException</code> (em C daria lixo/segfault).</li><li>Tamanho via <code>vet.length</code> (<strong>atributo</strong>, sem parênteses).</li><li>Sintaxe <code>int[] v</code> ou <code>int v[]</code>, as duas valem.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-7-strings" data-index="6">
+  <header class="section-head">
+    <span class="section-num">7</span>
+    <h2 class="section-title">STRINGS (não é char*)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <blockquote><code>String</code> é uma <strong>classe, imutável</strong>. Não é vetor de <code>char</code> terminado em <code>\0</code>.</blockquote>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code>str.length()    <span class="c">// tamanho (metodo, com () - diferente de array!)</span>
+str.charAt(i)   <span class="c">// caractere na posicao i</span>
+<span class="c">// NAO existe str[i] nem alterar posicao a posicao</span></code></pre></div>
+<ul><li>Nada de <code>strlen</code>/<code>strcpy</code>/<code>strcmp</code>.</li><li>Para comparar conteúdo use <code>.equals()</code>, <strong>nunca <code>==</code></strong> (<code>==</code> compara endereço).</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-8-ponteiros-referencias" data-index="7">
+  <header class="section-head">
+    <span class="section-num">8</span>
+    <h2 class="section-title">PONTEIROS → REFERÊNCIAS (conceito central)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Java não tem ponteiros explícitos, mas <strong>toda variável de objeto ou array é uma referência</strong> (guarda o endereço, não o conteúdo).</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Cliente</span> c1 = <span class="k">new</span> <span class="t">Cliente</span>(<span class="n">1</span>, <span class="s">&quot;aa&quot;</span>);
+<span class="t">Cliente</span> c2 = c1;      <span class="c">// ALIAS: c2 aponta pro MESMO objeto (nao copia!)</span>
+c2.setCodigo(<span class="n">3</span>);      <span class="c">// c1 tambem &quot;muda&quot; (mesmo objeto)</span></code></pre></div>
+<p><strong>Pegadinha de prova</strong> — <code>==</code> entre objetos compara <strong>endereços</strong>:</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">Hora</span> h1 = <span class="k">new</span> <span class="t">Hora</span>(<span class="n">12</span>,<span class="n">30</span>,<span class="n">30</span>);
+<span class="t">Hora</span> h2 = <span class="k">new</span> <span class="t">Hora</span>(<span class="n">12</span>,<span class="n">30</span>,<span class="n">30</span>);
+h1 == h2   <span class="c">// false! (&quot;Diferentes!&quot;) mesmo com atributos iguais</span></code></pre></div>
+<blockquote><strong>Passagem de parâmetro é sempre por valor</strong> (como em C). Mas para objeto/array, o valor copiado é o <strong>endereço</strong>: dá para alterar o conteúdo apontado, <strong>não</strong> para reapontar a variável de quem chamou. Cópia real exige um método <code>clone()</code>.</blockquote>
+  </div>
+</section>
+<section class="section" id="sec-9-orientacao-a-objetos" data-index="8">
+  <header class="section-head">
+    <span class="section-num">9</span>
+    <h2 class="section-title">ORIENTAÇÃO A OBJETOS (o que C não tem)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">class</span> <span class="t">Funcionario</span> {
+    <span class="k">private</span> <span class="k">double</span> salario;                <span class="c">// encapsulamento</span>
+
+    <span class="k">public</span> <span class="t">Funcionario</span>() { ... }             <span class="c">// construtor: mesmo nome, SEM retorno</span>
+    <span class="k">public</span> <span class="t">Funcionario</span>(<span class="k">double</span> s) { salario = s; }  <span class="c">// sobrecarga por parametros</span>
+
+    <span class="k">public</span> <span class="k">double</span> getSalario() { <span class="k">return</span> salario; }
+    <span class="k">public</span> <span class="k">void</span> setSalario(<span class="k">double</span> salario) {
+        <span class="k">this</span>.salario = salario;              <span class="c">// this = objeto corrente</span>
+    }
+}
+
+<span class="t">Funcionario</span> f = <span class="k">new</span> <span class="t">Funcionario</span>();   <span class="c">// instanciar com new</span></code></pre></div>
+<ul><li><code>public</code> / <code>private</code> controlam <strong>visibilidade</strong>.</li><li><code>static</code> = pertence à <strong>classe</strong>, chamado sem instanciar (<code>Math.pow</code>, <code>MyIO.println</code>); atributo estático é único e compartilhado.</li><li><strong>Herança:</strong> <code>class Gerente extends Funcionario</code>.</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-10-excecoes" data-index="9">
+  <header class="section-head">
+    <span class="section-num">10</span>
+    <h2 class="section-title">EXCEÇÕES (não existe em C)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Substitui os <strong>códigos de erro de retorno</strong> do C.</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="k">try</span> {
+    <span class="t">Integer</span> i = <span class="k">new</span> <span class="t">Integer</span>(args[<span class="n">0</span>]);
+} <span class="k">catch</span> (<span class="t">NumberFormatException</span> e) {
+    <span class="t">MyIO</span>.println(<span class="s">&quot;Erro de formato&quot;</span>);
+} <span class="k">catch</span> (<span class="t">ArrayIndexOutOfBoundsException</span> e) {
+    <span class="t">MyIO</span>.println(<span class="s">&quot;Erro de parametro&quot;</span>);
+} <span class="k">finally</span> {
+    <span class="t">MyIO</span>.println(<span class="s">&quot;SEMPRE executa&quot;</span>);   <span class="c">// limpeza vai aqui</span>
+}</code></pre></div>
+<ul><li><code>throw new Exception(&quot;msg&quot;)</code> → <strong>lança</strong>.</li><li><code>throws</code> na assinatura → <strong>repassa</strong> para quem chamou (até <code>main</code> pode ter <code>throws Exception</code>).</li></ul>
+  </div>
+</section>
+<section class="section" id="sec-11-estruturas-prontas" data-index="10">
+  <header class="section-head">
+    <span class="section-num">11</span>
+    <h2 class="section-title">ESTRUTURAS PRONTAS (nativas — não precisa implementar)</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <p>Diferente de C, o Java já traz <strong>TADs prontos</strong> em <code>java.util</code>:</p>
+<div class="code" data-lang="java"><button class="copy" title="Copiar">copiar</button><pre><code><span class="t">ArrayList</span>&lt;<span class="t">String</span>&gt; lista = <span class="k">new</span> <span class="t">ArrayList</span>&lt;<span class="t">String</span>&gt;();   <span class="c">// array redimensionavel (get rapido)</span>
+<span class="t">LinkedList</span>&lt;<span class="t">String</span>&gt; ll = <span class="k">new</span> <span class="t">LinkedList</span>&lt;<span class="t">String</span>&gt;();     <span class="c">// lista dupl. encadeada (insere no meio rapido)</span>
+<span class="t">Stack</span>&lt;<span class="t">String</span>&gt; pilha = <span class="k">new</span> <span class="t">Stack</span>&lt;<span class="t">String</span>&gt;();          <span class="c">// push/pop/peek/empty (LIFO)</span>
+<span class="t">Queue</span>&lt;<span class="t">String</span>&gt; fila = <span class="k">new</span> <span class="t">LinkedList</span>&lt;<span class="t">String</span>&gt;();       <span class="c">// add/remove/peek (FIFO)</span></code></pre></div>
+<p>Usam <strong>generics</strong> <code>&lt;Tipo&gt;</code> para definir o que guardam.</p>
+  </div>
+</section>
+<section class="section" id="sec-resumao" data-index="11">
+  <header class="section-head">
+    <span class="section-num">★</span>
+    <h2 class="section-title">RESUMÃO: &quot;não reaprender&quot; × &quot;prestar atenção&quot;</h2>
+    <button class="section-toggle" aria-label="recolher">–</button>
+  </header>
+  <div class="section-body">
+    <div class="tablewrap"><table><thead><tr><th>Igual a C/C++ (relaxa)</th><th>Muda em Java (atenção)</th></tr></thead><tbody><tr><td>Operadores aritméticos e de bits</td><td>Tudo dentro de uma classe</td></tr><tr><td><code>if</code> / <code>for</code> / <code>while</code> / <code>switch</code></td><td>Sem ponteiros/<code>malloc</code>/<code>free</code> (referências + <code>new</code> + GC)</td></tr><tr><td>Comentários <code>//</code> e <code>/* */</code></td><td><code>String</code> é classe (<code>==</code> vs <code>.equals</code>)</td></tr><tr><td>Divisão inteira e resto <code>%</code></td><td><code>char</code> é 16 bits Unicode; <code>boolean</code> separado de <code>int</code></td></tr><tr><td>Operador ternário <code>? :</code></td><td>array com <code>.length</code> e checagem de limites</td></tr><tr><td>Blocos com <code>{ }</code> e <code>;</code></td><td>I/O via <code>System.out</code> / <code>Scanner</code> / <code>MyIO</code></td></tr><tr><td>Pré/pós incremento <code>++ --</code></td><td>Exceções com <code>try</code>/<code>catch</code>; JVM + bytecode</td></tr></tbody></table></div>
+  </div>
+</section>
+      <div class="global-empty" id="globalEmpty">
+        <b>Nenhum resultado</b>
+        Tente outro termo — por exemplo “JVM”, “ponteiro” ou “string”.
+      </div>
+    </div>
+  </main>
+</div>
+
+<button class="backtop" id="backtop" aria-label="voltar ao topo">↑</button>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s,c){return (c||document).querySelector(s)};
+  var $$=function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
+
+  /* ---- Copy buttons ---- */
+  $$('.code .copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var code=btn.parentElement.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        var t=btn.textContent;btn.textContent='copiado ✓';btn.classList.add('done');
+        setTimeout(function(){btn.textContent=t;btn.classList.remove('done')},1400);
+      });
+    });
+  });
+
+  /* ---- Section collapse ---- */
+  $$('.section-head').forEach(function(head){
+    head.addEventListener('click',function(e){
+      if(e.target.closest('a'))return;
+      var sec=head.closest('.section');
+      sec.classList.toggle('collapsed');
+      var tog=head.querySelector('.section-toggle');
+      tog.textContent=sec.classList.contains('collapsed')?'+':'–';
+    });
+  });
+
+  /* ---- Active nav on scroll (scrollspy) ---- */
+  var sections=$$('.section');
+  var links=$$('.navlink');
+  var byId={};
+  links.forEach(function(l){byId[l.dataset.target]=l});
+  var spy=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        var id=en.target.id;
+        links.forEach(function(l){l.classList.remove('active')});
+        if(byId[id])byId[id].classList.add('active');
+        // keep active nav in view
+        if(byId[id]){var r=byId[id];r.scrollIntoView({block:'nearest'});}
+      }
+    });
+  },{rootMargin:'-15% 0px -70% 0px',threshold:0});
+  sections.forEach(function(s){spy.observe(s)});
+
+  /* ---- Reading progress ---- */
+  var main=$('.main');
+  var progfill=$('#progfill'),progpct=$('#progpct');
+  function updateProgress(){
+    var h=document.documentElement;
+    var scrolled=h.scrollTop||document.body.scrollTop;
+    var max=h.scrollHeight-h.clientHeight;
+    var pct=max>0?Math.min(100,Math.round(scrolled/max*100)):0;
+    progfill.style.width=pct+'%';progpct.textContent=pct+'%';
+    $('#backtop').classList.toggle('show',scrolled>500);
+  }
+  window.addEventListener('scroll',updateProgress,{passive:true});
+  updateProgress();
+
+  /* ---- Back to top ---- */
+  $('#backtop').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+
+  /* ---- Mobile drawer ---- */
+  var sidebar=$('#sidebar'),scrim=$('#scrim');
+  function openNav(){sidebar.classList.add('open');scrim.classList.add('show')}
+  function closeNav(){sidebar.classList.remove('open');scrim.classList.remove('show')}
+  $('#burger').addEventListener('click',openNav);
+  scrim.addEventListener('click',closeNav);
+  links.forEach(function(l){l.addEventListener('click',closeNav)});
+
+  /* ---- Search ---- */
+  var search=$('#search'),clr=$('#clr'),navEmpty=$('#navEmpty'),globalEmpty=$('#globalEmpty');
+  var origHTML={};
+  sections.forEach(function(s){origHTML[s.id]=s.querySelector('.section-body').innerHTML});
+  var titleOrig={};
+  sections.forEach(function(s){titleOrig[s.id]=s.querySelector('.section-title').innerHTML});
+
+  function clearMarks(){
+    sections.forEach(function(s){
+      s.querySelector('.section-body').innerHTML=origHTML[s.id];
+      s.querySelector('.section-title').innerHTML=titleOrig[s.id];
+    });
+    // reattach copy handlers
+    $$('.code .copy').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var code=btn.parentElement.querySelector('code').innerText;
+        navigator.clipboard.writeText(code).then(function(){
+          var t=btn.textContent;btn.textContent='copiado ✓';btn.classList.add('done');
+          setTimeout(function(){btn.textContent=t;btn.classList.remove('done')},1400);
+        });
+      });
+    });
+  }
+  function esc(t){return t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+
+  function walk(node,rx){
+    for(var i=0;i<node.childNodes.length;i++){
+      var c=node.childNodes[i];
+      if(c.nodeType===3){
+        var m=c.nodeValue.match(rx);
+        if(m){
+          var span=document.createElement('span');
+          span.innerHTML=c.nodeValue.replace(rx,function(x){return '<mark>'+x+'</mark>'});
+          c.parentNode.replaceChild(span,c);
+          i+=span.childNodes.length-1;
+        }
+      }else if(c.nodeType===1 && c.tagName!=='MARK'){
+        walk(c,rx);
+      }
+    }
+  }
+
+  var t;
+  function doSearch(){
+    var q=search.value.trim();
+    clr.style.display=q?'block':'none';
+    clearMarks();
+    if(!q){
+      sections.forEach(function(s){s.classList.remove('filtered-out','collapsed')});
+      links.forEach(function(l){l.classList.remove('hidden')});
+      navEmpty.style.display='none';globalEmpty.classList.remove('show');
+      return;
+    }
+    var rx=new RegExp(esc(q),'gi');
+    var anyVisible=false,anyNav=false;
+    sections.forEach(function(s){
+      var txt=s.innerText;
+      var hit=rx.test(txt);rx.lastIndex=0;
+      var link=byId[s.id];
+      if(hit){
+        s.classList.remove('filtered-out','collapsed');
+        walk(s.querySelector('.section-body'),rx);rx.lastIndex=0;
+        walk(s.querySelector('.section-title'),rx);rx.lastIndex=0;
+        if(link)link.classList.remove('hidden');
+        anyVisible=true;anyNav=true;
+      }else{
+        s.classList.add('filtered-out');
+        if(link)link.classList.add('hidden');
+      }
+    });
+    navEmpty.style.display=anyNav?'none':'block';
+    globalEmpty.classList.toggle('show',!anyVisible);
+  }
+  search.addEventListener('input',function(){clearTimeout(t);t=setTimeout(doSearch,120)});
+  clr.addEventListener('click',function(){search.value='';doSearch();search.focus()});
+  // keyboard: "/" focuses search
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&document.activeElement!==search){e.preventDefault();search.focus()}
+    if(e.key==='Escape'&&document.activeElement===search){search.value='';doSearch();search.blur()}
+  });
+})();
+</script>
+</body>
+</html>

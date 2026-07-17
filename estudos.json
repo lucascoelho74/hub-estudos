@@ -8,5 +8,10 @@
     "arquivo": "conceitos-java-interativo.html",
     "titulo": "Java · Conceitos Interativos",
     "descricao": "Cinco mecanismos que confundem porque acontecem na memória. Aqui você opera cada um — clica, executa, avança passo a passo — e vê as setas mudarem de destino."
+  },
+  {
+    "arquivo": "java-para-quem-sabe-c-cpp.html",
+    "titulo": "Java · Para quem já sabe C/C++",
+    "descricao": "Só o que muda ao sair de C/C++ para Java: JVM e bytecode, tipos fixos, referências no lugar de ponteiros, strings, exceções e estruturas prontas."
   }
 ]
