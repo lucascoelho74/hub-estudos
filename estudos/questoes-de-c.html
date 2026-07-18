@@ -1,0 +1,1628 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulado Geral — Verificações 01 · 02 · 03</title>
+<style>
+  :root{
+    /* paleta "café" — mesma do resumo de Java */
+    --bg:#0d0f14; --sheet:#141821; --panel:#161b26; --panel-2:#1b2130;
+    --ink:#e7e9ee; --ink-strong:#ffffff; --muted:#a5adbd; --faint:#6d7688;
+    --line:#28303f; --line-soft:#212836; --soft:#1b2130;
+    --accent:#c98a4b; --accent-deep:#a9663a; --accent-soft:rgba(201,138,75,.12); --crema:#e8c9a0;
+    --steam:#6fb4c9; --leaf:#7fae5f; --red:#d3776a;
+    --code-bg:#10141d; --code-fg:#cfd6e4; --code-inline:#e8c9a0;
+    --mono:'JetBrains Mono','SF Mono',Menlo,Consolas,"DejaVu Sans Mono",monospace;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{
+    margin:0; color:var(--ink); background:var(--bg);
+    font-family:var(--sans);
+    font-size:11pt; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(900px 500px at 82% -8%, rgba(201,138,75,.10), transparent 60%),
+      radial-gradient(700px 520px at 5% 110%, rgba(111,180,201,.06), transparent 55%);
+  }
+  .sheet{ position:relative; z-index:1; max-width:820px; margin:26px auto; padding:34px 38px 48px;
+          background:var(--sheet); border:1px solid var(--line); border-radius:16px;
+          box-shadow:0 24px 60px -30px rgba(0,0,0,.8); }
+
+  /* ---------- Header ---------- */
+  header{ border-bottom:2px solid var(--accent); padding-bottom:14px; margin-bottom:16px; }
+  .inst{ font-size:8.6pt; letter-spacing:.08em; color:var(--faint); text-align:center;
+         text-transform:uppercase; }
+  h1{ font-size:17pt; text-align:center; margin:10px 0 3px; letter-spacing:-.01em; font-weight:800; }
+  .subtitle{ text-align:center; font-size:10pt; color:var(--accent);
+             text-transform:uppercase; letter-spacing:.14em; font-weight:600; margin-bottom:10px; }
+  .idrow{ display:flex; gap:18px; font-size:9.5pt; margin-top:12px; }
+  .idrow .f{ flex:1; border-bottom:1px solid var(--line); padding-bottom:2px; }
+  .idrow .f.small{ flex:.5; }
+  .idrow label{ color:var(--faint); }
+  .meta{ font-size:8.9pt; color:var(--muted); margin-top:11px; line-height:1.55; }
+  .meta b{ color:var(--crema); }
+
+  /* ---------- Prova banners ---------- */
+  .prova{ margin:34px 0 4px; padding:15px 18px; border-radius:12px;
+          background:linear-gradient(90deg,var(--accent-soft),transparent 75%);
+          border:1px solid var(--line); border-left:4px solid var(--accent); }
+  .prova .ey{ font-family:var(--mono); font-size:8.4pt; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+  .prova h2{ font-size:14pt; font-weight:800; letter-spacing:-.01em; margin:3px 0 0; color:var(--ink); }
+  .prova p{ font-size:9pt; color:var(--muted); margin:5px 0 0; }
+
+  /* ---------- Section labels ---------- */
+  .part{ margin:22px 0 12px; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .part h3{ font-size:11pt; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
+            color:var(--crema); margin:0; }
+  .part .note{ font-size:8.9pt; color:var(--faint); margin-top:3px; }
+
+  /* ---------- Questions ---------- */
+  .q{ border:1px solid var(--line); border-radius:10px; padding:13px 15px 14px;
+      margin:0 0 12px; background:var(--panel); break-inside:avoid; page-break-inside:avoid; }
+  .q .head{ font-size:9.2pt; font-weight:700; letter-spacing:.06em; color:var(--accent);
+            margin-bottom:6px; text-transform:uppercase; }
+  .q .stem{ margin:0 0 8px; color:var(--ink); }
+  .q .stem code{ background:rgba(111,180,201,.10); border:1px solid rgba(111,180,201,.16);
+                 color:var(--code-inline); padding:0 4px; border-radius:4px; font-size:9.6pt;
+                 font-family:var(--mono); }
+  pre{ background:var(--code-bg); border:1px solid var(--line); border-left:3px solid var(--accent);
+       border-radius:7px; padding:9px 12px; margin:8px 0; overflow:auto;
+       font-family:var(--mono);
+       font-size:8.9pt; line-height:1.5; color:var(--code-fg); white-space:pre; }
+  .call{ border-left-color:var(--steam); }
+  .opts{ list-style:none; margin:7px 0 0; padding:0; font-size:10pt; }
+  .opts li{ margin:3px 0; color:var(--ink); }
+  .box{ font-family:var(--mono); color:var(--faint); margin-right:5px; }
+  .opts code{ font-family:var(--mono); font-size:9.4pt; color:var(--crema); }
+  .blanks{ display:grid; grid-template-columns:auto 1fr; gap:3px 10px; font-size:9pt;
+           background:var(--code-bg); border:1px dashed var(--line); border-radius:7px;
+           padding:9px 12px; margin:7px 0 2px; color:var(--code-fg);
+           font-family:var(--mono); }
+  .blanks .k{ color:var(--accent); font-weight:700; }
+  .blanks code{ color:var(--crema); }
+  .twocol{ columns:2; column-gap:20px; }
+  .twocol .opts li{ break-inside:avoid; }
+
+  .ex{ font-size:9pt; background:var(--soft); border:1px solid var(--line-soft);
+       border-radius:7px; padding:8px 11px; margin-top:8px; color:var(--ink); }
+  .ex b{ text-transform:uppercase; letter-spacing:.06em; color:var(--crema); font-size:8.4pt; }
+  .ex .mono{ font-family:var(--mono); font-size:8.7pt; color:var(--code-fg); }
+  .restr{ font-size:8.9pt; color:var(--red); margin-top:7px; }
+  .restr b{ text-transform:uppercase; letter-spacing:.04em; }
+  .restr code{ font-family:var(--mono); color:var(--crema); }
+
+  /* ---------- Answer key ---------- */
+  .pagebreak{ break-before:page; page-break-before:always; }
+  .gab h2{ font-size:14pt; text-align:center; text-transform:uppercase; letter-spacing:.1em; font-weight:800;
+           color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:9px; margin:0 0 16px; }
+  .gab h3{ font-size:10.5pt; text-transform:uppercase; letter-spacing:.07em; font-weight:700; color:var(--crema);
+           margin:22px 0 7px; }
+  .keytable{ width:100%; border-collapse:collapse; font-size:9.3pt; margin-bottom:6px; }
+  .keytable td{ border:1px solid var(--line); padding:5px 8px; vertical-align:top; }
+  .keytable td.qn{ width:54px; font-weight:700; color:var(--accent);
+                   font-family:var(--mono); white-space:nowrap; }
+  .keytable td.ans{ width:62px; font-weight:700; text-align:center; color:var(--leaf);
+                    font-family:var(--mono); }
+  .keytable td.why{ color:var(--ink); }
+  .keytable code{ font-family:var(--mono); font-size:8.9pt; background:var(--code-bg); color:var(--crema);
+                  padding:0 3px; border-radius:3px; }
+  .sol{ break-inside:avoid; page-break-inside:avoid; margin-bottom:14px; }
+  .sol .lbl{ font-size:9.4pt; font-weight:700; color:var(--accent);
+             font-family:var(--mono); }
+  .sol p{ font-size:9.2pt; margin:4px 0 0; color:var(--muted); }
+  .sol p code{ font-family:var(--mono); color:var(--crema); }
+  .sol p b{ color:var(--crema); }
+  footer{ margin-top:28px; text-align:center; font-size:8.2pt; color:var(--faint);
+          border-top:1px solid var(--line); padding-top:10px; }
+  footer code{ font-family:var(--mono); color:var(--muted); }
+
+  /* ---------- Print: papel branco (economiza tinta) ---------- */
+  @media print{
+    :root{
+      --bg:#fff; --sheet:#fff; --panel:#fff; --panel-2:#f6f7f9;
+      --ink:#16181d; --ink-strong:#000; --muted:#3a3f47; --faint:#5b6068;
+      --line:#c9ccd2; --line-soft:#dfe2e7; --soft:#eef0f3;
+      --accent:#7a1f2b; --accent-deep:#5f1822; --accent-soft:#f3e7e9; --crema:#7a1f2b;
+      --steam:#33506b; --leaf:#1f6b3a; --red:#6a2530;
+      --code-bg:#f6f7f9; --code-fg:#1d2026; --code-inline:#7a1f2b;
+    }
+    body{ background:#fff; font-size:10.5pt; }
+    body::before{ display:none; }
+    .sheet{ max-width:none; margin:0; padding:0 14mm; border:0; border-radius:0; box-shadow:none; }
+    .q, .ex, .blanks, .prova{ background:#fff; }
+    a{ color:inherit; text-decoration:none; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <div class="inst">Pontifícia Universidade Católica de Minas Gerais — Instituto de Ciências Exatas e Informática</div>
+    <h1>Algoritmos e Estruturas de Dados I</h1>
+    <div class="subtitle">Simulado Geral — Verificações 01 · 02 · 03</div>
+    <div class="idrow">
+      <div class="f"><label>Nome:</label></div>
+      <div class="f small"><label>Matrícula:</label></div>
+      <div class="f small"><label>Turma:</label></div>
+    </div>
+    <div class="meta">
+      <b>Estrutura:</b> 60 questões divididas em três provas — <b>Prova 1</b> (Q01–Q20, abstrações de controle), <b>Prova 2</b> (Q21–Q40, abstrações de dados) e <b>Prova 3</b> (Q41–Q60, orientação a objetos e estruturas encadeadas).
+      &nbsp; <b>Instruções:</b> nas questões fechadas, marque <b>uma única</b> alternativa; ao escolher <b>e) OUTRA</b>, escreva a resposta correta e justifique.
+      Nas questões abertas, respeite o estilo do curso: <b>for</b> como repetição padrão, <b>while</b> com condição lógica de parada (sem <code>break</code>) e tratamento de erro com <code>if/else</code> ou exceção e mensagem descritiva. Gabarito comentado ao final.
+    </div>
+  </header>
+
+  <!-- =========================================================================== -->
+  <!-- ============================== PROVA 1 ==================================== -->
+  <!-- =========================================================================== -->
+  <div class="prova">
+    <div class="ey">Verificação 01</div>
+    <h2>Prova 1 — Abstrações de Controle</h2>
+    <p>Expressões e tipos, estruturas condicionais e repetitivas, procedimentos e funções, recursão e passagem de parâmetros (por valor e por referência).</p>
+  </div>
+
+  <div class="part">
+    <h3>Parte I — Questões fechadas</h3>
+    <div class="note">14 questões · valor 1,0 cada · faça o teste de mesa do código antes de marcar.</div>
+  </div>
+
+  <!-- Q01 -->
+  <div class="q">
+    <div class="head">01.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_01 ( 17, 5 )</code>?</p>
+<pre>int f_01 ( int a, int b )
+{ return ( a / b + a % b * 2 );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>5</code></li>
+      <li><span class="box">[ ]</span>b.) <code>7</code></li>
+      <li><span class="box">[ ]</span>c.) <code>9</code></li>
+      <li><span class="box">[ ]</span>d.) <code>11</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q02 -->
+  <div class="q">
+    <div class="head">02.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_02 ( 9 )</code>?</p>
+<pre>int f_02 ( int x )
+{ int r;
+  if ( x % 2 == 0 )      { r = x / 2; }
+  else if ( x % 3 == 0 ) { r = x * 2; }
+  else                   { r = x + 1; }
+  return ( r );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>10</code></li>
+      <li><span class="box">[ ]</span>b.) <code>4</code></li>
+      <li><span class="box">[ ]</span>c.) <code>18</code></li>
+      <li><span class="box">[ ]</span>d.) <code>27</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q03 -->
+  <div class="q">
+    <div class="head">03.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_03 ( 5 )</code>?</p>
+<pre>int f_03 ( int n )
+{ int s = 0, i;
+  for ( i = 1; i &lt;= n; i = i + 1 )
+  { if ( i % 2 == 0 ) { s = s + i; }
+    else              { s = s - i; } }
+  return ( s );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>3</code></li>
+      <li><span class="box">[ ]</span>b.) <code>-3</code></li>
+      <li><span class="box">[ ]</span>c.) <code>-9</code></li>
+      <li><span class="box">[ ]</span>d.) <code>9</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q04 -->
+  <div class="q">
+    <div class="head">04.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_04 ( 4092 )</code>?</p>
+<pre>int f_04 ( int n )
+{ int s = 0;
+  while ( n &gt; 0 )
+  { s = s + n % 10;
+    n = n / 10; }
+  return ( s );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>15</code></li>
+      <li><span class="box">[ ]</span>b.) <code>9</code></li>
+      <li><span class="box">[ ]</span>c.) <code>6</code></li>
+      <li><span class="box">[ ]</span>d.) <code>150</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q05 -->
+  <div class="q">
+    <div class="head">05.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_05 ( 4 )</code>?</p>
+<pre>int f_05 ( int n )
+{ int c = 0, i, j;
+  for ( i = 0; i &lt; n; i = i + 1 )
+  { for ( j = i; j &lt; n; j = j + 1 )
+    { c = c + 1; } }
+  return ( c );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>16</code></li>
+      <li><span class="box">[ ]</span>b.) <code>6</code></li>
+      <li><span class="box">[ ]</span>c.) <code>10</code></li>
+      <li><span class="box">[ ]</span>d.) <code>12</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q06 -->
+  <div class="q">
+    <div class="head">06.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_06 ( 5 )</code>?</p>
+<pre>int f_06 ( int n )
+{ if ( n &lt;= 0 ) { return ( 0 ); }
+  return ( n + f_06 ( n - 1 ) );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>10</code></li>
+      <li><span class="box">[ ]</span>b.) <code>25</code></li>
+      <li><span class="box">[ ]</span>c.) <code>5</code></li>
+      <li><span class="box">[ ]</span>d.) <code>15</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q07 -->
+  <div class="q">
+    <div class="head">07.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_07 ( 3, 4 )</code>?</p>
+<pre>int f_07 ( int b, int e )
+{ if ( e == 0 ) { return ( 1 ); }
+  return ( b * f_07 ( b, e - 1 ) );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>81</code></li>
+      <li><span class="box">[ ]</span>b.) <code>12</code></li>
+      <li><span class="box">[ ]</span>c.) <code>64</code></li>
+      <li><span class="box">[ ]</span>d.) <code>27</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q08 -->
+  <div class="q">
+    <div class="head">08.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>void f_08 ( int n )
+{ if ( n &gt; 0 )
+  { printf ( "%d ", n );
+    f_08 ( n - 1 ); }
+}</pre>
+<pre class="call">f_08 ( 3 );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>1 2 3</code></li>
+      <li><span class="box">[ ]</span>b.) <code>3 2 1</code></li>
+      <li><span class="box">[ ]</span>c.) <code>2 1</code></li>
+      <li><span class="box">[ ]</span>d.) <code>3 2 1 0</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q09 -->
+  <div class="q">
+    <div class="head">09.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>void f_09 ( int n )
+{ if ( n &gt; 0 )
+  { f_09 ( n - 1 );
+    printf ( "%d ", n ); }
+}</pre>
+<pre class="call">f_09 ( 3 );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>3 2 1</code></li>
+      <li><span class="box">[ ]</span>b.) <code>1 2 3</code></li>
+      <li><span class="box">[ ]</span>c.) <code>1 2</code></li>
+      <li><span class="box">[ ]</span>d.) <code>0 1 2 3</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q">
+    <div class="head">10.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>void f_10 ( int a )
+{ a = a * 2;
+}</pre>
+<pre class="call">int x = 5;
+f_10 ( x );
+printf ( "%d\n", x );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>10</code></li>
+      <li><span class="box">[ ]</span>b.) <code>5</code></li>
+      <li><span class="box">[ ]</span>c.) <code>0</code></li>
+      <li><span class="box">[ ]</span>d.) <code>25</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q11 -->
+  <div class="q">
+    <div class="head">11.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>void f_11 ( int* a )
+{ *a = *a * 2;
+}</pre>
+<pre class="call">int x = 5;
+f_11 ( &amp;x );
+printf ( "%d\n", x );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>10</code></li>
+      <li><span class="box">[ ]</span>b.) <code>5</code></li>
+      <li><span class="box">[ ]</span>c.) <code>0</code></li>
+      <li><span class="box">[ ]</span>d.) <code>25</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q12 -->
+  <div class="q">
+    <div class="head">12.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>void f_12 ( int* a, int* b )
+{ int t = *a;  *a = *b;  *b = t;
+}</pre>
+<pre class="call">int x = 3, y = 8;
+f_12 ( &amp;x, &amp;y );
+printf ( "%d %d\n", x, y );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>3 8</code></li>
+      <li><span class="box">[ ]</span>b.) <code>8 3</code></li>
+      <li><span class="box">[ ]</span>c.) <code>3 3</code></li>
+      <li><span class="box">[ ]</span>d.) <code>8 8</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q">
+    <div class="head">13.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_13 ( 6 )</code>?</p>
+<pre>int f_13 ( int n )
+{ int a = 0, b = 1, t, i;
+  for ( i = 0; i &lt; n; i = i + 1 )
+  { t = a + b;  a = b;  b = t; }
+  return ( a );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>5</code></li>
+      <li><span class="box">[ ]</span>b.) <code>8</code></li>
+      <li><span class="box">[ ]</span>c.) <code>13</code></li>
+      <li><span class="box">[ ]</span>d.) <code>21</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q14 -->
+  <div class="q">
+    <div class="head">14.) Questão</div>
+    <p class="stem">Qual o retorno de <code>f_14 ( 48, 36 )</code>?</p>
+<pre>int f_14 ( int a, int b )
+{ if ( b == 0 ) { return ( a ); }
+  return ( f_14 ( b, a % b ) );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>6</code></li>
+      <li><span class="box">[ ]</span>b.) <code>24</code></li>
+      <li><span class="box">[ ]</span>c.) <code>12</code></li>
+      <li><span class="box">[ ]</span>d.) <code>4</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <div class="part">
+    <h3>Parte II — Questões abertas</h3>
+    <div class="note">6 questões · escreva o código completo respeitando o estilo do curso.</div>
+  </div>
+
+  <!-- Q15 -->
+  <div class="q">
+    <div class="head">15.) Questão</div>
+    <p class="stem">Definir uma <b>função iterativa</b> que receba um inteiro <code>n</code> e retorne a soma dos <code>n</code> primeiros números <b>pares positivos</b>.</p>
+    <p class="restr"><b>Restrição:</b> usar <code>for</code> como repetição padrão.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">n = 4  →  2 + 4 + 6 + 8 = 20</span></div>
+  </div>
+
+  <!-- Q16 -->
+  <div class="q">
+    <div class="head">16.) Questão</div>
+    <p class="stem">Definir uma <b>função recursiva</b> que receba um inteiro <code>n &gt; 0</code> e retorne a <b>quantidade de dígitos</b> desse número.</p>
+    <p class="restr"><b>Restrição:</b> não usar repetição; a solução deve ser recursiva.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">n = 4092  →  4</span></div>
+  </div>
+
+  <!-- Q17 -->
+  <div class="q">
+    <div class="head">17.) Questão</div>
+    <p class="stem">Definir um <b>procedimento</b> que receba dois inteiros <b>por referência</b> (apontadores) e os organize de modo que o <b>maior</b> fique no primeiro e o <b>menor</b> no segundo.</p>
+    <p class="restr"><b>Restrição:</b> alterar os valores do chamador via apontador (passagem por referência).</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">x = 3, y = 8  →  após a chamada: x = 8, y = 3</span></div>
+  </div>
+
+  <!-- Q18 -->
+  <div class="q">
+    <div class="head">18.) Questão</div>
+    <p class="stem">Definir uma <b>função recursiva</b> que receba uma <code>base</code> e um <code>expoente</code> (&ge; 0) e retorne a <b>potência</b> <code>base^expoente</code>.</p>
+    <p class="restr"><b>Restrição:</b> não usar a função <code>pow</code> nem repetição; a solução deve ser recursiva.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">base = 2, expoente = 5  →  32</span></div>
+  </div>
+
+  <!-- Q19 -->
+  <div class="q">
+    <div class="head">19.) Questão</div>
+    <p class="stem">Definir uma <b>função lógica</b> que receba um inteiro <code>n</code> e retorne <code>true</code> se ele for <b>primo</b> e <code>false</code> caso contrário.</p>
+    <p class="restr"><b>Restrição:</b> usar <code>while</code> com condição lógica de parada (sem <code>break</code>).</p>
+    <div class="ex"><b>Exemplos:</b> <span class="mono">7 → true&nbsp;&nbsp;·&nbsp;&nbsp;9 → false&nbsp;&nbsp;·&nbsp;&nbsp;1 → false</span></div>
+  </div>
+
+  <!-- Q20 -->
+  <div class="q">
+    <div class="head">20.) Questão</div>
+    <p class="stem">Definir um <b>procedimento</b> que receba um inteiro <code>n</code> e mostre os <code>n</code> primeiros termos da sequência de <b>Fibonacci</b> (começando em 0 e 1).</p>
+    <p class="restr"><b>Restrição:</b> usar <code>for</code> como repetição padrão; não usar recursão.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">n = 7  →  0 1 1 2 3 5 8</span></div>
+  </div>
+
+  <!-- =========================================================================== -->
+  <!-- ============================== PROVA 2 ==================================== -->
+  <!-- =========================================================================== -->
+  <div class="prova">
+    <div class="ey">Verificação 02</div>
+    <h2>Prova 2 — Abstrações de Dados</h2>
+    <p>Estruturas (<code>struct</code>), apontadores, caracteres, arranjos, matrizes e noções de orientação a objetos (classes/encapsulamento).</p>
+  </div>
+
+  <div class="part">
+    <h3>Parte I — Questões fechadas</h3>
+    <div class="note">14 questões · valor 1,0 cada · faça o teste de mesa do código antes de marcar.</div>
+  </div>
+
+  <!-- Q21 -->
+  <div class="q">
+    <div class="head">21.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>char* f_21 ( int x, int y, char* p )
+{ char c;
+  if ( 0&lt;=x &amp;&amp; x&lt;strlen(p) &amp;&amp;
+       0&lt;=y &amp;&amp; y&lt;strlen(p) )
+  { c = p[x]; p[x] = p[y]; p[y] = c; }
+  return ( p );
+}</pre>
+<pre class="call">char p[] = "marte";
+p = f_21 ( 0, 4, f_21 ( 1, 3, p ) );
+printf ( "[%s]\n", p );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>[matre]</code></li>
+      <li><span class="box">[ ]</span>b.) <code>[etram]</code></li>
+      <li><span class="box">[ ]</span>c.) <code>[etarm]</code></li>
+      <li><span class="box">[ ]</span>d.) <code>[mtrae]</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q22 -->
+  <div class="q">
+    <div class="head">22.) Questão</div>
+    <p class="stem">Qual a saída esperada para a chamada <code>f_22 ( 2, 7, a )</code>, com <code>a = {10,9,8,7,6,5,4,3,2,1}</code>?</p>
+<pre>void f_22 ( int p, int q, int a[] )
+{ int z, y;
+  z = a[p];
+  for ( y=p+1; y&lt;q; y=y+1 )
+  { a[y-1] = a[y]; }
+  a[q-1] = z;
+}</pre>
+    <ul class="opts">
+      <li><span class="box">[ ]</span>a.) <code>10 9 7 6 5 4 8 3 2 1</code></li>
+      <li><span class="box">[ ]</span>b.) <code>10 9 8 7 6 5 4 3 2 1</code></li>
+      <li><span class="box">[ ]</span>c.) <code>10 9 7 6 5 4 3 8 2 1</code></li>
+      <li><span class="box">[ ]</span>d.) <code>8 10 9 7 6 5 4 3 2 1</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q23 -->
+  <div class="q">
+    <div class="head">23.) Questão</div>
+    <p class="stem">Qual o retorno para <code>n=3</code> e <code>m = {{1,2,3},{4,5,6},{7,8,9}}</code>?</p>
+<pre>int f_23 ( int n, int m[][n] )
+{ int x, y, z = 0;
+  for ( x=0; x&lt;n; x++ )
+  { for ( y=0; y&lt;n; y++ )
+    { if ( x==0 || x==n-1 || y==0 || y==n-1 )
+      { z = z + m[x][y]; } }
+  }
+  return ( z );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>40</code></li>
+      <li><span class="box">[ ]</span>b.) <code>45</code></li>
+      <li><span class="box">[ ]</span>c.) <code>20</code></li>
+      <li><span class="box">[ ]</span>d.) <code>24</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q24 -->
+  <div class="q">
+    <div class="head">24.) Questão</div>
+    <p class="stem">Qual o retorno para a chamada <code>f_24 ( 0, 6, a )</code>, com <code>a = {4,7,2,9,6,5}</code>?</p>
+<pre>int f_24 ( int x, int n, int a[] )
+{ if ( x &gt;= n ) { return ( 0 ); }
+  if ( a[x] % 2 == 0 )
+  { return ( a[x] + f_24 ( x+1, n, a ) ); }
+  return ( f_24 ( x+1, n, a ) );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>12</code></li>
+      <li><span class="box">[ ]</span>b.) <code>22</code></li>
+      <li><span class="box">[ ]</span>c.) <code>10</code></li>
+      <li><span class="box">[ ]</span>d.) <code>0</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q25 -->
+  <div class="q">
+    <div class="head">25.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>int f_25 ( int m, char* s1, int n, char* s2 )
+{ if ( s1[m] == '\0' || s2[n] == '\0' )
+  { return ( 0 ); }
+  if ( s1[m] == s2[n] )
+  { return ( 1 + f_25 ( m+1, s1, n+1, s2 ) ); }
+  return ( f_25 ( m+1, s1, n+1, s2 ) );
+}</pre>
+<pre class="call">char p1[] = "casa";
+char p2[] = "caza";
+printf ( "%d\n", f_25 ( 0, p1, 0, p2 ) );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>4</code></li>
+      <li><span class="box">[ ]</span>b.) <code>3</code></li>
+      <li><span class="box">[ ]</span>c.) <code>2</code></li>
+      <li><span class="box">[ ]</span>d.) <code>1</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q26 -->
+  <div class="q">
+    <div class="head">26.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>struct s_Ponto { int x, y; };
+
+struct s_Ponto f_26 ( int a, int b )
+{ struct s_Ponto p;
+  p.x = a;  p.y = b;
+  while ( p.x &gt; p.y )
+  { p.x = p.x - p.y; }
+  return ( p );
+}</pre>
+<pre class="call">struct s_Ponto r = f_26 ( 17, 5 );
+printf ( "(%d,%d)\n", r.x, r.y );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>(2,5)</code></li>
+      <li><span class="box">[ ]</span>b.) <code>(3,5)</code></li>
+      <li><span class="box">[ ]</span>c.) <code>(17,5)</code></li>
+      <li><span class="box">[ ]</span>d.) <code>(12,5)</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q27 -->
+  <div class="q">
+    <div class="head">27.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>struct s_Tri { int a, b, c; };
+
+void f_27 ( struct s_Tri* r )
+{ int t;
+  if ( r-&gt;a &gt; r-&gt;b ) { t = r-&gt;a; r-&gt;a = r-&gt;b; r-&gt;b = t; }
+  if ( r-&gt;b &gt; r-&gt;c ) { t = r-&gt;b; r-&gt;b = r-&gt;c; r-&gt;c = t; }
+  if ( r-&gt;a &gt; r-&gt;b ) { t = r-&gt;a; r-&gt;a = r-&gt;b; r-&gt;b = t; }
+}</pre>
+<pre class="call">struct s_Tri x = { 5, 2, 4 };
+f_27 ( &amp;x );
+printf ( "%d %d %d\n", x.a, x.b, x.c );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>2 4 5</code></li>
+      <li><span class="box">[ ]</span>b.) <code>5 4 2</code></li>
+      <li><span class="box">[ ]</span>c.) <code>2 5 4</code></li>
+      <li><span class="box">[ ]</span>d.) <code>4 2 5</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q28 -->
+  <div class="q">
+    <div class="head">28.) Questão</div>
+    <p class="stem">Qual o retorno para <code>n=4</code> e <code>v = {{10,3},{20,7},{30,7},{40,2}}</code> (pares <code>cod,qtd</code>)?</p>
+<pre>struct s_Item { int cod, qtd; };
+
+int f_28 ( int n, struct s_Item v[] )
+{ int x, z;
+  z = 0;
+  for ( x=0; x&lt;n; x++ )
+  { if ( v[x].qtd &gt; v[z].qtd ) { z = x; } }
+  return ( v[z].cod );
+}</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>20</code></li>
+      <li><span class="box">[ ]</span>b.) <code>30</code></li>
+      <li><span class="box">[ ]</span>c.) <code>7</code></li>
+      <li><span class="box">[ ]</span>d.) <code>40</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q29 -->
+  <div class="q">
+    <div class="head">29.) Questão</div>
+    <p class="stem">Para <code>f_29 ( "abcde" )</code> produzir <code>"edcba"</code>, quais valores deverão preencher <span class="box">__a__</span>, <span class="box">__b__</span> e <span class="box">__c__</span>?</p>
+<pre>char* f_29 ( const char* s )
+{ char* r = NULL;   int x = 0, y = 0;
+  if ( s )
+  { while ( *(s+x) ) x++;
+    r = (char*) calloc ( x+1, sizeof(char) );
+    __a__;  while ( __b__ )  { __c__ }
+  }
+  return ( r );
+}</pre>
+    <div class="blanks">
+      <div></div><div><span class="k">__a__</span> &nbsp;&nbsp; <span class="k">__b__</span> &nbsp;&nbsp; <span class="k">__c__</span></div>
+      <div class="box">[ ] a.)</div><div><code>y=0;</code> &nbsp; <code>(y&lt;x)</code> &nbsp; <code>*(r+y)=*(s+x-1-y); y++;</code></div>
+      <div class="box">[ ] b.)</div><div><code>y=0;</code> &nbsp; <code>(y&lt;x)</code> &nbsp; <code>*(r+y)=*(s+y); y++;</code></div>
+      <div class="box">[ ] c.)</div><div><code>y=x;</code> &nbsp; <code>(y&gt;0)</code> &nbsp; <code>*(r+y)=*(s+x-y); y--;</code></div>
+      <div class="box">[ ] d.)</div><div><code>y=x-1;</code> &nbsp; <code>(y&gt;=0)</code> &nbsp; <code>*(r+y)=*(s+y); y--;</code></div>
+      <div class="box">[ ] e.)</div><div>OUTRA (JUSTIFICATIVA)</div>
+    </div>
+  </div>
+
+  <!-- Q30 -->
+  <div class="q">
+    <div class="head">30.) Questão</div>
+    <p class="stem">Para <code>f_30 ( 'x', "abc" )</code> produzir <code>"xabc"</code>, quais valores deverão preencher <span class="box">__a__</span>, <span class="box">__b__</span> e <span class="box">__c__</span>?</p>
+<pre>char* f_30 ( char c, const char* s )
+{ char* r = NULL;   int x = 0, y = 0;
+  if ( s )
+  { while ( *(s+x) ) x++;
+    r = (char*) calloc ( x+2, sizeof(char) );
+    *r = c;
+    __a__;  while ( __b__ )  { __c__ }
+  }
+  return ( r );
+}</pre>
+    <div class="blanks">
+      <div></div><div><span class="k">__a__</span> &nbsp;&nbsp; <span class="k">__b__</span> &nbsp;&nbsp; <span class="k">__c__</span></div>
+      <div class="box">[ ] a.)</div><div><code>y=0;</code> &nbsp; <code>(y&lt;x)</code> &nbsp; <code>*(r+y+1)=*(s+y); y++;</code></div>
+      <div class="box">[ ] b.)</div><div><code>y=0;</code> &nbsp; <code>(y&lt;x)</code> &nbsp; <code>*(r+y)=*(s+y); y++;</code></div>
+      <div class="box">[ ] c.)</div><div><code>y=1;</code> &nbsp; <code>(y&lt;=x)</code> &nbsp; <code>*(r+y)=*(s+y); y++;</code></div>
+      <div class="box">[ ] d.)</div><div><code>y=x;</code> &nbsp; <code>(y&gt;0)</code> &nbsp; <code>*(r+y+1)=*(s+y); y--;</code></div>
+      <div class="box">[ ] e.)</div><div>OUTRA (JUSTIFICATIVA)</div>
+    </div>
+  </div>
+
+  <!-- Q31 -->
+  <div class="q">
+    <div class="head">31.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>int f_31 ( char* p )
+{ int z = 0;
+  while ( *p )
+  { if ( *p == *(p+1) ) { z++; }
+    p++; }
+  return ( z );
+}</pre>
+<pre class="call">printf ( "%d\n", f_31 ( "sucesso" ) );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>2</code></li>
+      <li><span class="box">[ ]</span>b.) <code>1</code></li>
+      <li><span class="box">[ ]</span>c.) <code>0</code></li>
+      <li><span class="box">[ ]</span>d.) <code>3</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q32 -->
+  <div class="q">
+    <div class="head">32.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>int f_32 ( int a[], int b[], int ini, int fim )
+{ int m = 0;
+  while ( ini &lt;= fim )
+  { b[m] = a[ini]; m++; ini++; }
+  return ( m );
+}</pre>
+<pre class="call">int a[] = { 9, 8, 7, 6, 5, 4, 3 };
+int b[10];
+int k = f_32 ( a, b, 2, 5 );
+printf ( "%d: %d %d %d %d\n", k, b[0], b[1], b[2], b[3] );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>4: 7 6 5 4</code></li>
+      <li><span class="box">[ ]</span>b.) <code>3: 7 6 5</code></li>
+      <li><span class="box">[ ]</span>c.) <code>4: 8 7 6 5</code></li>
+      <li><span class="box">[ ]</span>d.) <code>5: 7 6 5 4</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q33 -->
+  <div class="q">
+    <div class="head">33.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>struct s_Tempo { int h, m, s; };
+
+struct s_Tempo f_33 ( struct s_Tempo a, struct s_Tempo b )
+{ struct s_Tempo r;
+  r.s = a.s + b.s;
+  r.m = a.m + b.m + r.s / 60;   r.s = r.s % 60;
+  r.h = a.h + b.h + r.m / 60;   r.m = r.m % 60;
+  return ( r );
+}</pre>
+<pre class="call">struct s_Tempo t1 = { 1, 45, 50 };
+struct s_Tempo t2 = { 2, 20, 25 };
+struct s_Tempo t3 = f_33 ( t1, t2 );
+printf ( "%02d:%02d:%02d\n", t3.h, t3.m, t3.s );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>04:06:15</code></li>
+      <li><span class="box">[ ]</span>b.) <code>03:66:75</code></li>
+      <li><span class="box">[ ]</span>c.) <code>04:05:15</code></li>
+      <li><span class="box">[ ]</span>d.) <code>03:06:15</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q34 -->
+  <div class="q">
+    <div class="head">34.) Questão</div>
+    <p class="stem">Qual o conteúdo da matriz <code>m</code> após <code>f_34 ( 3, m )</code>?</p>
+<pre>void f_34 ( int n, int m[][n] )
+{ int x, y;
+  for ( x=0; x&lt;n; x++ )
+  { for ( y=0; y&lt;n; y++ )
+    { if ( y &lt;= x ) { m[x][y] = (x+1)*10 + (y+1); }
+      else          { m[x][y] = 0; } }
+  }
+}</pre>
+    <ul class="opts">
+      <li><span class="box">[ ]</span>a.) <code>{{11,0,0},{21,22,0},{31,32,33}}</code></li>
+      <li><span class="box">[ ]</span>b.) <code>{{11,12,13},{0,22,23},{0,0,33}}</code></li>
+      <li><span class="box">[ ]</span>c.) <code>{{1,0,0},{2,3,0},{4,5,6}}</code></li>
+      <li><span class="box">[ ]</span>d.) <code>{{11,21,31},{0,22,32},{0,0,33}}</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <div class="part">
+    <h3>Parte II — Questões abertas</h3>
+    <div class="note">6 questões · escreva o código completo respeitando o estilo do curso.</div>
+  </div>
+
+  <!-- Q35 -->
+  <div class="q">
+    <div class="head">35.) Questão</div>
+    <p class="stem">Dada a estrutura abaixo, definir uma função para receber dois valores desse tipo e calcular a sua soma, <b>sem permitir excessos</b> em qualquer dos campos (segundos e minutos no intervalo de 0 a 59).</p>
+<pre>struct s_Tempo { int h, m, s; };  // horas, minutos, segundos</pre>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">t1 = {1, 45, 50}  +  t2 = {2, 20, 25}  →  t3 = {4, 6, 15}</span></div>
+  </div>
+
+  <!-- Q36 -->
+  <div class="q">
+    <div class="head">36.) Questão</div>
+    <p class="stem">Um arquivo (DADOS.TXT) contém valores inteiros, não ordenados; o <b>primeiro valor</b> indica quantos números vêm em seguida. Definir um procedimento que leia esse arquivo e grave em (SAIDA.TXT) os mesmos valores reorganizados de modo que <b>todos os negativos venham antes</b> de todos os não-negativos, preservando a ordem relativa dentro de cada grupo.</p>
+    <p class="restr"><b>Restrição:</b> o arquivo de dados só poderá ser lido <b>uma única vez</b>; usar pelo menos uma repetição com <code>while</code>.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">DADOS.TXT = 6 / 3 -1 4 -2 0 -5  →  SAIDA.TXT: -1 -2 -5 3 4 0</span></div>
+  </div>
+
+  <!-- Q37 -->
+  <div class="q">
+    <div class="head">37.) Questão</div>
+    <p class="stem">Um arranjo de inteiros (no máximo <code>MAX = 20</code> elementos) contém valores quaisquer. Definir uma <b>função lógica</b> que receba a quantidade de elementos e o arranjo e retorne <code>true</code> se existir algum par de elementos <b>vizinhos</b> cuja soma seja igual a zero, ou <code>false</code> caso contrário. Definir também um <b>procedimento de teste</b> capaz de ler o arquivo (DADOS.TXT) — cujo primeiro valor é a quantidade — e mostrar o resultado da função.</p>
+    <p class="restr"><b>Restrição:</b> usar pelo menos uma repetição com <code>while</code>.</p>
+    <div class="ex"><b>Exemplos:</b> <span class="mono">{1, 3, -3, 5, 2} → true&nbsp;&nbsp;·&nbsp;&nbsp;{1, 2, 3, 4} → false</span></div>
+  </div>
+
+  <!-- Q38 -->
+  <div class="q">
+    <div class="head">38.) Questão</div>
+    <p class="stem">Considere a classe abaixo, que encapsula um vetor de inteiros. Implementar o método <code>int contarMaioresQue ( int limite )</code>, que retorna quantos elementos do vetor são <b>estritamente maiores</b> que <code>limite</code>.</p>
+<pre>class Vetor
+{ private:
+    int* dados;
+    int  tamanho;
+  public:
+    Vetor ( int n );
+    ~Vetor ( );
+    void atribuir ( int indice, int valor );
+    int  obter ( int indice );
+    int  tamanhoDe ( );
+    int  contarMaioresQue ( int limite );   // implementar
+};</pre>
+    <p class="restr"><b>Restrição:</b> usar <code>for</code> como repetição padrão; tratar erro com <code>if/else</code> e mensagem descritiva quando o objeto não tiver elementos.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">dados = {3, 8, 1, 9, 4}, limite = 4  →  retorno = 2</span></div>
+  </div>
+
+  <!-- Q39 -->
+  <div class="q">
+    <div class="head">39.) Questão</div>
+    <p class="stem">Dada a estrutura para registrar produtos, definir uma função que receba um <b>apontador</b> para o primeiro elemento de um arranjo de <code>s_Produto</code>, a quantidade de produtos, e retorne o <code>codigo</code> do produto <b>mais caro</b>. Em caso de empate, retornar o de menor índice.</p>
+<pre>struct s_Produto { int codigo; double preco; };</pre>
+    <p class="restr"><b>Restrição:</b> usar aritmética de apontadores (ex.: <code>(v+i)-&gt;preco</code>); usar pelo menos uma repetição com <code>while</code>.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">{ {10, 9.90}, {20, 15.00}, {30, 15.00}, {40, 7.50} }  →  retorno = 20</span></div>
+  </div>
+
+  <!-- Q40 -->
+  <div class="q">
+    <div class="head">40.) Questão</div>
+    <p class="stem">Definir um procedimento que receba a dimensão <code>n</code> (n &gt; 0) de uma matriz quadrada e grave no arquivo (MATRIZ.TXT) o padrão <b>triangular superior (incluindo a diagonal)</b> preenchido com o número da linha (começando em 1); as demais posições recebem 0.</p>
+    <p class="restr"><b>Restrição:</b> usar pelo menos uma repetição com <code>while</code> decrescente.</p>
+    <div class="ex"><b>Exemplo</b> (n = 4) — conteúdo de MATRIZ.TXT:
+      <pre style="margin-top:5px;border-left-color:var(--steam);">1 1 1 1
+0 2 2 2
+0 0 3 3
+0 0 0 4</pre>
+    </div>
+  </div>
+
+  <!-- =========================================================================== -->
+  <!-- ============================== PROVA 3 ==================================== -->
+  <!-- =========================================================================== -->
+  <div class="prova">
+    <div class="ey">Verificação 03</div>
+    <h2>Prova 3 — Orientação a Objetos &amp; Estruturas Encadeadas</h2>
+    <p>Classes e encapsulamento, construtores e <code>static</code>, herança e polimorfismo, sobrecarga × sobrescrita, templates (genéricos), tratamento de erros com a classe <code>Erro</code> e exceções, pilha (LIFO) e fila (FIFO) com apontadores. Código em C++.</p>
+  </div>
+
+  <div class="part">
+    <h3>Parte I — Questões fechadas</h3>
+    <div class="note">14 questões · valor 1,0 cada · faça o teste de mesa do código antes de marcar.</div>
+  </div>
+
+  <!-- Q41 -->
+  <div class="q">
+    <div class="head">41.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Contador
+{ private: int n;
+  public:  Contador ( ) { n = 0; }
+           void inc ( ) { n = n + 1; }
+           int  get ( ) { return ( n ); }
+};</pre>
+<pre class="call">Contador c;
+c.inc ( );  c.inc ( );  c.inc ( );
+cout &lt;&lt; c.get ( );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>0</code></li>
+      <li><span class="box">[ ]</span>b.) <code>3</code></li>
+      <li><span class="box">[ ]</span>c.) <code>1</code></li>
+      <li><span class="box">[ ]</span>d.) erro de compilação</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q42 -->
+  <div class="q">
+    <div class="head">42.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Ponto
+{ public: static int total;
+          Ponto ( ) { total = total + 1; }
+};
+int Ponto::total = 0;</pre>
+<pre class="call">Ponto a, b, c;
+cout &lt;&lt; Ponto::total;</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>3</code></li>
+      <li><span class="box">[ ]</span>b.) <code>1</code></li>
+      <li><span class="box">[ ]</span>c.) <code>0</code></li>
+      <li><span class="box">[ ]</span>d.) valor indefinido</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q43 -->
+  <div class="q">
+    <div class="head">43.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Conta
+{ private: int saldo;
+  public:  Conta ( ) { saldo = 0; }
+           void depositar ( int v ) { if ( v &gt; 0 ) { saldo = saldo + v; } }
+           int  getSaldo ( ) { return ( saldo ); }
+};</pre>
+<pre class="call">Conta c;
+c.depositar ( 50 );
+c.depositar ( -30 );
+c.depositar ( 20 );
+cout &lt;&lt; c.getSaldo ( );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>40</code></li>
+      <li><span class="box">[ ]</span>b.) <code>70</code></li>
+      <li><span class="box">[ ]</span>c.) <code>100</code></li>
+      <li><span class="box">[ ]</span>d.) <code>50</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q44 -->
+  <div class="q">
+    <div class="head">44.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Animal
+{ protected: string nome;
+  public: Animal ( string n ) { nome = n; }
+          string getNome ( ) { return ( nome ); }
+};
+class Cachorro : public Animal
+{ public: Cachorro ( string n ) : Animal ( n ) { }
+          string som ( ) { return ( nome + " faz au" ); }
+};</pre>
+<pre class="call">Cachorro d ( "Rex" );
+cout &lt;&lt; d.som ( );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>faz au</code></li>
+      <li><span class="box">[ ]</span>b.) <code>Rex</code></li>
+      <li><span class="box">[ ]</span>c.) <code>Rex faz au</code></li>
+      <li><span class="box">[ ]</span>d.) erro de compilação</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q45 -->
+  <div class="q">
+    <div class="head">45.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Forma
+{ public: virtual int area ( ) { return ( 0 ); }
+};
+class Quadrado : public Forma
+{ private: int l;
+  public:  Quadrado ( int x ) { l = x; }
+           int area ( ) { return ( l * l ); }
+};</pre>
+<pre class="call">Forma* f = new Quadrado ( 5 );
+cout &lt;&lt; f-&gt;area ( );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>0</code></li>
+      <li><span class="box">[ ]</span>b.) <code>5</code></li>
+      <li><span class="box">[ ]</span>c.) <code>25</code></li>
+      <li><span class="box">[ ]</span>d.) <code>10</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q46 -->
+  <div class="q">
+    <div class="head">46.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Calc
+{ public: int    soma ( int a, int b )       { return ( a + b ); }
+          double soma ( double a, double b ) { return ( a + b ); }
+};</pre>
+<pre class="call">Calc c;
+cout &lt;&lt; c.soma ( 3, 4 ) &lt;&lt; " " &lt;&lt; c.soma ( 1.5, 2.0 );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>7 3</code></li>
+      <li><span class="box">[ ]</span>b.) <code>7 3.5</code></li>
+      <li><span class="box">[ ]</span>c.) <code>3.5 3.5</code></li>
+      <li><span class="box">[ ]</span>d.) erro (nomes iguais)</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q47 -->
+  <div class="q">
+    <div class="head">47.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Animal { public: virtual string falar ( ) { return ( "..." ); } };
+class Gato : public Animal { public: string falar ( ) { return ( "miau" ); } };
+class Cao  : public Animal { public: string falar ( ) { return ( "au" ); } };</pre>
+<pre class="call">Animal* a[2];
+a[0] = new Gato ( );
+a[1] = new Cao ( );
+for ( int i = 0; i &lt; 2; i = i + 1 )
+{ cout &lt;&lt; a[i]-&gt;falar ( ) &lt;&lt; " "; }</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>miau au</code></li>
+      <li><span class="box">[ ]</span>b.) <code>... ...</code></li>
+      <li><span class="box">[ ]</span>c.) <code>au miau</code></li>
+      <li><span class="box">[ ]</span>d.) erro de compilação</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q48 -->
+  <div class="q">
+    <div class="head">48.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>template &lt;typename T&gt;
+class Caixa
+{ private: T v;
+  public:  void set ( T x ) { v = x; }
+           T    get ( )      { return ( v ); }
+};</pre>
+<pre class="call">Caixa&lt;int&gt; c;
+c.set ( 42 );
+cout &lt;&lt; c.get ( );</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>0</code></li>
+      <li><span class="box">[ ]</span>b.) <code>42</code></li>
+      <li><span class="box">[ ]</span>c.) erro (falta o tipo)</li>
+      <li><span class="box">[ ]</span>d.) <code>T</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q49 -->
+  <div class="q">
+    <div class="head">49.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>int dividir ( int a, int b )
+{ if ( b == 0 ) { throw 1; }
+  return ( a / b );
+}</pre>
+<pre class="call">try   { cout &lt;&lt; dividir ( 10, 0 ); }
+catch ( int e ) { cout &lt;&lt; "erro " &lt;&lt; e; }</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>0</code></li>
+      <li><span class="box">[ ]</span>b.) <code>erro 1</code></li>
+      <li><span class="box">[ ]</span>c.) encerra sem imprimir</li>
+      <li><span class="box">[ ]</span>d.) <code>10</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q50 -->
+  <div class="q">
+    <div class="head">50.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Erro
+{ private: int cod;
+  public:  Erro ( int c ) { cod = c; }
+           int getCod ( ) { return ( cod ); }
+};
+int f ( int x )
+{ if ( x &lt; 0 ) { throw Erro ( 2 ); }
+  return ( x * 2 );
+}</pre>
+<pre class="call">try   { cout &lt;&lt; f ( -5 ); }
+catch ( Erro&amp; e ) { cout &lt;&lt; "E" &lt;&lt; e.getCod ( ); }</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>-10</code></li>
+      <li><span class="box">[ ]</span>b.) <code>E0</code></li>
+      <li><span class="box">[ ]</span>c.) <code>E2</code></li>
+      <li><span class="box">[ ]</span>d.) crash (sem catch)</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q51 -->
+  <div class="q">
+    <div class="head">51.) Questão</div>
+    <p class="stem">Uma pilha <b>LIFO</b> encadeada, inicialmente vazia, sofre as operações abaixo. Ao final, desempilha-se tudo, imprimindo cada valor. Qual a saída?</p>
+<pre class="call">push ( 1 );  push ( 2 );  push ( 3 );
+pop ( );
+push ( 4 );
+// desempilha e imprime ate esvaziar</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>1 2 4</code></li>
+      <li><span class="box">[ ]</span>b.) <code>4 2 1</code></li>
+      <li><span class="box">[ ]</span>c.) <code>4 3 2 1</code></li>
+      <li><span class="box">[ ]</span>d.) <code>3 2 1</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q52 -->
+  <div class="q">
+    <div class="head">52.) Questão</div>
+    <p class="stem">Uma fila <b>FIFO</b> encadeada, inicialmente vazia, sofre as operações abaixo. Ao final, remove-se tudo, imprimindo cada valor. Qual a saída?</p>
+<pre class="call">enqueue ( 1 );  enqueue ( 2 );  enqueue ( 3 );
+dequeue ( );
+enqueue ( 4 );
+// remove e imprime ate esvaziar</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>4 3 2</code></li>
+      <li><span class="box">[ ]</span>b.) <code>2 3 4</code></li>
+      <li><span class="box">[ ]</span>c.) <code>1 2 3 4</code></li>
+      <li><span class="box">[ ]</span>d.) <code>2 3</code></li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q53 -->
+  <div class="q">
+    <div class="head">53.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class P { public: int v; P ( int x ) { v = x; } };</pre>
+<pre class="call">P* a = new P ( 5 );
+P* b = a;          // b recebe o endereco de a
+b-&gt;v = 9;
+cout &lt;&lt; a-&gt;v;</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>5</code></li>
+      <li><span class="box">[ ]</span>b.) <code>9</code></li>
+      <li><span class="box">[ ]</span>c.) <code>0</code></li>
+      <li><span class="box">[ ]</span>d.) erro de compilação</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <!-- Q54 -->
+  <div class="q">
+    <div class="head">54.) Questão</div>
+    <p class="stem">Qual a saída esperada?</p>
+<pre>class Cel { public: int v; Cel* prox;
+            Cel ( int x ) { v = x; prox = nullptr; } };</pre>
+<pre class="call">Cel* a = new Cel ( 1 );
+a-&gt;prox = new Cel ( 2 );
+a-&gt;prox-&gt;prox = new Cel ( 3 );
+int c = 0;  Cel* p = a;
+while ( p != nullptr ) { c = c + 1; p = p-&gt;prox; }
+cout &lt;&lt; c;</pre>
+    <ul class="opts twocol">
+      <li><span class="box">[ ]</span>a.) <code>2</code></li>
+      <li><span class="box">[ ]</span>b.) <code>3</code></li>
+      <li><span class="box">[ ]</span>c.) <code>0</code></li>
+      <li><span class="box">[ ]</span>d.) laço infinito</li>
+      <li><span class="box">[ ]</span>e.) OUTRA (JUSTIFICATIVA)</li>
+    </ul>
+  </div>
+
+  <div class="part">
+    <h3>Parte II — Questões abertas</h3>
+    <div class="note">6 questões · escreva o código completo em C++ respeitando o estilo do curso.</div>
+  </div>
+
+  <!-- Q55 -->
+  <div class="q">
+    <div class="head">55.) Questão</div>
+    <p class="stem">Definir a classe <code>Fracao</code> com atributos privados <code>numerador</code> e <code>denominador</code>, um <b>construtor padrão</b> (0/1), um <b>construtor parametrizado</b> que <b>valide</b> o denominador (se for 0, usar 1), e um método <code>to_string</code> que devolva a fração no formato <code>"n/d"</code>.</p>
+    <p class="restr"><b>Restrição:</b> atributos <code>private</code>; validação com <code>if/else</code>.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">Fracao(3,4).to_string() → "3/4"&nbsp;&nbsp;·&nbsp;&nbsp;Fracao(1,0) → denominador vira 1</span></div>
+  </div>
+
+  <!-- Q56 -->
+  <div class="q">
+    <div class="head">56.) Questão</div>
+    <p class="stem">Dada a superclasse abaixo, definir a subclasse <code>Gato</code> que herde de <code>Animal</code>, chame o construtor da superclasse com <code>nome</code> e <b>sobrescreva</b> o método <code>falar</code> para devolver <code>"miau"</code>.</p>
+<pre>class Animal
+{ protected: string nome;
+  public:  Animal ( string n ) { nome = n; }
+           virtual string falar ( ) { return ( "..." ); }
+};</pre>
+    <p class="restr"><b>Restrição:</b> usar <code>: public Animal</code> e <code>Animal(nome)</code> na lista de inicialização.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">Gato g("Mimi"); g.falar() → "miau"</span></div>
+  </div>
+
+  <!-- Q57 -->
+  <div class="q">
+    <div class="head">57.) Questão</div>
+    <p class="stem">Na classe <code>Vetor</code> (que encapsula <code>int* dados</code> e <code>int tamanho</code>), implementar o método <code>int maior ( )</code> que retorne o maior elemento do vetor. Se o vetor estiver <b>vazio</b>, <b>lançar</b> uma exceção da classe <code>Erro</code>.</p>
+    <p class="restr"><b>Restrição:</b> inicializar a referência com o <b>primeiro elemento válido</b>; usar <code>for</code>; tratar o vazio com <code>throw Erro(...)</code>.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">dados = {3, 8, 1, 9, 4} → 9&nbsp;&nbsp;·&nbsp;&nbsp;vetor vazio → lança Erro</span></div>
+  </div>
+
+  <!-- Q58 -->
+  <div class="q">
+    <div class="head">58.) Questão</div>
+    <p class="stem">Definir uma função <code>int obter ( int v[], int n, int i )</code> que retorne <code>v[i]</code>, mas <b>lance</b> um <code>Erro</code> se o índice <code>i</code> for inválido (fora de <code>0..n-1</code>). Mostrar também um <b>trecho de teste</b> com <code>try/catch</code> que trate esse erro imprimindo o código.</p>
+    <p class="restr"><b>Restrição:</b> validar o índice com <code>if/else</code>; capturar com <code>catch ( Erro&amp; e )</code>.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">obter(v,5,9) → lança Erro; o catch imprime o código</span></div>
+  </div>
+
+  <!-- Q59 -->
+  <div class="q">
+    <div class="head">59.) Questão</div>
+    <p class="stem">Considerando uma célula <code>IntCell</code> (valor + apontador <code>proxima</code>), implementar os métodos <code>push</code> e <code>pop</code> de uma <b>pilha encadeada</b> <code>IntStack</code> (atributo <code>topo</code>). O <code>pop</code> deve <b>lançar</b> um <code>Erro</code> se a pilha estiver vazia e liberar a célula removida.</p>
+    <p class="restr"><b>Restrição:</b> inserir/remover sempre no topo (LIFO); usar <code>new</code>/<code>delete</code>; sem <code>break</code>.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">push(1);push(2);pop() → devolve 2, topo volta para 1</span></div>
+  </div>
+
+  <!-- Q60 -->
+  <div class="q">
+    <div class="head">60.) Questão</div>
+    <p class="stem">Considerando a mesma célula <code>IntCell</code>, implementar os métodos <code>enqueue</code> e <code>dequeue</code> de uma <b>fila encadeada</b> <code>IntQueue</code> (atributos <code>inicio</code> e <code>fim</code>). O <code>dequeue</code> deve <b>lançar</b> um <code>Erro</code> se a fila estiver vazia e ajustar <code>fim</code> quando a fila ficar vazia.</p>
+    <p class="restr"><b>Restrição:</b> inserir no fim e remover do início (FIFO); usar <code>new</code>/<code>delete</code>; sem <code>break</code>.</p>
+    <div class="ex"><b>Exemplo:</b> <span class="mono">enqueue(1);enqueue(2);dequeue() → devolve 1, início vai para 2</span></div>
+  </div>
+
+  <!-- =========================================================================== -->
+  <!-- ============================== GABARITO =================================== -->
+  <!-- =========================================================================== -->
+  <div class="pagebreak gab">
+    <h2>Gabarito comentado</h2>
+
+    <!-- ---------------- PROVA 1 ---------------- -->
+    <h3>Prova 1 — Parte I (fechadas)</h3>
+    <table class="keytable">
+      <tr><td class="qn">01</td><td class="ans">b</td><td class="why"><code>17/5=3</code>, <code>17%5=2</code>, <code>2*2=4</code> (multiplicação antes da soma) → <code>3+4 = 7</code>.</td></tr>
+      <tr><td class="qn">02</td><td class="ans">c</td><td class="why"><code>9%2≠0</code>; <code>9%3==0</code> → <code>r = 9*2 = 18</code>.</td></tr>
+      <tr><td class="qn">03</td><td class="ans">b</td><td class="why">Ímpares subtraem, pares somam: <code>-1+2-3+4-5 = -3</code>.</td></tr>
+      <tr><td class="qn">04</td><td class="ans">a</td><td class="why">Soma dos dígitos de 4092: <code>2+9+0+4 = 15</code>.</td></tr>
+      <tr><td class="qn">05</td><td class="ans">c</td><td class="why">Laço triangular: <code>4+3+2+1 = 10</code> iterações.</td></tr>
+      <tr><td class="qn">06</td><td class="ans">d</td><td class="why">Soma recursiva <code>1..5 = 15</code>.</td></tr>
+      <tr><td class="qn">07</td><td class="ans">a</td><td class="why">Potência recursiva <code>3^4 = 81</code>.</td></tr>
+      <tr><td class="qn">08</td><td class="ans">b</td><td class="why">Imprime <b>antes</b> da chamada → ordem decrescente: <code>3 2 1</code>.</td></tr>
+      <tr><td class="qn">09</td><td class="ans">b</td><td class="why">Imprime <b>depois</b> da chamada → ordem crescente: <code>1 2 3</code>.</td></tr>
+      <tr><td class="qn">10</td><td class="ans">b</td><td class="why">Passagem por <b>valor</b>: o parâmetro é cópia; <code>x</code> permanece <code>5</code>.</td></tr>
+      <tr><td class="qn">11</td><td class="ans">a</td><td class="why">Passagem por <b>referência</b> (apontador): <code>*a</code> dobra o original → <code>10</code>.</td></tr>
+      <tr><td class="qn">12</td><td class="ans">b</td><td class="why">A troca via apontadores afeta o chamador: <code>8 3</code>.</td></tr>
+      <tr><td class="qn">13</td><td class="ans">b</td><td class="why">Fibonacci: após 6 iterações <code>a = 8</code> (0,1,1,2,3,5,<b>8</b>).</td></tr>
+      <tr><td class="qn">14</td><td class="ans">c</td><td class="why">Euclides: <code>gcd(48,36)=gcd(36,12)=gcd(12,0)=12</code>.</td></tr>
+    </table>
+
+    <h3>Prova 1 — Parte II (resoluções de referência)</h3>
+
+    <div class="sol">
+      <div class="lbl">15.) Soma dos n primeiros pares positivos</div>
+<pre>int somaPares ( int n )
+{ int soma = 0, i;
+  for ( i = 1; i &lt;= n; i = i + 1 )
+  { soma = soma + 2 * i; }
+  return ( soma );
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">16.) Quantidade de dígitos (recursiva)</div>
+<pre>int qtdDigitos ( int n )
+{ int result;
+  if ( n &lt; 10 ) { result = 1; }
+  else          { result = 1 + qtdDigitos ( n / 10 ); }
+  return ( result );
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">17.) Maior no primeiro, menor no segundo (por referência)</div>
+<pre>void ordenar ( int* a, int* b )
+{ int t;
+  if ( *a &lt; *b )
+  { t = *a;  *a = *b;  *b = t; }
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">18.) Potência recursiva</div>
+<pre>int potencia ( int base, int expoente )
+{ int result;
+  if ( expoente == 0 ) { result = 1; }
+  else                 { result = base * potencia ( base, expoente - 1 ); }
+  return ( result );
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">19.) Função lógica: é primo? (while)</div>
+<pre>bool ehPrimo ( int n )
+{ bool result = true;
+  int  i = 2;
+  if ( n &lt; 2 ) { result = false; }
+  else
+  { while ( i &lt; n &amp;&amp; result )        // para por condicao logica
+    { if ( n % i == 0 ) { result = false; }
+      i = i + 1; }
+  }
+  return ( result );
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">20.) Mostrar n termos de Fibonacci (for)</div>
+<pre>void fibonacci ( int n )
+{ int a = 0, b = 1, t, i;
+  for ( i = 0; i &lt; n; i = i + 1 )
+  { printf ( "%d ", a );
+    t = a + b;  a = b;  b = t; }
+}</pre>
+    </div>
+
+    <!-- ---------------- PROVA 2 ---------------- -->
+    <h3>Prova 2 — Parte I (fechadas)</h3>
+    <table class="keytable">
+      <tr><td class="qn">21</td><td class="ans">b</td><td class="why"><code>f_21(1,3)</code> troca <code>a↔t</code> → <code>"mtrae"</code>; depois <code>f_21(0,4)</code> troca <code>m↔e</code> → <code>"etram"</code>.</td></tr>
+      <tr><td class="qn">22</td><td class="ans">a</td><td class="why">Rotação à esquerda do trecho [2..6]: <code>a[2]</code> sai (vale 8), os demais deslizam, e 8 volta em <code>a[6]</code>.</td></tr>
+      <tr><td class="qn">23</td><td class="ans">a</td><td class="why">Soma a borda da matriz. Em 3×3 só o centro (<code>5</code>) fica de fora: <code>45 − 5 = 40</code>.</td></tr>
+      <tr><td class="qn">24</td><td class="ans">a</td><td class="why">Soma recursiva apenas dos pares: <code>4 + 2 + 6 = 12</code>.</td></tr>
+      <tr><td class="qn">25</td><td class="ans">b</td><td class="why">Conta posições alinhadas iguais entre <code>"casa"</code> e <code>"caza"</code>: <code>c, a, _, a</code> → 3.</td></tr>
+      <tr><td class="qn">26</td><td class="ans">a</td><td class="why">Subtrai 5 de <code>x</code> enquanto <code>x&gt;5</code>: 17→12→7→2 (equivale a <code>17 % 5</code>). <code>y</code> não muda.</td></tr>
+      <tr><td class="qn">27</td><td class="ans">a</td><td class="why">Três comparações ordenam os campos em ordem crescente: <code>2 4 5</code>.</td></tr>
+      <tr><td class="qn">28</td><td class="ans">a</td><td class="why">Maior <code>qtd</code> é 7; a comparação é <b>estrita</b> (<code>&gt;</code>), então mantém o primeiro a atingi-la (índice 1, <code>cod 20</code>).</td></tr>
+      <tr><td class="qn">29</td><td class="ans">a</td><td class="why"><code>*(r+y)=*(s+x-1-y)</code> copia <code>s</code> de trás para frente → <code>"edcba"</code>.</td></tr>
+      <tr><td class="qn">30</td><td class="ans">a</td><td class="why"><code>r[0]</code> já recebeu <code>c</code>; <code>*(r+y+1)=*(s+y)</code> desloca <code>s</code> uma casa → <code>"xabc"</code>.</td></tr>
+      <tr><td class="qn">31</td><td class="ans">b</td><td class="why">Conta vizinhos iguais; em <code>"sucesso"</code> só há o par <code>"ss"</code> → 1.</td></tr>
+      <tr><td class="qn">32</td><td class="ans">a</td><td class="why">Copia <code>a[2..5] = {7,6,5,4}</code> para <code>b</code> e retorna a contagem 4.</td></tr>
+      <tr><td class="qn">33</td><td class="ans">a</td><td class="why"><code>75s → 1m 15s</code>; <code>66m → 1h 06m</code>; <code>1+2+1 = 4h</code> → <code>04:06:15</code>.</td></tr>
+      <tr><td class="qn">34</td><td class="ans">a</td><td class="why">Triangular inferior (+diagonal), valor <code>(linha+1)·10 + (col+1)</code>; fora dela, 0.</td></tr>
+    </table>
+
+    <h3>Prova 2 — Parte II (resoluções de referência)</h3>
+
+    <div class="sol">
+      <div class="lbl">35.) Soma de tempos sem excessos</div>
+<pre>struct s_Tempo soma ( struct s_Tempo a, struct s_Tempo b )
+{ struct s_Tempo r;
+  r.s = a.s + b.s;
+  r.m = a.m + b.m + r.s / 60;
+  r.s = r.s % 60;
+  r.h = a.h + b.h + r.m / 60;
+  r.m = r.m % 60;
+  return ( r );
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">36.) Reorganizar DADOS.TXT (negativos antes) — leitura única</div>
+<pre>void reorganizar ( )
+{ FILE* entrada = fopen ( "DADOS.TXT", "r" );
+  FILE* saida   = fopen ( "SAIDA.TXT",  "w" );
+  if ( entrada == NULL || saida == NULL )
+  { printf ( "Erro ao abrir arquivo.\n" ); }
+  else
+  { int n, i;
+    fscanf ( entrada, "%d", &amp;n );
+    int* v = (int*) calloc ( n, sizeof(int) );
+    i = 0;
+    while ( i &lt; n )                 // unica leitura do arranjo
+    { fscanf ( entrada, "%d", &amp;v[i] );  i++; }
+    fclose ( entrada );
+    for ( i = 0; i &lt; n; i++ )            // negativos primeiro
+    { if ( v[i] &lt; 0 )  { fprintf ( saida, "%d ", v[i] ); } }
+    for ( i = 0; i &lt; n; i++ )            // depois os nao-negativos
+    { if ( v[i] &gt;= 0 ) { fprintf ( saida, "%d ", v[i] ); } }
+    free ( v );
+    fclose ( saida );
+  }
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">37.) Função lógica (vizinhos somam zero) + teste lendo arquivo</div>
+<pre>bool temVizinhosSoma0 ( int n, int v[] )
+{ bool achou = false;
+  int i = 0;
+  while ( i &lt; n - 1 &amp;&amp; achou == false )   // parada por condicao logica
+  { if ( v[i] + v[i+1] == 0 ) { achou = true; }
+    i++; }
+  return ( achou );
+}
+
+void testar ( )
+{ FILE* arq = fopen ( "DADOS.TXT", "r" );
+  if ( arq == NULL )
+  { printf ( "Erro ao abrir arquivo.\n" ); }
+  else
+  { int n, i, v[20];
+    fscanf ( arq, "%d", &amp;n );
+    i = 0;
+    while ( i &lt; n )
+    { fscanf ( arq, "%d", &amp;v[i] );  i++; }
+    fclose ( arq );
+    if ( temVizinhosSoma0 ( n, v ) == true )
+    { printf ( "Resultado: true\n" ); }
+    else
+    { printf ( "Resultado: false\n" ); }
+  }
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">38.) Método da classe Vetor</div>
+<pre>int Vetor::contarMaioresQue ( int limite )
+{ int total = 0;
+  if ( tamanho &lt;= 0 )
+  { printf ( "Erro: vetor sem elementos.\n" ); }
+  else
+  { for ( int i = 0; i &lt; tamanho; i++ )
+    { if ( dados[i] &gt; limite ) { total++; } }
+  }
+  return ( total );
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">39.) Produto mais caro via apontador</div>
+<pre>int maisCaro ( struct s_Produto* v, int n )
+{ int indiceMax = 0;
+  int i = 1;
+  while ( i &lt; n )
+  { if ( (v+i)-&gt;preco &gt; (v+indiceMax)-&gt;preco )  // estrito → empate fica no 1o
+    { indiceMax = i; }
+    i++; }
+  return ( (v+indiceMax)-&gt;codigo );
+}</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">40.) Padrão triangular superior em MATRIZ.TXT (while decrescente)</div>
+<pre>void gravarPadrao ( int n )
+{ FILE* arq = fopen ( "MATRIZ.TXT", "w" );
+  if ( arq == NULL )
+  { printf ( "Erro ao abrir arquivo.\n" ); }
+  else
+  { int linha[64];
+    for ( int x = 0; x &lt; n; x++ )
+    { int y = n - 1;                       // while decrescente preenche a linha
+      while ( y &gt;= 0 )
+      { if ( y &gt;= x ) { linha[y] = x + 1; }
+        else          { linha[y] = 0; }
+        y--; }
+      for ( int c = 0; c &lt; n; c++ )         // grava da esquerda para a direita
+      { fprintf ( arq, "%d", linha[c] );
+        if ( c &lt; n - 1 ) { fprintf ( arq, " " ); } }
+      fprintf ( arq, "\n" );
+    }
+    fclose ( arq );
+  }
+}</pre>
+      <p>Observação: as casas com <code>y &gt;= x</code> recebem o número da linha e as demais recebem 0. O <code>while</code> decrescente preenche o vetor <code>linha</code> (de <code>n−1</code> até 0) e, em seguida, um <code>for</code> grava da esquerda para a direita. <b>Atenção:</b> gravar dentro do próprio <code>while</code> decrescente imprimiria a linha invertida.</p>
+    </div>
+
+    <!-- ---------------- PROVA 3 ---------------- -->
+    <h3>Prova 3 — Parte I (fechadas)</h3>
+    <table class="keytable">
+      <tr><td class="qn">41</td><td class="ans">b</td><td class="why">Três <code>inc()</code> sobre <code>n=0</code> → <code>3</code>.</td></tr>
+      <tr><td class="qn">42</td><td class="ans">a</td><td class="why"><code>total</code> é <b>static</b> (compartilhado); três construtores → <code>3</code>.</td></tr>
+      <tr><td class="qn">43</td><td class="ans">b</td><td class="why">O setter só aceita <code>v&gt;0</code>: <code>50</code> ok, <code>-30</code> ignorado, <code>+20</code> → <code>70</code>.</td></tr>
+      <tr><td class="qn">44</td><td class="ans">c</td><td class="why">A subclasse acessa <code>nome</code> (protected) herdado → <code>"Rex faz au"</code>.</td></tr>
+      <tr><td class="qn">45</td><td class="ans">c</td><td class="why">Método <b>virtual</b> resolvido em execução chama <code>Quadrado::area</code> → <code>5*5 = 25</code>.</td></tr>
+      <tr><td class="qn">46</td><td class="ans">b</td><td class="why"><b>Sobrecarga</b>: a versão <code>int</code> dá <code>7</code>, a <code>double</code> dá <code>3.5</code>.</td></tr>
+      <tr><td class="qn">47</td><td class="ans">a</td><td class="why"><b>Polimorfismo</b>: cada objeto responde do seu jeito → <code>"miau au"</code>.</td></tr>
+      <tr><td class="qn">48</td><td class="ans">b</td><td class="why"><code>Caixa&lt;int&gt;</code> instancia o template com <code>T=int</code>; <code>get()</code> → <code>42</code>.</td></tr>
+      <tr><td class="qn">49</td><td class="ans">b</td><td class="why"><code>b==0</code> lança <code>1</code>; o <code>catch(int)</code> imprime <code>"erro 1"</code>.</td></tr>
+      <tr><td class="qn">50</td><td class="ans">c</td><td class="why"><code>x&lt;0</code> lança <code>Erro(2)</code>; o <code>catch</code> imprime <code>"E" + getCod()</code> → <code>"E2"</code>.</td></tr>
+      <tr><td class="qn">51</td><td class="ans">b</td><td class="why">Pilha após <code>push 1,2,3</code> = topo 3→2→1; <code>pop</code> tira 3; <code>push 4</code> = 4→2→1; desempilha → <code>4 2 1</code>.</td></tr>
+      <tr><td class="qn">52</td><td class="ans">b</td><td class="why">Fila após <code>enqueue 1,2,3</code>; <code>dequeue</code> tira 1; <code>enqueue 4</code> = 2→3→4; remove tudo → <code>2 3 4</code>.</td></tr>
+      <tr><td class="qn">53</td><td class="ans">b</td><td class="why"><code>b = a</code> copia o <b>endereço</b> (alias); alterar <code>b-&gt;v</code> altera o mesmo objeto → <code>9</code>.</td></tr>
+      <tr><td class="qn">54</td><td class="ans">b</td><td class="why">Percorre 3 células ligadas até <code>nullptr</code> → <code>3</code>.</td></tr>
+    </table>
+
+    <h3>Prova 3 — Parte II (resoluções de referência)</h3>
+
+    <div class="sol">
+      <div class="lbl">55.) Classe Fracao (dois construtores + to_string)</div>
+<pre>class Fracao
+{ private:
+    int numerador;
+    int denominador;
+  public:
+    Fracao ( )
+    { numerador = 0;  denominador = 1; }        // end Fracao
+
+    Fracao ( int n, int d )
+    { numerador = n;
+      if ( d != 0 ) { denominador = d; }
+      else          { denominador = 1; }
+    }                                            // end Fracao
+
+    string to_string ( )
+    { return ( std::to_string ( numerador ) + "/" +
+               std::to_string ( denominador ) );
+    }                                            // end to_string
+};  // end class Fracao</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">56.) Subclasse Gato (herança + sobrescrita)</div>
+<pre>class Gato : public Animal
+{ public:
+    Gato ( string nome ) : Animal ( nome ) { }   // chama construtor da base
+
+    string falar ( )                             // sobrescreve
+    { return ( "miau" ); }
+};  // end class Gato</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">57.) Vetor::maior() com exceção quando vazio</div>
+<pre>int Vetor::maior ( )
+{ int result;
+  if ( tamanho &lt;= 0 )
+  { throw Erro ( 1 ); }                 // vetor vazio
+  else
+  { result = dados[0];                  // primeiro elemento valido
+    for ( int i = 1; i &lt; tamanho; i = i + 1 )
+    { if ( dados[i] &gt; result ) { result = dados[i]; } }
+  }
+  return ( result );
+}  // end maior</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">58.) obter() lança Erro + teste com try/catch</div>
+<pre>int obter ( int v[], int n, int i )
+{ int result = 0;
+  if ( i &lt; 0 || i &gt;= n )
+  { throw Erro ( 2 ); }                 // indice invalido
+  else
+  { result = v[i]; }
+  return ( result );
+}  // end obter
+
+// teste:
+try
+{ cout &lt;&lt; obter ( v, 5, 9 ); }
+catch ( Erro&amp; e )
+{ cout &lt;&lt; "Erro " &lt;&lt; e.getCod ( ); }</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">59.) Pilha encadeada: push e pop</div>
+<pre>void IntStack::push ( int v )
+{ IntCell* nova = new IntCell ( v );
+  nova-&gt;setProxima ( topo );           // aponta pro antigo topo
+  topo = nova;
+}  // end push
+
+int IntStack::pop ( )
+{ int result = 0;
+  if ( topo == nullptr )
+  { throw Erro ( 1 ); }                 // pilha vazia
+  else
+  { IntCell* aux = topo;
+    result = topo-&gt;getValor ( );
+    topo   = topo-&gt;getProxima ( );      // avanca o topo
+    delete aux;                         // libera a celula
+  }
+  return ( result );
+}  // end pop</pre>
+    </div>
+
+    <div class="sol">
+      <div class="lbl">60.) Fila encadeada: enqueue e dequeue</div>
+<pre>void IntQueue::enqueue ( int v )
+{ IntCell* nova = new IntCell ( v );
+  if ( inicio == nullptr )             // fila vazia
+  { inicio = nova;  fim = nova; }
+  else
+  { fim-&gt;setProxima ( nova );          // liga no fim
+    fim = nova; }
+}  // end enqueue
+
+int IntQueue::dequeue ( )
+{ int result = 0;
+  if ( inicio == nullptr )
+  { throw Erro ( 1 ); }                 // fila vazia
+  else
+  { IntCell* aux = inicio;
+    result = inicio-&gt;getValor ( );
+    inicio = inicio-&gt;getProxima ( );    // avanca o inicio
+    if ( inicio == nullptr ) { fim = nullptr; }   // ficou vazia
+    delete aux;
+  }
+  return ( result );
+}  // end dequeue</pre>
+    </div>
+
+    <footer>
+      Simulado geral de estudo — Verificações 01, 02 e 03. Questões adaptadas do formato do curso (abstrações de controle, abstrações de dados e orientação a objetos). Confira sempre os resultados com <code>gcc -Wall</code> (C) ou <code>g++ -Wall -Wextra</code> (C++).
+    </footer>
+  </div>
+
+</div>
+</body>
+</html>
