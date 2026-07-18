@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Integrais — Cálculo 2 (Stewart)</title>
+<style>
+  :root{
+    /* mesma paleta "café" do resumo de Java */
+    --ink:#0d0f14;          /* deep near-black, cooled */
+    --ink-2:#141821;
+    --panel:#161b26;
+    --panel-2:#1b2130;
+    --line:#28303f;
+    --line-soft:#212836;
+    --fg:#e7e9ee;
+    --fg-dim:#a5adbd;
+    --fg-faint:#6d7688;
+    --bean:#c98a4b;         /* roasted amber */
+    --bean-deep:#a9663a;
+    --crema:#e8c9a0;
+    --steam:#6fb4c9;        /* cool steam accent */
+    --leaf:#7fae5f;         /* island green, used sparingly */
+    --rose:#d98a9e;
+    --code-bg:#10141d;
+    --shadow:0 18px 50px -24px rgba(0,0,0,.7);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    --math:"Cambria Math",Cambria,"Times New Roman",Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--fg);-webkit-font-smoothing:antialiased}
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(900px 500px at 82% -8%, rgba(201,138,75,.10), transparent 60%),
+      radial-gradient(700px 500px at 5% 110%, rgba(111,180,201,.07), transparent 55%);
+  }
+  .wrap{position:relative;z-index:1;
+    max-width:860px;margin:0 auto;padding:48px 24px 96px;
+    font-family:var(--sans);color:var(--fg);
+    line-height:1.65;font-size:17px}
+  header.top{border-bottom:2px solid var(--line);padding-bottom:20px;margin-bottom:8px}
+  .eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--bean);font-weight:700}
+  h1{font-family:var(--serif);font-size:38px;line-height:1.1;margin:.25em 0 .1em;
+    text-wrap:balance;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--fg-dim);font-size:15px;margin-top:6px}
+  h2{font-family:var(--serif);font-size:26px;margin:56px 0 4px;letter-spacing:-.01em;
+    text-wrap:balance}
+  .band{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);
+    padding-bottom:8px;margin-bottom:20px;margin-top:56px}
+  .band h2{margin:0}
+  .band .tag{font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--fg-faint);font-weight:600;margin-left:auto;white-space:nowrap}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .num{font-family:var(--math);font-weight:700;color:var(--bean);font-size:15px;
+    background:var(--panel-2);border:1px solid rgba(201,138,75,.28);
+    border-radius:6px;padding:2px 9px;letter-spacing:.02em}
+  h3{font-family:var(--serif);font-size:20px;margin:0;font-weight:700}
+  .lead{color:var(--fg-dim);font-size:15px;margin:2px 0 14px}
+  h4{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-faint);
+    margin:18px 0 6px;font-weight:700}
+  p{margin:8px 0}
+  ul,ol{margin:8px 0;padding-left:22px}
+  li{margin:5px 0}
+  li::marker{color:var(--bean)}
+  b,strong{color:#fff;font-weight:650}
+  .m{font-family:var(--math);font-style:italic}
+  code.m{font-style:normal}
+  .eq{font-family:var(--math);background:var(--code-bg);border-radius:10px;
+    padding:12px 16px;margin:10px 0;font-size:18px;overflow-x:auto;
+    border:1px solid var(--line);white-space:nowrap;color:var(--crema)}
+  .eq.big{font-size:20px;text-align:center}
+  .eq::-webkit-scrollbar{height:8px}
+  .eq::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;
+    text-align:center;margin:0 .18em}
+  .frac > span:first-child{border-bottom:1.4px solid currentColor;padding:0 .35em}
+  .frac > span:last-child{padding:0 .35em}
+  .callout{border-left:3px solid var(--bean);
+    background:linear-gradient(90deg,rgba(201,138,75,.09),transparent);
+    border-radius:0 10px 10px 0;padding:12px 16px;margin:14px 0;font-size:15.5px;
+    color:var(--crema)}
+  .callout.blue{border-left-color:var(--steam);
+    background:linear-gradient(90deg,rgba(111,180,201,.10),transparent);
+    color:#c5e0e9}
+  .callout.green{border-left-color:var(--leaf);
+    background:linear-gradient(90deg,rgba(127,174,95,.10),transparent);
+    color:#cfe3bd}
+  .callout b{color:#fff}
+  .callout .m{color:inherit}
+  .tip{font-size:14.5px;color:var(--fg-dim)}
+  .tip b{color:var(--fg)}
+  table.ig{width:100%;border-collapse:collapse;margin:12px 0;font-family:var(--math);
+    font-size:16px;overflow-x:auto;display:block}
+  table.ig td{border-bottom:1px solid var(--line-soft);padding:7px 10px;white-space:nowrap}
+  table.ig td:first-child{color:var(--fg-dim)}
+  table.ig tr:hover td{background:rgba(255,255,255,.018)}
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px 22px;margin:24px 0 8px;box-shadow:var(--shadow)}
+  .toc h4{margin-top:0}
+  .toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px}
+  .toc a{color:var(--fg-dim);text-decoration:none;font-size:14.5px;
+    display:flex;gap:8px;padding:3px 0;border-bottom:1px dotted transparent;
+    transition:color .15s}
+  .toc a:hover{color:var(--bean);border-bottom-color:var(--line)}
+  .toc a .c{font-family:var(--math);color:var(--bean);font-weight:700;min-width:34px}
+  a{color:var(--bean)}
+  ::selection{background:rgba(201,138,75,.32);color:#fff}
+  .foot{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);
+    color:var(--fg-faint);font-size:13.5px}
+  .foot b{color:var(--crema);font-weight:600}
+  @media (max-width:620px){
+    .wrap{padding:32px 16px 72px;font-size:16px}
+    h1{font-size:30px}.toc-grid{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Cálculo 2 · Stewart, 9ª ed. · Volume 1</div>
+  <h1>Guia de Integrais</h1>
+  <div class="sub">Resumo da matéria organizado exatamente na ordem das seções da sua lista de exercícios — dos conceitos e fórmulas ao método de resolução de cada tipo de questão. Seções <b>4.9 → 8.5</b>.</div>
+</header>
+
+<div class="toc">
+  <h4>Índice</h4>
+  <div class="toc-grid">
+    <a href="#s49"><span class="c">4.9</span> Primitivas</a>
+    <a href="#s74"><span class="c">7.4</span> Frações Parciais</a>
+    <a href="#s51"><span class="c">5.1</span> Áreas e distâncias</a>
+    <a href="#s78"><span class="c">7.8</span> Integrais impróprias</a>
+    <a href="#s52"><span class="c">5.2</span> A integral definida</a>
+    <a href="#s61"><span class="c">6.1</span> Áreas entre curvas</a>
+    <a href="#s53"><span class="c">5.3</span> Teorema Fundamental</a>
+    <a href="#s62"><span class="c">6.2</span> Volumes (discos/anéis)</a>
+    <a href="#s54"><span class="c">5.4</span> Integrais indef. / Variação</a>
+    <a href="#s63"><span class="c">6.3</span> Volumes (cascas)</a>
+    <a href="#s55"><span class="c">5.5</span> Regra da substituição</a>
+    <a href="#s64"><span class="c">6.4</span> Trabalho</a>
+    <a href="#s71"><span class="c">7.1</span> Integração por partes</a>
+    <a href="#s65"><span class="c">6.5</span> Valor médio</a>
+    <a href="#s72"><span class="c">7.2</span> Integrais trigonométricas</a>
+    <a href="#s81"><span class="c">8.1</span> Comprimento de arco</a>
+    <a href="#s73"><span class="c">7.3</span> Substituição trigon.</a>
+    <a href="#s82"><span class="c">8.2</span> Área de superfície</a>
+    <a href="#riemann"><span class="c">★</span> Modelagem por Riemann</a>
+    <a href="#s85"><span class="c">8.5</span> Probabilidade</a>
+  </div>
+</div>
+
+<!-- ============ BLOCO 1 ============ -->
+<div class="band"><h2>Bloco 1 — A integral e cálculo de áreas/volumes</h2><span class="tag">4.9 – 6.3</span></div>
+
+<section class="card" id="s49">
+  <div class="sec-head"><span class="num">4.9</span><h3>Primitivas (antiderivadas)</h3></div>
+  <p class="lead"><span class="m">F</span> é primitiva de <span class="m">f</span> se <span class="m">F′ = f</span>. A primitiva geral é <span class="m">F(x) + C</span>.</p>
+
+  <h4>Tabela básica</h4>
+  <table class="ig">
+    <tr><td>∫ x<sup>n</sup> dx</td><td>= <span class="frac"><span>x<sup>n+1</sup></span><span>n+1</span></span> + C&nbsp;&nbsp;(n ≠ −1)</td></tr>
+    <tr><td>∫ (1/x) dx</td><td>= ln|x| + C</td></tr>
+    <tr><td>∫ e<sup>x</sup> dx</td><td>= e<sup>x</sup> + C</td></tr>
+    <tr><td>∫ sen x dx</td><td>= −cos x + C</td></tr>
+    <tr><td>∫ cos x dx</td><td>= sen x + C</td></tr>
+    <tr><td>∫ sec²x dx</td><td>= tg x + C</td></tr>
+    <tr><td>∫ 1/(1+x²) dx</td><td>= arctg x + C</td></tr>
+    <tr><td>∫ 1/√(1−x²) dx</td><td>= arcsen x + C</td></tr>
+  </table>
+
+  <h4>Como resolver</h4>
+  <ul>
+    <li>Some primitiva termo a termo; constantes saem para fora.</li>
+    <li><b>Problema de valor inicial</b> (dado <span class="m">F(x₀)=y₀</span>): ache a primitiva geral e use a condição para achar <span class="m">C</span>.</li>
+    <li>Movimento: <span class="m">a(t) → v(t) = ∫a dt → s(t) = ∫v dt</span>, achando cada <span class="m">C</span> pelas condições iniciais.</li>
+  </ul>
+  <div class="tip"><b>Cheque sempre</b> derivando o resultado: tem que voltar em <span class="m">f</span>.</div>
+</section>
+
+<section class="card" id="s51">
+  <div class="sec-head"><span class="num">5.1</span><h3>Os problemas de área e distância</h3></div>
+  <p class="lead">A área sob <span class="m">y=f(x)</span> é o limite de somas de retângulos.</p>
+  <div class="eq big">A = lim<sub>n→∞</sub> Σ<sub>i=1</sub><sup>n</sup> f(x<sub>i</sub>*) Δx,&nbsp;&nbsp; Δx = <span class="frac"><span>b−a</span><span>n</span></span></div>
+  <ul>
+    <li><span class="m">x<sub>i</sub></span> = <span class="m">a + iΔx</span>. Extremo direito: <span class="m">x<sub>i</sub>* = a + iΔx</span>; esquerdo: <span class="m">a + (i−1)Δx</span>.</li>
+    <li>Use as somas <span class="m">Σi = n(n+1)/2</span>, <span class="m">Σi² = n(n+1)(2n+1)/6</span>, <span class="m">Σi³ = [n(n+1)/2]²</span>.</li>
+    <li><b>Distância</b> = área sob o gráfico da velocidade (mesma soma, <span class="m">v(t)</span> no lugar de <span class="m">f</span>).</li>
+  </ul>
+  <div class="tip">Este é o coração da <b>modelagem por soma de Riemann</b> — veja o bloco ★ no fim.</div>
+</section>
+
+<section class="card" id="s52">
+  <div class="sec-head"><span class="num">5.2</span><h3>A integral definida</h3></div>
+  <div class="eq big">∫<sub>a</sub><sup>b</sup> f(x) dx = lim<sub>n→∞</sub> Σ<sub>i=1</sub><sup>n</sup> f(x<sub>i</sub>*) Δx</div>
+  <p>É a "área com sinal": positiva acima do eixo, negativa abaixo.</p>
+  <h4>Propriedades</h4>
+  <ul>
+    <li>∫<sub>a</sub><sup>b</sup> c dx = c(b−a); constantes e somas saem da integral.</li>
+    <li>∫<sub>a</sub><sup>b</sup> = ∫<sub>a</sub><sup>c</sup> + ∫<sub>c</sub><sup>b</sup>&nbsp;;&nbsp; ∫<sub>a</sub><sup>b</sup> = −∫<sub>b</sub><sup>a</sup>&nbsp;;&nbsp; ∫<sub>a</sub><sup>a</sup> = 0.</li>
+    <li>Se <span class="m">m ≤ f ≤ M</span>: <span class="m">m(b−a) ≤ ∫f ≤ M(b−a)</span>.</li>
+  </ul>
+  <div class="callout blue"><b>Ponto médio (Midpoint Rule)</b> para aproximar numericamente: use <span class="m">x̄<sub>i</sub> = (x<sub>i−1</sub>+x<sub>i</sub>)/2</span> no centro de cada subintervalo.</div>
+</section>
+
+<section class="card" id="s53">
+  <div class="sec-head"><span class="num">5.3</span><h3>O Teorema Fundamental do Cálculo (TFC)</h3></div>
+  <h4>Parte 1 — derivada de uma integral</h4>
+  <div class="eq">g(x) = ∫<sub>a</sub><sup>x</sup> f(t) dt&nbsp;&nbsp;⟹&nbsp;&nbsp; g′(x) = f(x)</div>
+  <p>Com limite variável composto, use a <b>regra da cadeia</b>:</p>
+  <div class="eq"><span class="frac"><span>d</span><span>dx</span></span> ∫<sub>a</sub><sup>u(x)</sup> f(t) dt = f(u(x))·u′(x)</div>
+  <p class="tip">Limite variável embaixo? Inverta o sinal. Ambos variáveis? Quebre em <span class="m">∫<sub>a</sub><sup>v</sup> − ∫<sub>a</sub><sup>u</sup></span>.</p>
+  <h4>Parte 2 — cálculo por primitiva</h4>
+  <div class="eq big">∫<sub>a</sub><sup>b</sup> f(x) dx = F(b) − F(a),&nbsp;&nbsp; onde F′ = f</div>
+</section>
+
+<section class="card" id="s54">
+  <div class="sec-head"><span class="num">5.4</span><h3>Integrais indefinidas e o Teorema da Variação Total</h3></div>
+  <p class="lead">Integral indefinida = família de primitivas: <span class="m">∫f(x)dx = F(x)+C</span>.</p>
+  <div class="callout green"><b>Teorema da Variação Total:</b> <span class="m">∫<sub>a</sub><sup>b</sup> F′(x) dx = F(b) − F(a)</span>. A integral de uma <i>taxa de variação</i> dá a <i>variação total</i>.</div>
+  <ul>
+    <li><span class="m">∫v(t)dt</span> = deslocamento (com sinal); <span class="m">∫|v(t)|dt</span> = distância percorrida.</li>
+    <li><span class="m">∫</span>(taxa de vazão) <span class="m">dt</span> = volume total; <span class="m">∫</span>(custo marginal) = variação de custo, etc.</li>
+  </ul>
+  <div class="tip"><b>Distância vs deslocamento:</b> ache onde <span class="m">v(t)=0</span>, quebre a integral e some os módulos.</div>
+</section>
+
+<section class="card" id="s55">
+  <div class="sec-head"><span class="num">5.5</span><h3>A regra da substituição</h3></div>
+  <p class="lead">Reverte a regra da cadeia. Escolha <span class="m">u</span> = "a função de dentro".</p>
+  <div class="eq">∫ f(g(x))·g′(x) dx = ∫ f(u) du,&nbsp;&nbsp; u = g(x), du = g′(x)dx</div>
+  <h4>Passo a passo</h4>
+  <ol>
+    <li>Escolha <span class="m">u</span>; calcule <span class="m">du</span> e isole o que precisar.</li>
+    <li>Reescreva <b>tudo</b> em <span class="m">u</span> (não pode sobrar <span class="m">x</span>).</li>
+    <li><b>Definida:</b> troque os limites — <span class="m">x=a→u=g(a)</span>, <span class="m">x=b→u=g(b)</span> (aí não precisa voltar pra x).</li>
+  </ol>
+  <div class="callout"><b>Simetria:</b> se <span class="m">f</span> é <b>par</b>, ∫<sub>−a</sub><sup>a</sup>f = 2∫<sub>0</sub><sup>a</sup>f. Se <b>ímpar</b>, ∫<sub>−a</sub><sup>a</sup>f = 0. Verifique antes de calcular — economiza tempo.</div>
+</section>
+
+<section class="card" id="s61">
+  <div class="sec-head"><span class="num">6.1</span><h3>Áreas entre curvas</h3></div>
+  <div class="eq big">A = ∫<sub>a</sub><sup>b</sup> [ f<sub>cima</sub>(x) − f<sub>baixo</sub>(x) ] dx</div>
+  <ul>
+    <li>Ache as interseções (resolva <span class="m">f=g</span>) → esses são os limites.</li>
+    <li>Se as curvas se cruzam no intervalo, quebre e some, sempre <b>(de cima − de baixo)</b>.</li>
+    <li><b>Integrar em y</b> às vezes é mais simples: <span class="m">A = ∫<sub>c</sub><sup>d</sup>[x<sub>dir</sub>(y) − x<sub>esq</sub>(y)]dy</span>.</li>
+  </ul>
+  <div class="tip"><b>Sempre faça um esboço</b> — decide quem é "de cima" e se precisa dividir a integral.</div>
+</section>
+
+<section class="card" id="s62">
+  <div class="sec-head"><span class="num">6.2</span><h3>Volumes — discos e anéis (washers)</h3></div>
+  <p class="lead">Fatie perpendicular ao eixo de rotação: <span class="m">V = ∫ A(x) dx</span>.</p>
+  <div class="eq">Disco:&nbsp; V = ∫<sub>a</sub><sup>b</sup> π[R(x)]² dx</div>
+  <div class="eq">Anel:&nbsp; V = ∫<sub>a</sub><sup>b</sup> π( [R<sub>ext</sub>]² − [R<sub>int</sub>]² ) dx</div>
+  <ul>
+    <li>Raio = distância da curva ao <b>eixo de rotação</b> (cuidado quando o eixo não é <span class="m">x=0</span> ou <span class="m">y=0</span>: ex. rodar em torno de <span class="m">y=2</span> → <span class="m">R = 2 − f(x)</span>).</li>
+    <li>Roda em torno de eixo <b>horizontal</b> → integre em <span class="m">x</span>; <b>vertical</b> → integre em <span class="m">y</span>.</li>
+    <li>Sólido de seção conhecida (não-rotação): <span class="m">V = ∫A(x)dx</span> com <span class="m">A</span> da figura (quadrado, triângulo…).</li>
+  </ul>
+</section>
+
+<section class="card" id="s63">
+  <div class="sec-head"><span class="num">6.3</span><h3>Volumes por cascas cilíndricas</h3></div>
+  <div class="eq big">V = ∫<sub>a</sub><sup>b</sup> 2π · (raio) · (altura) dx</div>
+  <ul>
+    <li><b>raio</b> = distância da fatia ao eixo; <b>altura</b> = a função (ou diferença de funções).</li>
+    <li>Casca é ideal quando você fatia <b>paralelo</b> ao eixo de rotação (o oposto de discos).</li>
+    <li>Rotação em torno do eixo <b>y</b> → casca costuma dar <span class="m">∫2πx·f(x)dx</span> (integra em x, sem inverter a função).</li>
+  </ul>
+  <div class="callout blue"><b>Casca × Anel:</b> os dois dão o mesmo volume. Escolha o que evita ter que inverter a função. Rodou em torno do eixo <i>y</i> e a função está em <span class="m">y=f(x)</span>? Casca é mais direta.</div>
+</section>
+
+<!-- ============ BLOCO 2 ============ -->
+<div class="band"><h2>Bloco 2 — Técnicas de integração e aplicações</h2><span class="tag">7.1 – 8.5</span></div>
+
+<section class="card" id="s71">
+  <div class="sec-head"><span class="num">7.1</span><h3>Integração por partes</h3></div>
+  <div class="eq big">∫ u dv = u·v − ∫ v du</div>
+  <h4>Escolha de u — regra LIATE</h4>
+  <p><b>L</b>ogarítmica · <b>I</b>nversa trig · <b>A</b>lgébrica · <b>T</b>rigonométrica · <b>E</b>xponencial. Escolha <span class="m">u</span> na ordem que aparece primeiro (deriva fácil); o resto é <span class="m">dv</span>.</p>
+  <ul>
+    <li><b>∫ln x dx</b>, <b>∫arctg x dx</b>: <span class="m">u</span> = a própria função, <span class="m">dv = dx</span>.</li>
+    <li><b>Duas vezes:</b> ∫x²eˣ, ∫x²sen x — aplique por partes repetido.</li>
+    <li><b>Circular:</b> ∫eˣsen x dx volta em si mesma → isole a integral no fim.</li>
+    <li><b>Definida:</b> <span class="m">∫<sub>a</sub><sup>b</sup>u dv = [uv]<sub>a</sub><sup>b</sup> − ∫<sub>a</sub><sup>b</sup>v du</span>.</li>
+  </ul>
+</section>
+
+<section class="card" id="s72">
+  <div class="sec-head"><span class="num">7.2</span><h3>Integrais trigonométricas</h3></div>
+  <h4>∫ senᵐx cosⁿx dx</h4>
+  <ul>
+    <li><b>Potência ímpar</b> em sen (ou cos): separe um fator, use <span class="m">sen²=1−cos²</span> (ou <span class="m">cos²=1−sen²</span>) e substitua.</li>
+    <li><b>Ambas pares:</b> use os ângulos-metade <span class="m">sen²x = (1−cos2x)/2</span>, <span class="m">cos²x = (1+cos2x)/2</span>.</li>
+  </ul>
+  <h4>∫ tgᵐx secⁿx dx</h4>
+  <ul>
+    <li><b>sec par:</b> guarde <span class="m">sec²x</span>, converta o resto com <span class="m">sec²=1+tg²</span>, faça <span class="m">u=tg x</span>.</li>
+    <li><b>tg ímpar:</b> guarde <span class="m">sec x·tg x</span>, converta com <span class="m">tg²=sec²−1</span>, faça <span class="m">u=sec x</span>.</li>
+  </ul>
+  <div class="callout"><b>Produtos sen·cos de ângulos diferentes</b> (∫sen mx cos nx): use as identidades de produto-para-soma.</div>
+  <div class="tip">Identidades-chave: <span class="m">∫tg x dx=ln|sec x|+C</span>, <span class="m">∫sec x dx=ln|sec x+tg x|+C</span>.</div>
+</section>
+
+<section class="card" id="s73">
+  <div class="sec-head"><span class="num">7.3</span><h3>Substituição trigonométrica</h3></div>
+  <p class="lead">Para radicais <span class="m">√(a²±x²)</span> e <span class="m">√(x²−a²)</span>.</p>
+  <table class="ig">
+    <tr><td>√(a² − x²)</td><td>x = a·sen θ&nbsp;&nbsp;→&nbsp;&nbsp;√ = a·cos θ</td></tr>
+    <tr><td>√(a² + x²)</td><td>x = a·tg θ&nbsp;&nbsp;→&nbsp;&nbsp;√ = a·sec θ</td></tr>
+    <tr><td>√(x² − a²)</td><td>x = a·sec θ&nbsp;&nbsp;→&nbsp;&nbsp;√ = a·tg θ</td></tr>
+  </table>
+  <ol>
+    <li>Substitua <span class="m">x</span> e <span class="m">dx</span>; simplifique o radical com a identidade pitagórica.</li>
+    <li>Resolva a integral trigonométrica resultante.</li>
+    <li><b>Volte para x</b> desenhando o <b>triângulo retângulo</b> (define sen, cos, tg em função de x).</li>
+  </ol>
+  <div class="callout blue">📌 <b>Nota da sua lista (7.3):</b> "fazer a modelagem e escrever a soma de Riemann associada" — antes de calcular, monte a integral como <span class="m">lim Σ f(x<sub>i</sub>*)Δx</span>. Veja o bloco ★.</div>
+</section>
+
+<section class="card" id="s74">
+  <div class="sec-head"><span class="num">7.4</span><h3>Integração de funções racionais (frações parciais)</h3></div>
+  <p class="lead">Para <span class="m">∫ P(x)/Q(x) dx</span>.</p>
+  <h4>Passo a passo</h4>
+  <ol>
+    <li>Se <span class="m">grau P ≥ grau Q</span>: faça a <b>divisão de polinômios</b> primeiro.</li>
+    <li>Fatore <span class="m">Q(x)</span> completamente.</li>
+    <li>Decomponha conforme os fatores:
+      <ul>
+        <li>Linear <span class="m">(x−a)</span>: <span class="frac"><span>A</span><span>x−a</span></span></li>
+        <li>Linear repetido <span class="m">(x−a)ᵏ</span>: <span class="frac"><span>A₁</span><span>x−a</span></span> + … + <span class="frac"><span>A<sub>k</sub></span><span>(x−a)ᵏ</span></span></li>
+        <li>Quadrático irredutível <span class="m">(x²+bx+c)</span>: <span class="frac"><span>Ax+B</span><span>x²+bx+c</span></span></li>
+      </ul>
+    </li>
+    <li>Ache as constantes (cubra-e-substitua ou iguale coeficientes) e integre cada termo: linear → <span class="m">ln</span>; quadrático → <span class="m">ln</span> + <span class="m">arctg</span> (completando quadrado).</li>
+  </ol>
+  <div class="callout blue">📌 <b>Nota da sua lista (7.4):</b> também pede a <b>modelagem + soma de Riemann associada</b>.</div>
+</section>
+
+<section class="card" id="s78">
+  <div class="sec-head"><span class="num">7.8</span><h3>Integrais impróprias</h3></div>
+  <h4>Tipo 1 — intervalo infinito</h4>
+  <div class="eq">∫<sub>a</sub><sup>∞</sup> f dx = lim<sub>t→∞</sub> ∫<sub>a</sub><sup>t</sup> f dx</div>
+  <h4>Tipo 2 — descontinuidade (assíntota vertical)</h4>
+  <div class="eq">se f explode em b:&nbsp; ∫<sub>a</sub><sup>b</sup> f dx = lim<sub>t→b⁻</sub> ∫<sub>a</sub><sup>t</sup> f dx</div>
+  <ul>
+    <li><b>Converge</b> se o limite é finito; <b>diverge</b> caso contrário.</li>
+    <li>Referência <span class="m">p</span>: <span class="m">∫<sub>1</sub><sup>∞</sup>dx/xᵖ</span> converge sse <span class="m">p&gt;1</span>; <span class="m">∫<sub>0</sub><sup>1</sup>dx/xᵖ</span> converge sse <span class="m">p&lt;1</span>.</li>
+    <li><b>Teste da comparação:</b> se <span class="m">0≤f≤g</span> e ∫g converge, ∫f converge (e vice-versa para divergência).</li>
+  </ul>
+  <div class="callout"><b>Sempre</b> escreva o limite explicitamente — não substitua ∞ diretamente. Descontinuidade no meio? Quebre a integral no ponto ruim.</div>
+  <div class="callout blue">📌 <b>Nota da sua lista (7.8):</b> nas questões com uso de software, faça <b>modelagem + soma de Riemann</b> (bloco ★).</div>
+</section>
+
+<section class="card" id="s64">
+  <div class="sec-head"><span class="num">6.4</span><h3>Trabalho</h3></div>
+  <div class="eq big">W = ∫<sub>a</sub><sup>b</sup> F(x) dx</div>
+  <ul>
+    <li><b>Mola (Lei de Hooke):</b> <span class="m">F(x)=kx</span> → <span class="m">W=∫kx dx</span>. Ache <span class="m">k</span> com o dado do enunciado.</li>
+    <li><b>Bombear líquido / içar corrente:</b> fatie; a fatia a uma altura <span class="m">x</span> tem peso <span class="m">ρg·A(x)dx</span> e sobe uma distância <span class="m">d(x)</span> → <span class="m">W=∫ρg·A(x)·d(x)dx</span>.</li>
+    <li>Unidades: J = N·m. Peso = <span class="m">massa × g</span> (ou densidade × volume × g).</li>
+  </ul>
+  <div class="callout green">📌 <b>Nota da lista (6.4):</b> a modelagem por fatias <b>já é</b> uma soma de Riemann: <span class="m">W ≈ ΣF(x<sub>i</sub>*)Δx</span>.</div>
+</section>
+
+<section class="card" id="s65">
+  <div class="sec-head"><span class="num">6.5</span><h3>Valor médio de uma função</h3></div>
+  <div class="eq big">f<sub>méd</sub> = <span class="frac"><span>1</span><span>b−a</span></span> ∫<sub>a</sub><sup>b</sup> f(x) dx</div>
+  <div class="callout"><b>Teorema do Valor Médio para integrais:</b> existe <span class="m">c∈[a,b]</span> com <span class="m">f(c)=f<sub>méd</sub></span>. Para achar <span class="m">c</span>: calcule <span class="m">f<sub>méd</sub></span> e resolva <span class="m">f(c)=f<sub>méd</sub></span>.</div>
+</section>
+
+<section class="card" id="s81">
+  <div class="sec-head"><span class="num">8.1</span><h3>Comprimento de arco</h3></div>
+  <div class="eq big">L = ∫<sub>a</sub><sup>b</sup> √( 1 + [f′(x)]² ) dx</div>
+  <p>Se a curva está em <span class="m">x=g(y)</span>: <span class="m">L = ∫<sub>c</sub><sup>d</sup>√(1+[g′(y)]²)dy</span>.</p>
+  <div class="callout blue">📌 <b>Nota da lista (8.1):</b> "no lugar da calculadora, <b>programe</b>" — monte a soma de Riemann <span class="m">L ≈ Σ√(1+[f′(x<sub>i</sub>*)]²)Δx</span> e implemente a soma numérica.</div>
+  <div class="tip">Truque comum: a álgebra é feita para <span class="m">1+[f′]²</span> virar um quadrado perfeito e o radical sumir.</div>
+</section>
+
+<section class="card" id="s82">
+  <div class="sec-head"><span class="num">8.2</span><h3>Área de superfície de revolução</h3></div>
+  <div class="eq">em torno do eixo x:&nbsp; S = ∫ 2π·y·√(1+[f′]²) dx</div>
+  <div class="eq">em torno do eixo y:&nbsp; S = ∫ 2π·x·√(1+[f′]²) dx</div>
+  <ul>
+    <li><b>Raio</b> = distância da curva ao eixo (<span class="m">y</span> se roda em x, <span class="m">x</span> se roda em y).</li>
+    <li>O fator <span class="m">√(1+[f′]²)dx = ds</span> é o mesmo elemento de arco de 8.1.</li>
+  </ul>
+  <div class="callout">📌 <b>Nota da lista (8.2):</b> basta <b>escrever a integral</b> (montar o modelo), não precisa resolver.</div>
+</section>
+
+<section class="card" id="s85">
+  <div class="sec-head"><span class="num">8.5</span><h3>Probabilidade</h3></div>
+  <p class="lead">Uma função <span class="m">f</span> é <b>densidade de probabilidade</b> se <span class="m">f≥0</span> e <span class="m">∫<sub>−∞</sub><sup>∞</sup>f(x)dx = 1</span>.</p>
+  <div class="eq">P(a ≤ X ≤ b) = ∫<sub>a</sub><sup>b</sup> f(x) dx</div>
+  <div class="eq">Média (valor esperado): μ = ∫<sub>−∞</sub><sup>∞</sup> x·f(x) dx</div>
+  <ul>
+    <li><b>Achar constante:</b> imponha <span class="m">∫f = 1</span> e resolva.</li>
+    <li><b>Exponencial:</b> <span class="m">f(t)=</span> <span class="frac"><span>1</span><span>μ</span></span><span class="m">e<sup>−t/μ</sup></span> para <span class="m">t≥0</span> (tempos de espera).</li>
+    <li><b>Normal:</b> <span class="m">f(x)=</span> <span class="frac"><span>1</span><span>σ√(2π)</span></span><span class="m">e<sup>−(x−μ)²/2σ²</sup></span>.</li>
+    <li>Mediana <span class="m">m</span>: <span class="m">∫<sub>−∞</sub><sup>m</sup>f = ½</span>.</li>
+  </ul>
+</section>
+
+<!-- ============ RIEMANN ============ -->
+<div class="band"><h2>★ Modelagem por soma de Riemann</h2><span class="tag">Notas do rodapé</span></div>
+
+<section class="card" id="riemann">
+  <p class="lead">Sua lista pede isso explicitamente em <b>7.3, 7.4</b> e nas questões de software de <b>7.8</b> (e é a lógica por trás de 6.4). "Modelar" = montar a integral a partir de fatias, mostrando a soma antes do limite.</p>
+
+  <h4>Receita geral (4 passos)</h4>
+  <ol>
+    <li><b>Fatie:</b> divida <span class="m">[a,b]</span> em <span class="m">n</span> pedaços de largura <span class="m">Δx = (b−a)/n</span>; ponto amostra <span class="m">x<sub>i</sub>* = a + iΔx</span>.</li>
+    <li><b>Aproxime uma fatia:</b> escreva a quantidade da fatia genérica — área <span class="m">f(x<sub>i</sub>*)Δx</span>, volume <span class="m">A(x<sub>i</sub>*)Δx</span>, trabalho <span class="m">F(x<sub>i</sub>*)Δx</span>, etc.</li>
+    <li><b>Some (soma de Riemann):</b>
+      <div class="eq">Total ≈ Σ<sub>i=1</sub><sup>n</sup> (quantidade da fatia)</div>
+    </li>
+    <li><b>Passe ao limite</b> <span class="m">n→∞</span> → vira a integral:
+      <div class="eq big">lim<sub>n→∞</sub> Σ<sub>i=1</sub><sup>n</sup> f(x<sub>i</sub>*)Δx = ∫<sub>a</sub><sup>b</sup> f(x)dx</div>
+    </li>
+  </ol>
+
+  <div class="callout blue"><b>Para questões "programe / use software":</b> pare no passo 3. A soma <span class="m">Σf(x<sub>i</sub>*)Δx</span> com <span class="m">n</span> grande <b>é</b> o algoritmo — some numericamente (ponto médio, esquerda ou direita) num loop de <span class="m">i=1</span> a <span class="m">n</span>.</div>
+
+  <div class="tip"><b>Modelo pronto de resposta:</b> "Divido em <span class="m">n</span> subintervalos, <span class="m">Δx=(b−a)/n</span>; a <span class="m">i</span>-ésima fatia contribui com <span class="m">___·Δx</span>; somando, <span class="m">Σ___·Δx</span>; no limite <span class="m">n→∞</span>, obtenho <span class="m">∫<sub>a</sub><sup>b</sup>___ dx</span>."</div>
+</section>
+
+<div class="foot">
+  Baseado em <b>Cálculo, Volume 1 — Stewart, Clegg &amp; Watson, 9ª ed. (Cengage, 2022)</b>, seções 4.9 a 8.5.
+  Guia de estudo — confira sempre as fórmulas contra o livro ao resolver. Notação: <span class="m">∫</span> integral, <span class="m">Σ</span> soma, <span class="m">Δx</span> largura da fatia.
+</div>
+</div>
+</body>
+</html>
