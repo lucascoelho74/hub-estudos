@@ -1,0 +1,65 @@
+/* ============================================================
+   tema.css — identidade visual "café" do Hub de Estudos
+   ------------------------------------------------------------
+   Fonte única da paleta. Para retemar o site inteiro, edite
+   SÓ este arquivo — todos os estudos leem daqui.
+
+   Cada estudo mantém no seu próprio <style> apenas os estilos
+   de componente (cards, tabelas, quiz...), nunca as cores.
+   ============================================================ */
+
+:root{
+  /* ---------- superfícies ---------- */
+  --ink:#0d0f14;          /* fundo da página (near-black frio) */
+  --ink-2:#141821;        /* fundo elevado / folha */
+  --panel:#161b26;        /* card */
+  --panel-2:#1b2130;      /* card aninhado / chip */
+  --line:#28303f;         /* borda padrão */
+  --line-soft:#212836;    /* borda discreta */
+  --line-2:#333c4d;       /* borda em destaque */
+
+  /* ---------- texto ---------- */
+  --fg:#e7e9ee;           /* texto principal */
+  --fg-dim:#a5adbd;       /* texto secundário */
+  --fg-faint:#6d7688;     /* legenda / metadado */
+  --fg-strong:#ffffff;    /* ênfase */
+
+  /* ---------- acentos "café" ---------- */
+  --bean:#c98a4b;         /* amber torrado — acento principal */
+  --bean-deep:#a9663a;
+  --bean-soft:rgba(201,138,75,.13);
+  --crema:#e8c9a0;        /* creme */
+  --crema-soft:rgba(232,201,160,.14);
+  --steam:#6fb4c9;        /* vapor — acento frio */
+  --steam-soft:rgba(111,180,201,.14);
+  --leaf:#7fae5f;         /* verde — sucesso, usar com parcimônia */
+  --leaf-soft:rgba(127,174,95,.14);
+  --rose:#d98a9e;         /* rosé — secundário */
+  --rose-soft:rgba(217,138,158,.14);
+  --clay:#cf8b5f;         /* terracota — entre bean e rose */
+  --clay-soft:rgba(207,139,95,.15);
+  --red:#d3776a;          /* alerta / erro */
+  --red-soft:rgba(211,119,106,.14);
+
+  /* ---------- código ---------- */
+  --code-bg:#10141d;
+  --code-fg:#cfd6e4;
+  --code-inline:#e8c9a0;
+
+  /* ---------- forma ---------- */
+  --shadow:0 18px 50px -24px rgba(0,0,0,.7);
+  --radius:14px;
+  --radius-sm:10px;
+
+  /* ---------- tipografia ---------- */
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,'Fira Code',Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --math:"Cambria Math",Cambria,"Times New Roman",Georgia,serif;
+}
+
+::selection{ background:rgba(201,138,75,.32); color:#fff; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none!important; transition:none!important; scroll-behavior:auto!important; }
+}

@@ -4,32 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AED1 · Resumo Interativo Completo — ED00 ao ED15</title>
+<link rel="stylesheet" href="../tema.css">
 <style>
-  :root{
-    /* base — mesma paleta "café" do resumo de Java */
-    --bg:#0d0f14; --bg2:#161b26; --bg3:#1b2130;
-    --ink:#e7e9ee; --ink2:#a5adbd; --ink3:#6d7688;
-    --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.14);
-    /* bean = amber torrado (accent principal), crema, steam, leaf, rose */
-    --acc:#c98a4b; --acc-d:#a9663a; --acc-soft:rgba(201,138,75,.13);
-    --pur:#d98a9e; --pur-soft:rgba(217,138,158,.14);
-    --cor:#cf8b5f; --cor-soft:rgba(207,139,95,.15);
-    --blu:#6fb4c9; --blu-soft:rgba(111,180,201,.14);
-    --amb:#e8c9a0; --amb-soft:rgba(232,201,160,.14);
-    --red:#d3776a; --red-soft:rgba(211,119,106,.14);
-    --grn:#7fae5f; --grn-soft:rgba(127,174,95,.14);
-    --pnk:#d98a9e; --pnk-soft:rgba(217,138,158,.14);
-    --crema:#e8c9a0;
-    --code-bg:#10141d;
-    --mono:'JetBrains Mono','SF Mono',ui-monospace,'Cascadia Code','Fira Code',Menlo,Consolas,monospace;
-    --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-    --r:14px; --r2:10px;
-  }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{
-    background:var(--bg);
-    color:var(--ink);
+    background:var(--ink);
+    color:var(--fg);
     font-family:var(--sans);
     line-height:1.65;
     -webkit-font-smoothing:antialiased;
@@ -44,104 +25,104 @@
   }
   body::after{
     content:"";position:fixed;inset:0;z-index:-1;opacity:.02;pointer-events:none;
-    background-image:linear-gradient(var(--ink) 1px,transparent 1px),linear-gradient(90deg,var(--ink) 1px,transparent 1px);
+    background-image:linear-gradient(var(--fg) 1px,transparent 1px),linear-gradient(90deg,var(--fg) 1px,transparent 1px);
     background-size:46px 46px;
   }
 
   /* ---------- progress bar ---------- */
   #prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:100;
-    background:linear-gradient(90deg,var(--acc-d),var(--acc),var(--crema));transition:width .15s ease}
+    background:linear-gradient(90deg,var(--bean-deep),var(--bean),var(--crema));transition:width .15s ease}
 
   /* ---------- nav ---------- */
   nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
     background:rgba(13,15,20,.78);border-bottom:1px solid var(--line)}
   .nav-in{max-width:1080px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.12em;font-size:14px;text-transform:uppercase}
-  .brand .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--acc),var(--blu));box-shadow:0 0 14px var(--acc)}
+  .brand .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--bean),var(--steam));box-shadow:0 0 14px var(--bean)}
   .nav-links{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
-  .nav-links a{color:var(--ink2);text-decoration:none;font-size:12.5px;padding:6px 10px;border-radius:8px;transition:.18s;white-space:nowrap}
-  .nav-links a:hover{color:var(--ink);background:var(--bg3)}
-  .nav-links a.on{color:var(--acc);background:var(--acc-soft)}
+  .nav-links a{color:var(--fg-dim);text-decoration:none;font-size:12.5px;padding:6px 10px;border-radius:8px;transition:.18s;white-space:nowrap}
+  .nav-links a:hover{color:var(--fg);background:var(--panel-2)}
+  .nav-links a.on{color:var(--bean);background:var(--bean-soft)}
 
   /* ---------- hero ---------- */
   header{max-width:1080px;margin:0 auto;padding:72px 22px 30px;position:relative}
   .kick{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--acc);background:var(--acc-soft);padding:6px 13px;border-radius:30px;
+    text-transform:uppercase;color:var(--bean);background:var(--bean-soft);padding:6px 13px;border-radius:30px;
     border:1px solid rgba(201,138,75,.28)}
   h1{font-size:clamp(2.4rem,6vw,4.1rem);line-height:1.02;letter-spacing:-.02em;margin:22px 0 14px;font-weight:800}
-  h1 .grad{background:linear-gradient(120deg,var(--crema),var(--acc) 55%,var(--blu));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .lede{font-size:1.12rem;color:var(--ink2);max-width:660px}
+  h1 .grad{background:linear-gradient(120deg,var(--crema),var(--bean) 55%,var(--steam));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .lede{font-size:1.12rem;color:var(--fg-dim);max-width:660px}
   .meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
-  .meta{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);
-    border-radius:var(--r2);padding:10px 14px;font-size:13px}
+  .meta{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius-sm);padding:10px 14px;font-size:13px}
   .meta b{color:var(--crema);font-weight:600}
-  .meta span{color:var(--ink3)}
+  .meta span{color:var(--fg-faint)}
   .meta .ic{font-size:16px}
 
   /* ---------- sections ---------- */
   main{max-width:1080px;margin:0 auto;padding:30px 22px 90px}
   section{padding:46px 0;border-top:1px solid var(--line);scroll-margin-top:70px}
   .sec-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:26px}
-  .sec-num{font-family:var(--mono);font-size:13px;color:var(--acc);background:var(--bg3);
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--bean);background:var(--panel-2);
     width:auto;min-width:46px;height:46px;padding:0 10px;border-radius:12px;display:grid;place-items:center;flex:none;font-weight:700;
     border:1px solid var(--line);white-space:nowrap}
   .sec-head h2{font-size:1.85rem;letter-spacing:-.01em;font-weight:700;line-height:1.15}
-  .sec-head p{color:var(--ink2);font-size:.96rem;margin-top:4px;max-width:720px}
+  .sec-head p{color:var(--fg-dim);font-size:.96rem;margin-top:4px;max-width:720px}
 
   /* ---------- cards ---------- */
   .grid{display:grid;gap:14px}
   .g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
   .g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
   .g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-  .card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;transition:.2s}
-  .card:hover{border-color:var(--line2);transform:translateY(-2px)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;transition:.2s}
+  .card:hover{border-color:var(--line-2);transform:translateY(-2px)}
   .card h3{font-size:1.02rem;font-weight:650;margin-bottom:7px;display:flex;align-items:center;gap:9px}
-  .card p{color:var(--ink2);font-size:.92rem}
+  .card p{color:var(--fg-dim);font-size:.92rem}
   .card .ic{font-size:18px}
 
-  .pill{display:inline-block;background:var(--bg3);border:1px solid var(--line);color:var(--ink2);
+  .pill{display:inline-block;background:var(--panel-2);border:1px solid var(--line);color:var(--fg-dim);
     font-size:11.5px;padding:3px 9px;border-radius:20px;font-family:var(--mono)}
   .tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:7px}
-  .t-warn{background:var(--amb-soft);color:var(--amb)} .t-info{background:var(--blu-soft);color:var(--blu)}
-  .t-succ{background:var(--acc-soft);color:var(--acc)} .t-dang{background:var(--red-soft);color:var(--red)}
-  .t-pur{background:var(--pur-soft);color:var(--pur)}
+  .t-warn{background:var(--crema-soft);color:var(--crema)} .t-info{background:var(--steam-soft);color:var(--steam)}
+  .t-succ{background:var(--bean-soft);color:var(--bean)} .t-dang{background:var(--red-soft);color:var(--red)}
+  .t-pur{background:var(--rose-soft);color:var(--rose)}
 
   /* pillar tiles */
-  .pillar{border-radius:var(--r);padding:18px;position:relative;overflow:hidden}
+  .pillar{border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
   .pillar h3{font-size:1rem;margin-bottom:5px} .pillar p{font-size:.85rem;opacity:.85}
-  .p-pur{background:var(--pur-soft);border:1px solid rgba(217,138,158,.3)} .p-pur h3{color:var(--pur)}
-  .p-acc{background:var(--acc-soft);border:1px solid rgba(201,138,75,.32)} .p-acc h3{color:var(--acc)}
-  .p-cor{background:var(--cor-soft);border:1px solid rgba(207,139,95,.3)} .p-cor h3{color:var(--cor)}
-  .p-blu{background:var(--blu-soft);border:1px solid rgba(111,180,201,.3)} .p-blu h3{color:var(--blu)}
-  .p-gry{background:var(--bg3);border:1px solid var(--line2)} .p-gry h3{color:var(--ink)}
+  .p-pur{background:var(--rose-soft);border:1px solid rgba(217,138,158,.3)} .p-pur h3{color:var(--rose)}
+  .p-acc{background:var(--bean-soft);border:1px solid rgba(201,138,75,.32)} .p-acc h3{color:var(--bean)}
+  .p-cor{background:var(--clay-soft);border:1px solid rgba(207,139,95,.3)} .p-cor h3{color:var(--clay)}
+  .p-blu{background:var(--steam-soft);border:1px solid rgba(111,180,201,.3)} .p-blu h3{color:var(--steam)}
+  .p-gry{background:var(--panel-2);border:1px solid var(--line-2)} .p-gry h3{color:var(--fg)}
   .pillar .big{position:absolute;right:-6px;bottom:-18px;font-size:80px;font-weight:800;opacity:.07;font-family:var(--mono)}
 
   /* visibility chips */
   .vis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-  .vis{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);padding:16px;text-align:center}
+  .vis{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;text-align:center}
   .vis .sym{font-size:34px;font-weight:700;font-family:var(--mono);line-height:1}
   .vis .nm{font-weight:600;margin-top:8px;font-size:.95rem}
-  .vis .ds{color:var(--ink3);font-size:.82rem;margin-top:3px}
+  .vis .ds{color:var(--fg-faint);font-size:.82rem;margin-top:3px}
 
   /* code */
-  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r2);padding:16px 18px;overflow-x:auto;
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px 18px;overflow-x:auto;
     margin:14px 0;font-family:var(--mono);font-size:13px;line-height:1.6;position:relative}
   pre .cmt{color:#5b6577;font-style:italic} pre .kw{color:#e08c5a;font-weight:600} pre .str{color:#9bc27f} pre .fn{color:var(--crema)} pre .ty{color:#6fb4c9} pre .num{color:#d98a9e}
-  .code-label{font-family:var(--mono);font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;margin:18px 0 0}
+  .code-label{font-family:var(--mono);font-size:11px;color:var(--fg-faint);text-transform:uppercase;letter-spacing:.12em;margin:18px 0 0}
 
   /* compare split */
   .vs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:560px){.vs{grid-template-columns:1fr}.nav-links{display:none}}
-  .vs-box{border-radius:var(--r);padding:16px}
-  .vs-a{background:var(--cor-soft);border:1px solid rgba(207,139,95,.3)}
-  .vs-b{background:var(--blu-soft);border:1px solid rgba(111,180,201,.3)}
-  .vs-box h4{font-size:.95rem;margin-bottom:6px} .vs-a h4{color:var(--cor)} .vs-b h4{color:var(--blu)}
-  .vs-box p{font-size:.86rem;color:var(--ink2)}
+  .vs-box{border-radius:var(--radius);padding:16px}
+  .vs-a{background:var(--clay-soft);border:1px solid rgba(207,139,95,.3)}
+  .vs-b{background:var(--steam-soft);border:1px solid rgba(111,180,201,.3)}
+  .vs-box h4{font-size:.95rem;margin-bottom:6px} .vs-a h4{color:var(--clay)} .vs-b h4{color:var(--steam)}
+  .vs-box p{font-size:.86rem;color:var(--fg-dim)}
 
   /* flow */
   .flow{display:flex;flex-direction:column;gap:10px}
-  .flow-item{background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:var(--r2);padding:13px 16px}
-  .flow-item b{font-size:.96rem} .flow-item p{color:var(--ink2);font-size:.85rem;margin-top:3px}
+  .flow-item{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--bean);border-radius:var(--radius-sm);padding:13px 16px}
+  .flow-item b{font-size:.96rem} .flow-item p{color:var(--fg-dim);font-size:.85rem;margin-top:3px}
 
   /* error/step codes */
   .codes{display:flex;flex-wrap:wrap;gap:9px;margin:6px 0 4px}
@@ -149,59 +130,59 @@
 
   code.inl{background:rgba(111,180,201,.10);border:1px solid rgba(111,180,201,.16);border-radius:6px;padding:1px 6px;font-family:var(--mono);font-size:.86em;color:var(--crema)}
   b.hl{color:#fff;font-weight:650}
-  ul.clean{list-style:none;margin:8px 0} ul.clean li{padding:5px 0 5px 22px;position:relative;color:var(--ink2);font-size:.92rem}
-  ul.clean li::before{content:"▸";position:absolute;left:0;color:var(--acc)}
+  ul.clean{list-style:none;margin:8px 0} ul.clean li{padding:5px 0 5px 22px;position:relative;color:var(--fg-dim);font-size:.92rem}
+  ul.clean li::before{content:"▸";position:absolute;left:0;color:var(--bean)}
 
   /* memory diagram */
   .memrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
-  .memcell{background:var(--bg3);border:1px solid var(--line2);border-radius:8px;padding:10px 14px;text-align:center;min-width:64px;font-family:var(--mono);font-size:13px}
-  .memcell .lab{color:var(--ink3);font-size:10px;display:block;margin-bottom:3px}
-  .arrow{color:var(--acc);font-size:20px;font-family:var(--mono)}
+  .memcell{background:var(--panel-2);border:1px solid var(--line-2);border-radius:8px;padding:10px 14px;text-align:center;min-width:64px;font-family:var(--mono);font-size:13px}
+  .memcell .lab{color:var(--fg-faint);font-size:10px;display:block;margin-bottom:3px}
+  .arrow{color:var(--bean);font-size:20px;font-family:var(--mono)}
 
   /* ---------- flashcards ---------- */
   .fc-stage{perspective:1400px;margin:8px 0}
   .fc{position:relative;width:100%;min-height:200px;cursor:pointer;transition:transform .55s cubic-bezier(.4,.1,.2,1);transform-style:preserve-3d}
   .fc.flip{transform:rotateY(180deg)}
   .fc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    border-radius:var(--r);display:flex;align-items:center;justify-content:center;text-align:center;padding:30px 26px}
-  .fc-front{background:var(--bg2);border:1px solid var(--line2)}
-  .fc-back{background:linear-gradient(160deg,var(--bg3),var(--bg2));border:1px solid var(--acc-d);transform:rotateY(180deg)}
+    border-radius:var(--radius);display:flex;align-items:center;justify-content:center;text-align:center;padding:30px 26px}
+  .fc-front{background:var(--panel);border:1px solid var(--line-2)}
+  .fc-back{background:linear-gradient(160deg,var(--panel-2),var(--panel));border:1px solid var(--bean-deep);transform:rotateY(180deg)}
   .fc-front .q{font-size:1.14rem;font-weight:650}
-  .fc-back .a{font-size:.98rem;color:var(--ink2);line-height:1.6}
-  .fc-tag{position:absolute;top:12px;left:14px;font-family:var(--mono);font-size:10.5px;color:var(--ink3)}
+  .fc-back .a{font-size:.98rem;color:var(--fg-dim);line-height:1.6}
+  .fc-tag{position:absolute;top:12px;left:14px;font-family:var(--mono);font-size:10.5px;color:var(--fg-faint)}
   .fc-bar{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px}
-  .fc-hint{text-align:center;color:var(--ink3);font-size:12px;margin-top:9px;font-family:var(--mono)}
-  button{font-family:var(--sans);cursor:pointer;border:1px solid var(--line2);background:var(--bg3);color:var(--ink);
+  .fc-hint{text-align:center;color:var(--fg-faint);font-size:12px;margin-top:9px;font-family:var(--mono)}
+  button{font-family:var(--sans);cursor:pointer;border:1px solid var(--line-2);background:var(--panel-2);color:var(--fg);
     border-radius:9px;padding:9px 15px;font-size:13.5px;transition:.16s;display:inline-flex;align-items:center;gap:7px}
-  button:hover{background:var(--bg2);border-color:var(--acc)}
+  button:hover{background:var(--panel);border-color:var(--bean)}
   button:active{transform:scale(.97)}
   button:disabled{opacity:.45;cursor:default}
-  .counter{font-family:var(--mono);font-size:13px;color:var(--ink3)}
+  .counter{font-family:var(--mono);font-size:13px;color:var(--fg-faint)}
 
   /* ---------- quiz ---------- */
-  .qbar{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 16px;
+  .qbar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:13.5px;flex-wrap:wrap;gap:8px}
   .qscore{font-weight:600;font-family:var(--mono)}
-  .qcard{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:14px}
+  .qcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px}
   .qcard .qq{font-weight:650;margin-bottom:12px;font-size:1rem}
-  .qcard .qtag{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-bottom:8px;display:block}
+  .qcard .qtag{font-family:var(--mono);font-size:10.5px;color:var(--fg-faint);margin-bottom:8px;display:block}
   .opt{display:block;width:100%;text-align:left;margin:7px 0;padding:11px 14px;border-radius:9px;
-    border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:.92rem;transition:.16s}
-  .opt:hover:not(:disabled){border-color:var(--acc);background:var(--bg3)}
-  .opt.correct{background:var(--acc-soft);border-color:var(--acc);color:var(--acc)}
+    border:1px solid var(--line);background:var(--ink);color:var(--fg);font-size:.92rem;transition:.16s}
+  .opt:hover:not(:disabled){border-color:var(--bean);background:var(--panel-2)}
+  .opt.correct{background:var(--bean-soft);border-color:var(--bean);color:var(--bean)}
   .opt.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red)}
   .opt.dim{opacity:.5}
-  .qexp{font-size:.86rem;color:var(--ink2);margin-top:10px;padding:11px 14px;background:var(--bg);border-radius:9px;border-left:3px solid var(--amb)}
-  .qexp b{color:var(--amb)}
+  .qexp{font-size:.86rem;color:var(--fg-dim);margin-top:10px;padding:11px 14px;background:var(--ink);border-radius:9px;border-left:3px solid var(--crema)}
+  .qexp b{color:var(--crema)}
 
-  footer{max-width:1080px;margin:0 auto;padding:36px 22px 60px;border-top:1px solid var(--line);color:var(--ink3);font-size:13px}
-  footer b{color:var(--ink2)}
+  footer{max-width:1080px;margin:0 auto;padding:36px 22px 60px;border-top:1px solid var(--line);color:var(--fg-faint);font-size:13px}
+  footer b{color:var(--fg-dim)}
 
   /* reveal anim */
   .rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
   .rv.in{opacity:1;transform:none}
 
-  ::-webkit-scrollbar{height:9px;width:9px} ::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:8px}
+  ::-webkit-scrollbar{height:9px;width:9px} ::-webkit-scrollbar-thumb{background:var(--panel-2);border-radius:8px}
 
   @media (prefers-reduced-motion: reduce){
     *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -275,7 +256,7 @@
     <div class="flow-item"><b>ED15 · Apontadores: Pilha &amp; Fila</b><p>Células ligadas por apontadores: Pilha (LIFO) e Fila (FIFO).</p></div>
   </div>
 
-  <div class="card" style="margin-top:14px;border-left:3px solid var(--amb)">
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--crema)">
     <h3><span class="ic">📌</span> Convenções obrigatórias do professor</h3>
     <ul class="clean">
       <li>Macros <code class="inl">AND</code> / <code class="inl">OR</code> / <code class="inl">NOT</code> no lugar de <code class="inl">&amp;&amp;</code> / <code class="inl">||</code> / <code class="inl">!</code></li>
@@ -352,7 +333,7 @@
 
   <div class="grid g2">
     <div class="card" style="border-left:3px solid var(--red)"><h3>🛑 Caso base</h3><p>A condição de parada. Sem ele, a recursão nunca termina → estouro de pilha (<i>stack overflow</i>).</p></div>
-    <div class="card" style="border-left:3px solid var(--acc)"><h3>♻️ Caso recursivo</h3><p>A função se chama com um problema <b class="hl">menor</b>, caminhando em direção ao caso base.</p></div>
+    <div class="card" style="border-left:3px solid var(--bean)"><h3>♻️ Caso recursivo</h3><p>A função se chama com um problema <b class="hl">menor</b>, caminhando em direção ao caso base.</p></div>
   </div>
 
   <div class="code-label">Fatorial — o exemplo clássico</div>
@@ -370,7 +351,7 @@
   <span class="kw">return</span> result;
 } <span class="cmt">// end fatorial</span></pre>
 
-  <div class="card" style="margin-top:14px;border-left:3px solid var(--amb)">
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--crema)">
     <h3><span class="ic">💡</span> Truque de ordem</h3>
     <p>Onde você coloca a chamada muda a ordem da saída. <b class="hl">Imprimir antes</b> da chamada → ordem decrescente/descida. <b class="hl">Imprimir depois</b> da chamada → ordem crescente/subida (o famoso "chamada antes do print").</p>
   </div>
@@ -443,7 +424,7 @@
   <span class="fn">IO_printf</span> ( <span class="str">"\n"</span> );
 } <span class="cmt">// end for i</span></pre>
 
-  <div class="card" style="margin-top:14px;border-left:3px solid var(--amb)">
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--crema)">
     <h3><span class="ic">⚠️</span> Cuidado com a referência inicial</h3>
     <p>Ao buscar maior/menor, inicialize com o <b class="hl">primeiro elemento válido</b> (<code class="inl">v[0]</code>), não com <code class="inl">0</code>. Se o vetor tiver só negativos, começar em 0 dá resposta errada.</p>
   </div>
@@ -467,9 +448,9 @@
 
   <div class="card" style="margin:14px 0"><h3>🎯 Os três operadores</h3>
     <div class="vis-grid" style="margin-top:12px">
-      <div class="vis"><div class="sym" style="color:var(--acc)">&amp;</div><div class="nm">endereço-de</div><div class="ds">&amp;x = "onde x mora"</div></div>
-      <div class="vis"><div class="sym" style="color:var(--blu)">*</div><div class="nm">desreferência</div><div class="ds">*p = "valor lá"</div></div>
-      <div class="vis"><div class="sym" style="color:var(--cor)">-&gt;</div><div class="nm">membro via ponteiro</div><div class="ds">p-&gt;h = (*p).h</div></div>
+      <div class="vis"><div class="sym" style="color:var(--bean)">&amp;</div><div class="nm">endereço-de</div><div class="ds">&amp;x = "onde x mora"</div></div>
+      <div class="vis"><div class="sym" style="color:var(--steam)">*</div><div class="nm">desreferência</div><div class="ds">*p = "valor lá"</div></div>
+      <div class="vis"><div class="sym" style="color:var(--clay)">-&gt;</div><div class="nm">membro via ponteiro</div><div class="ds">p-&gt;h = (*p).h</div></div>
     </div>
   </div>
 
@@ -484,7 +465,7 @@
     <div class="memcell"><span class="lab">m</span>30</div>
     <div class="memcell"><span class="lab">s</span>00</div>
   </div>
-  <p style="color:var(--ink2);font-size:.9rem">Passar <code class="inl">ref_Tempo</code> para uma função evita copiar a struct inteira <b>e</b> permite alterar o original.</p>
+  <p style="color:var(--fg-dim);font-size:.9rem">Passar <code class="inl">ref_Tempo</code> para uma função evita copiar a struct inteira <b>e</b> permite alterar o original.</p>
 
   <div class="code-label">Alocação dinâmica</div>
   <pre><span class="cmt">// em C</span>
@@ -553,11 +534,11 @@ Tempo* q = <span class="kw">new</span> Tempo;
 
   <div class="vis-grid" style="margin:16px 0">
     <div class="vis"><div class="sym" style="color:var(--red)">−</div><div class="nm">private</div><div class="ds">só dentro da classe</div></div>
-    <div class="vis"><div class="sym" style="color:var(--acc)">+</div><div class="nm">public</div><div class="ds">a interface pública</div></div>
-    <div class="vis"><div class="sym" style="color:var(--amb)">#</div><div class="nm">protected</div><div class="ds">classe + derivadas</div></div>
+    <div class="vis"><div class="sym" style="color:var(--bean)">+</div><div class="nm">public</div><div class="ds">a interface pública</div></div>
+    <div class="vis"><div class="sym" style="color:var(--crema)">#</div><div class="nm">protected</div><div class="ds">classe + derivadas</div></div>
   </div>
 
-  <div class="card" style="border-left:3px solid var(--acc);margin-bottom:14px">
+  <div class="card" style="border-left:3px solid var(--bean);margin-bottom:14px">
     <h3><span class="ic">⭐</span> Os 5 padrões universais de prova</h3>
     <ul class="clean">
       <li><b class="hl">Construtor padrão</b> — sem parâmetros, inicializa em valores neutros</li>
@@ -620,7 +601,7 @@ Tempo* q = <span class="kw">new</span> Tempo;
     <span class="ty">int</span> <span class="fn">getNumerador</span> ( );
 }; <span class="cmt">// end class Fracao</span></pre>
 
-  <div class="card" style="margin-top:14px;border-left:3px solid var(--amb)">
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--crema)">
     <h3><span class="ic">🔧</span> Rule of Three</h3>
     <p>Se sua classe aloca memória com <code class="inl">new</code>, ela precisa dos três: <b class="hl">destrutor</b> (<code class="inl">~Classe()</code>), <b class="hl">construtor de cópia</b> e <b class="hl">operador de atribuição</b> (<code class="inl">operator=</code>). Senão, cópias compartilham o mesmo ponteiro e dá double-free.</p>
   </div>
@@ -695,20 +676,20 @@ Tempo* q = <span class="kw">new</span> Tempo;
   <div class="vs" style="margin-top:16px">
     <div class="vs-box vs-a"><h4>🥞 Pilha — LIFO</h4>
       <p><b>Last In, First Out.</b> O último a entrar é o primeiro a sair. Insere e remove sempre no <b>topo</b>.</p>
-      <p style="margin-top:8px;font-family:var(--mono);font-size:.8rem;color:var(--cor)">push (empilha) · pop (desempilha) · dup · swap</p></div>
+      <p style="margin-top:8px;font-family:var(--mono);font-size:.8rem;color:var(--clay)">push (empilha) · pop (desempilha) · dup · swap</p></div>
     <div class="vs-box vs-b"><h4>🚶 Fila — FIFO</h4>
       <p><b>First In, First Out.</b> O primeiro a entrar é o primeiro a sair. Insere no <b>fim</b>, remove do <b>início</b>.</p>
-      <p style="margin-top:8px;font-family:var(--mono);font-size:.8rem;color:var(--blu)">push/enqueue (final) · pop/dequeue (início) · compare · join · search</p></div>
+      <p style="margin-top:8px;font-family:var(--mono);font-size:.8rem;color:var(--steam)">push/enqueue (final) · pop/dequeue (início) · compare · join · search</p></div>
   </div>
 
   <div class="code-label">Pilha visual (topo à esquerda)</div>
   <div class="memrow">
-    <div class="memcell" style="border-color:var(--cor)"><span class="lab">topo</span>30</div>
-    <span class="arrow" style="color:var(--cor)">──▶</span>
+    <div class="memcell" style="border-color:var(--clay)"><span class="lab">topo</span>30</div>
+    <span class="arrow" style="color:var(--clay)">──▶</span>
     <div class="memcell">20</div>
-    <span class="arrow" style="color:var(--cor)">──▶</span>
+    <span class="arrow" style="color:var(--clay)">──▶</span>
     <div class="memcell">10</div>
-    <span class="arrow" style="color:var(--ink3)">──▶</span>
+    <span class="arrow" style="color:var(--fg-faint)">──▶</span>
     <div class="memcell" style="opacity:.5"><span class="lab">fim</span>nullptr</div>
   </div>
 
@@ -757,7 +738,7 @@ Tempo* q = <span class="kw">new</span> Tempo;
   <div class="grid g2" style="margin-top:14px">
     <div class="card" style="border-left:3px solid var(--red)"><h3>🧹 Não esqueça o delete</h3>
       <p>Toda célula criada com <code class="inl">new</code> precisa de <code class="inl">delete</code> ao remover — senão, memory leak. No destrutor, esvazie a estrutura inteira.</p></div>
-    <div class="card" style="border-left:3px solid var(--amb)"><h3>⚠️ Sempre teste o vazio</h3>
+    <div class="card" style="border-left:3px solid var(--crema)"><h3>⚠️ Sempre teste o vazio</h3>
       <p>Antes de <code class="inl">pop</code>/<code class="inl">dequeue</code>/consultar, cheque se está vazia (<code class="inl">== nullptr</code>) e lance <code class="inl">Erro</code>. É o caso de borda que o professor sempre cobra.</p></div>
   </div>
 </section>
@@ -799,7 +780,7 @@ Tempo* q = <span class="kw">new</span> Tempo;
 
 <footer>
   <p><b>AED1 · Resumo Interativo Completo</b> — ED00 ao ED15 (16 estudos dirigidos). Baseado na apostila (capítulos 00–10 + anexos C/C++) e nos guias de estudo dirigido da disciplina. Paleta "café" compartilhada com o resumo de Java.</p>
-  <p style="margin-top:6px">Sempre confira o código com <code class="inl" style="color:var(--ink3)">gcc -std=c11 -Wall</code> ou <code class="inl" style="color:var(--ink3)">g++ -std=c++11 -Wall -fsanitize=address</code>.</p>
+  <p style="margin-top:6px">Sempre confira o código com <code class="inl" style="color:var(--fg-faint)">gcc -std=c11 -Wall</code> ou <code class="inl" style="color:var(--fg-faint)">g++ -std=c++11 -Wall -fsanitize=address</code>.</p>
 </footer>
 
 <script>
