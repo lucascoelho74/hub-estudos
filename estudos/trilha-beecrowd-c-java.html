@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trilha beecrowd — C e Java</title>
+<link rel="stylesheet" href="../tema.css">
+<style>
+/* ============================================================
+   Só componentes. Todas as cores vêm de ../tema.css
+   Acento por lista: C -> --bean · Java -> --steam
+   ============================================================ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--ink);color:var(--fg);
+  font-family:var(--sans);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 500px at 82% -8%, rgba(201,138,75,.10), transparent 60%),
+    radial-gradient(700px 500px at 5% 110%, rgba(111,180,201,.07), transparent 55%);
+}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 20px 100px}
+a{color:inherit}
+
+/* ---------- marca ---------- */
+.top{display:flex;align-items:center;gap:14px;padding:26px 4px 0;text-decoration:none}
+.cup{flex:none;width:40px;height:40px}
+.top h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700}
+.top p{margin:2px 0 0;font-size:11.5px;color:var(--fg-faint);letter-spacing:.05em}
+.top b{color:var(--bean)}
+
+/* ---------- cabeçalho ---------- */
+header{padding:40px 0 28px;border-bottom:1px solid var(--line)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--bean);margin:0 0 16px
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--bean)}
+h2.title{
+  font-size:clamp(28px,4.6vw,44px);font-weight:800;
+  letter-spacing:-.02em;margin:0 0 14px;line-height:1.06
+}
+h2.title .c{color:var(--bean)}
+h2.title .j{color:var(--steam)}
+.lede{max-width:66ch;color:var(--fg-dim);margin:0 0 4px;font-size:16px}
+
+/* ---------- matriz 2x2 ---------- */
+.matrix-shell{margin:32px 0 0}
+.matrix-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--fg-faint);margin-bottom:12px
+}
+.matrix{
+  display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:stretch
+}
+.axis-head{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--fg-faint);display:flex;align-items:flex-end;padding:0 0 8px 2px
+}
+.axis-side{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--fg-faint);display:flex;align-items:center;justify-content:flex-end;
+  padding-right:12px;width:64px
+}
+.cell{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:16px 16px 14px;text-align:left;cursor:pointer;color:inherit;font:inherit;
+  transition:border-color .16s,background .16s,transform .16s,box-shadow .16s;
+  position:relative;overflow:hidden
+}
+.cell:hover{background:var(--panel-2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.cell:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+.cell::before{
+  content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--tint);
+  opacity:.4;transition:opacity .16s
+}
+.cell[aria-selected="true"]{background:var(--panel-2);border-color:var(--tint)}
+.cell[aria-selected="true"]::before{opacity:1}
+.cell-name{font-weight:700;font-size:15px;margin-bottom:2px}
+.cell-sub{font-size:12.5px;color:var(--fg-faint);margin-bottom:12px}
+.cell-count{font-family:var(--mono);font-size:12px;color:var(--fg-dim)}
+.cell-count b{color:var(--tint);font-weight:600}
+.minibar{height:3px;background:var(--line-2);border-radius:2px;margin-top:8px;overflow:hidden}
+.minibar i{display:block;height:100%;background:var(--tint);width:0;transition:width .3s}
+
+/* ---------- barra de estado ---------- */
+.statusbar{
+  position:sticky;top:0;z-index:20;background:rgba(13,15,20,.92);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  margin:36px -20px 0;padding:12px 20px;
+  display:flex;gap:16px;align-items:center;flex-wrap:wrap
+}
+.status-title{font-family:var(--mono);font-size:13px;color:var(--fg);font-weight:600}
+.status-title .dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--tint);margin-right:8px;vertical-align:1px
+}
+.bigbar{flex:1;min-width:140px;height:6px;background:var(--line-2);border-radius:3px;overflow:hidden}
+.bigbar i{display:block;height:100%;background:var(--tint);width:0;transition:width .3s}
+.status-num{font-family:var(--mono);font-size:13px;color:var(--fg-dim);white-space:nowrap}
+.status-num b{color:var(--tint)}
+.filters{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:3px}
+.filters button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:0;color:var(--fg-faint);padding:5px 10px;border-radius:6px;cursor:pointer;
+  transition:color .14s,background .14s
+}
+.filters button:hover{color:var(--fg-dim)}
+.filters button[aria-pressed="true"]{background:var(--panel-2);color:var(--fg)}
+.filters button:focus-visible{outline:2px solid var(--tint);outline-offset:1px}
+
+/* ---------- seções ---------- */
+.section{margin-top:40px}
+.section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.section-idx{font-family:var(--mono);font-size:12px;color:var(--tint);letter-spacing:.06em}
+.section-title{font-size:19px;font-weight:700;margin:0;letter-spacing:-.01em}
+.section-note{color:var(--fg-dim);font-size:14px;max-width:72ch;margin:0 0 16px}
+
+/* ---------- linha de problema ---------- */
+.rows{border-top:1px solid var(--line-soft)}
+.row{
+  display:grid;grid-template-columns:26px 62px 1fr auto;gap:14px;align-items:start;
+  padding:14px 10px 14px 4px;border-bottom:1px solid var(--line-soft);
+  transition:background .14s;border-radius:8px
+}
+.row:hover{background:var(--panel)}
+.row.done .r-title{color:var(--fg-faint)}
+.row.done .r-id{opacity:.45}
+.row.hidden{display:none}
+.check{
+  appearance:none;-webkit-appearance:none;width:19px;height:19px;margin:3px 0 0;
+  border:1.5px solid var(--line-2);border-radius:6px;background:var(--panel-2);
+  cursor:pointer;position:relative;flex:none;transition:border-color .14s,background .14s
+}
+.check:hover{border-color:var(--fg-faint)}
+.check:checked{background:var(--leaf);border-color:var(--leaf)}
+.check:checked::after{
+  content:"";position:absolute;left:6px;top:2px;width:4px;height:9px;
+  border:solid var(--ink);border-width:0 2px 2px 0;transform:rotate(42deg)
+}
+.check:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+.r-id{
+  font-family:var(--mono);font-size:14px;font-weight:600;color:var(--tint);
+  padding-top:2px;letter-spacing:-.02em;text-decoration:none;display:block
+}
+.r-id:hover{text-decoration:underline}
+.r-title{font-weight:700;font-size:14.5px;margin:0 0 3px;line-height:1.35}
+.r-ask{color:var(--fg-dim);font-size:13.5px;margin:0 0 3px}
+.r-train{font-size:13px;color:var(--fg-faint);margin:0}
+.r-train b{color:var(--fg-dim);font-weight:600}
+.r-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding-top:2px}
+.dots{display:flex;gap:3px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--line-2)}
+.dots i.on{background:var(--tint)}
+.star{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--crema);background:var(--crema-soft);border:1px solid rgba(232,201,160,.25);
+  padding:2px 7px;border-radius:6px
+}
+
+/* ---------- callout ---------- */
+.callout{
+  background:linear-gradient(90deg,var(--bean-soft),transparent 80%);
+  border:1px solid var(--line);border-left:3px solid var(--bean);
+  border-radius:var(--radius-sm);padding:13px 16px;margin:16px 0 4px;
+  font-size:13.5px;color:var(--fg-dim)
+}
+.callout b{color:var(--fg-strong);font-weight:600}
+.callout code,.r-ask code,.r-train code,.section-note code,p code{
+  font-family:var(--mono);font-size:12.5px;background:var(--code-bg);
+  border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px;color:var(--code-inline)
+}
+.callout pre{
+  font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line-soft);
+  border-radius:8px;padding:11px 13px;margin:10px 0 0;overflow-x:auto;color:var(--code-fg);line-height:1.5
+}
+
+/* ---------- rodapé ---------- */
+.footer{margin-top:56px;padding-top:24px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+.footer p{font-size:12.5px;color:var(--fg-faint);margin:0;max-width:60ch}
+.reset{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  background:none;border:1px solid var(--line);color:var(--fg-faint);
+  padding:8px 14px;border-radius:8px;cursor:pointer;transition:all .14s;white-space:nowrap
+}
+.reset:hover{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+.reset:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.empty{padding:28px 4px;color:var(--fg-faint);font-size:14px}
+
+@media (max-width:720px){
+  .matrix{grid-template-columns:1fr 1fr;gap:7px}
+  .axis-side{display:none}
+  .axis-head{display:none}
+  .row{grid-template-columns:22px 1fr;gap:10px;padding:13px 6px}
+  .r-id{grid-column:2;margin-bottom:-2px}
+  .r-side{grid-column:2;align-items:flex-start;flex-direction:row;gap:10px;padding-top:4px}
+  .statusbar{gap:10px}
+  .bigbar{order:5;flex-basis:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<g id="cupg">
+  <path d="M8 15 h26 v13 a11 11 0 0 1 -11 11 h-4 a11 11 0 0 1 -11 -11 z" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M34 18 h4 a6 6 0 0 1 0 12 h-3" fill="none" stroke="var(--bean)" stroke-width="2.4"/>
+  <path d="M15 4 c-2 3 2 5 0 8 M21 3 c-2 3 2 5 0 8 M27 4 c-2 3 2 5 0 8" fill="none" stroke="var(--steam)" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+</g>
+</defs></svg>
+
+<div class="wrap">
+
+<a class="top" href="../index.html">
+  <svg class="cup" viewBox="0 0 48 44"><use href="#cupg"/></svg>
+  <div>
+    <h1>Hub de Estudos</h1>
+    <p>Ciência da Computação · <b>Lucas</b></p>
+  </div>
+</a>
+
+<header>
+  <p class="eyebrow">beecrowd · trilha de treino</p>
+  <h2 class="title">Duas linguagens,<br><span class="c">C</span> e <span class="j">Java</span>. Dois eixos.</h2>
+  <p class="lede">Linguagem é sintaxe: o que a linguagem te obriga a escrever. Algoritmo é a sacada: qual estrutura e qual complexidade resolvem o problema. São habilidades diferentes e sobem em ritmos diferentes — por isso, quatro listas separadas.</p>
+
+  <div class="matrix-shell">
+    <p class="matrix-label">Escolha a frente</p>
+    <div class="matrix" role="tablist" aria-label="Seleção de lista">
+      <div class="axis-head"></div>
+      <div class="axis-head">Linguagem — sintaxe e API</div>
+      <div class="axis-head">Algoritmo — sacada e complexidade</div>
+
+      <div class="axis-side">C</div>
+      <button class="cell" role="tab" data-list="c-lang" style="--tint:var(--bean)" aria-selected="true">
+        <div class="cell-name">C · Linguagem</div>
+        <div class="cell-sub">printf, ponteiros, char[]</div>
+        <div class="cell-count"><b data-done>0</b>/<span data-total>0</span> aceitos</div>
+        <div class="minibar"><i data-bar></i></div>
+      </button>
+      <button class="cell" role="tab" data-list="c-algo" style="--tint:var(--bean)" aria-selected="false">
+        <div class="cell-name">C · Algoritmo</div>
+        <div class="cell-sub">construir a estrutura na mão</div>
+        <div class="cell-count"><b data-done>0</b>/<span data-total>0</span> aceitos</div>
+        <div class="minibar"><i data-bar></i></div>
+      </button>
+
+      <div class="axis-side">Java</div>
+      <button class="cell" role="tab" data-list="java-lang" style="--tint:var(--steam)" aria-selected="false">
+        <div class="cell-name">Java · Linguagem</div>
+        <div class="cell-sub">Scanner, String, arrays</div>
+        <div class="cell-count"><b data-done>0</b>/<span data-total>0</span> aceitos</div>
+        <div class="minibar"><i data-bar></i></div>
+      </button>
+      <button class="cell" role="tab" data-list="java-algo" style="--tint:var(--steam)" aria-selected="false">
+        <div class="cell-name">Java · Algoritmo</div>
+        <div class="cell-sub">escolher a estrutura certa</div>
+        <div class="cell-count"><b data-done>0</b>/<span data-total>0</span> aceitos</div>
+        <div class="minibar"><i data-bar></i></div>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="statusbar" id="statusbar">
+  <span class="status-title"><span class="dot"></span><span id="statusName">C · Linguagem</span></span>
+  <span class="bigbar"><i id="bigbar"></i></span>
+  <span class="status-num"><b id="statusDone">0</b> / <span id="statusTotal">0</span></span>
+  <span class="filters" role="group" aria-label="Filtrar problemas">
+    <button data-filter="all" aria-pressed="true">Todos</button>
+    <button data-filter="todo" aria-pressed="false">Pendentes</button>
+    <button data-filter="done" aria-pressed="false">Feitos</button>
+  </span>
+</div>
+
+<main id="content"></main>
+
+<div class="footer">
+  <p>Marque um problema quando ele passar no juiz. O progresso fica salvo neste navegador. Dificuldade: 1 ponto = mecânico, 5 pontos = exige derivar o algoritmo.</p>
+  <button class="reset" id="reset">Limpar progresso</button>
+</div>
+
+</div>
+
+<script>
+/* ============================================================
+   Armazenamento: localStorage, com memória como plano B
+   (navegação privada / storage bloqueado).
+   ============================================================ */
+const Progresso = (() => {
+  const CHAVE = "trilha-beecrowd-v1";
+  let cache = {};
+  let persistente = true;
+
+  function carregar(){
+    try{
+      const bruto = localStorage.getItem(CHAVE);
+      cache = bruto ? JSON.parse(bruto) : {};
+    }catch(e){ persistente = false; cache = {}; }
+    return cache;
+  }
+
+  function salvar(){
+    if (!persistente) return;
+    try{ localStorage.setItem(CHAVE, JSON.stringify(cache)); }
+    catch(e){ persistente = false; }
+  }
+
+  return {
+    carregar,
+    marcado: (id) => !!cache[id],
+    alternar: (id, valor) => { if(valor) cache[id]=1; else delete cache[id]; salvar(); },
+    limpar: () => { cache = {}; salvar(); }
+  };
+})();
+
+/* ============================================================
+   Dados: 4 listas, cada uma com seções e problemas.
+   d = dificuldade 1..5 · destaque = problema-chave
+   ============================================================ */
+const LISTAS = {
+
+/* ---------------------------------------------------------- */
+"c-lang": {
+  nome: "C · Linguagem",
+  tint: "var(--bean)",
+  intro: "Objetivo: parar de apanhar da sintaxe. Nenhum problema aqui exige sacada — se você travar, é a linguagem, não o raciocínio.",
+  secoes: [
+    {
+      idx:"1.1", titulo:"printf e scanf",
+      nota:"A fonte de 80% dos erros de iniciante em C. Um <code>%d</code> onde devia ser <code>%lf</code> imprime lixo sem avisar.",
+      callout:"<b>Erro nº 1:</b> use <code>%lf</code> no <code>scanf</code> para ler <code>double</code>, mas <code>%f</code> no <code>printf</code> para imprimir. O <code>printf</code> promove <code>float</code> para <code>double</code> automaticamente; o <code>scanf</code> não, porque recebe um ponteiro e precisa saber o tamanho exato.",
+      itens:[
+        {n:1000,t:"Hello World",d:1,pede:"Imprimir <code>Hello World!</code> — sem entrada.",treina:"Estrutura do <code>main</code>, <code>#include &lt;stdio.h&gt;</code>, <code>\\n</code> no fim da linha."},
+        {n:1001,t:"Extremamente Básico",d:1,pede:"Ler dois inteiros e imprimir a soma no formato <code>X = 10</code>.",treina:"<code>scanf</code> com <code>&amp;</code>, texto fixo dentro do <code>printf</code>."},
+        {n:1002,t:"Área do Círculo",d:1,pede:"Ler o raio e calcular a área usando π = 3.14159.",treina:"<code>double</code>, <code>%.4f</code>, constante em ponto flutuante."},
+        {n:1010,t:"Cálculo Simples",d:1,pede:"Ler código, quantidade e preço de dois produtos e somar o total.",treina:"Misturar <code>%d</code> e <code>%lf</code> na mesma leitura sem embaralhar a ordem."},
+        {n:1017,t:"Gasto de Combustível",d:1,pede:"Tempo e velocidade média; o carro faz 12 km/l. Quantos litros gastou?",treina:"Divisão inteira acidental — <code>km/12</code> com inteiros trunca."},
+        {n:1018,t:"Cédulas",d:2,pede:"Decompor um valor inteiro em notas de 100, 50, 20, 10, 5, 2 e 1.",treina:"<code>/</code> e <code>%</code> em sequência, laço de decomposição."},
+        {n:1021,t:"Notas e Moedas",d:2,pede:"Mesma decomposição, agora com centavos e moedas.",treina:"Erro de arredondamento de <code>float</code>. Converta para centavos inteiros logo na leitura."}
+      ]
+    },
+    {
+      idx:"1.2", titulo:"Condicionais e laços",
+      nota:"Sintaxe idêntica à de Java, então esta parte deve ser rápida. O que muda é o comportamento em erro.",
+      callout:"<b>Diferença crítica:</b> em C, dividir por zero <b>não</b> lança exceção. Com inteiros o programa costuma abortar; com <code>double</code> você recebe <code>inf</code> ou <code>nan</code> silenciosamente. Você tem que testar o divisor antes, sempre.",
+      itens:[
+        {n:1035,t:"Teste de Seleção 1",d:1,pede:"Quatro inteiros; imprimir se todas as condições dadas forem satisfeitas.",treina:"Encadear <code>&amp;&amp;</code> sem se perder nos parênteses."},
+        {n:1038,t:"Lanche",d:1,pede:"Código do item e quantidade; consultar a tabela de preços e somar.",treina:"<code>switch</code> com <code>break</code> — sem ele, cai no caso seguinte."},
+        {n:1043,t:"Triângulo",d:2,pede:"Três lados; se formam triângulo, imprimir o perímetro, senão a área do trapézio.",treina:"Desigualdade triangular como condição composta."},
+        {n:1059,t:"Números Pares",d:1,pede:"Imprimir os pares de 1 a 100.",treina:"<code>for</code> com passo 2 — mais rápido que testar <code>% 2</code>."},
+        {n:1078,t:"Tabuada",d:1,pede:"Ler N e imprimir a tabuada de 1 a 10 no formato exato.",treina:"Formatação dentro do laço; espaços contam."},
+        {n:1114,t:"Senha Fixa",d:1,pede:"Ler até que a senha correta seja digitada.",treina:"<code>while</code> com sentinela — a leitura precisa aparecer antes e dentro do laço."},
+        {n:1116,t:"Dividindo X por Y",d:2,pede:"N pares; dividir e tratar o caso do divisor zero.",treina:"Testar o divisor antes de dividir. Em C, não existe rede de proteção."}
+      ]
+    },
+    {
+      idx:"1.3", titulo:"Leitura até EOF",
+      nota:"O padrão que domina metade do beecrowd: você não sabe quantos casos virão.",
+      callout:"<b>Padrão canônico:</b><pre>int a, b;\nwhile (scanf(\"%d %d\", &amp;a, &amp;b) == 2) {\n    printf(\"%d\\n\", a + b);\n} /* end while */</pre>Testar <code>== 2</code> é melhor que <code>!= EOF</code>: cobre fim de arquivo <b>e</b> entrada malformada, porque <code>scanf</code> devolve quantos itens conseguiu ler.",
+      itens:[
+        {n:1132,t:"Múltiplos de 13",d:2,pede:"Somar os valores do intervalo entre X e Y que não são múltiplos de 13.",treina:"Intervalo com limites em ordem qualquer — normalize antes."},
+        {n:1133,t:"Rest of a Division",d:2,pede:"Imprimir os números do intervalo cujo resto por 5 seja 2 ou 3.",treina:"EOF combinado com filtro dentro do laço."},
+        {n:1026,t:"Carrega ou não Carrega",d:3,pede:"Somar dois inteiros de 32 bits descartando o vai-um de cada bit.",treina:"XOR (<code>^</code>). Use <code>unsigned int</code> e <code>%u</code> — com <code>%d</code> o resultado sai negativo acima de 2³¹.",destaque:true},
+        {n:1160,t:"População A e B",d:2,pede:"Duas cidades com populações e taxas de crescimento; em quantos anos A ultrapassa B?",treina:"Laço com condição composta e limite de segurança (100 anos)."}
+      ]
+    },
+    {
+      idx:"1.4", titulo:"Vetores, matrizes e endereços",
+      nota:"Aqui C e Java começam a divergir de verdade. Em C, o vetor é o endereço do primeiro elemento — nada mais.",
+      callout:"<b>Cuidado:</b> vetor local em C <b>não</b> vem zerado. <code>int v[10];</code> contém lixo da pilha. Ou inicialize com <code>int v[10] = {0};</code> ou preencha antes de ler. Em Java isso nunca acontece, e é exatamente por isso que o bug passa despercebido por quem alterna entre as duas.",
+      itens:[
+        {n:1173,t:"Preenchimento de Vetor I",d:1,pede:"Ler um valor e preencher 10 posições dobrando a cada passo.",treina:"Indexação básica e o hábito de inicializar."},
+        {n:1175,t:"Inversão de Vetor",d:2,pede:"Ler 20 valores e imprimir na ordem inversa.",treina:"Troca com variável temporária; percorrer só metade do vetor."},
+        {n:1180,t:"Menor e Posição",d:2,pede:"Ler N valores e imprimir o menor e a posição em que ele aparece.",treina:"Guardar o índice junto do valor — erro comum é guardar só o valor."},
+        {n:1181,t:"Linha na Matriz",d:2,pede:"Matriz 12×12; ler uma linha e uma operação (soma ou média).",treina:"<code>double m[12][12]</code>, percorrer uma linha fixa."},
+        {n:1183,t:"Acima da Diagonal Principal",d:2,pede:"Somar ou tirar a média dos elementos acima da diagonal principal.",treina:"Traduzir uma região geométrica em condição sobre <code>i</code> e <code>j</code> (<code>j &gt; i</code>)."},
+        {n:1187,t:"Área Superior",d:3,pede:"Mesma matriz, região triangular superior.",treina:"Duas condições simultâneas sobre índices. Desenhe a matriz no papel antes."}
+      ]
+    },
+    {
+      idx:"1.5", titulo:"Strings — o território hostil",
+      nota:"Em C, string é um vetor de <code>char</code> terminado em <code>\\0</code>. Tudo é manual: tamanho, cópia, comparação.",
+      callout:"<b>A armadilha que pega todo mundo:</b> misturar <code>scanf(\"%d\", &amp;n)</code> com <code>fgets</code>. O <code>scanf</code> deixa o <code>\\n</code> no buffer e o <code>fgets</code> seguinte lê uma linha vazia. Resolva com um <code>getchar()</code> depois do <code>scanf</code>, ou leia tudo com <code>fgets</code> e converta com <code>sscanf</code>.",
+      itens:[
+        {n:1234,t:"Dancing Sentence",d:3,pede:"Alternar maiúsculas e minúsculas ao longo de cada palavra.",treina:"<code>fgets</code>, <code>strlen</code>, <code>toupper</code>/<code>tolower</code> de <code>&lt;ctype.h&gt;</code>."},
+        {n:1238,t:"Combiner",d:3,pede:"Intercalar os caracteres de duas strings de tamanhos diferentes.",treina:"Percorrer dois <code>char[]</code> com índices independentes."},
+        {n:1272,t:"Mensagem Oculta",d:3,pede:"Extrair uma mensagem escondida a partir de tokens do texto.",treina:"<code>strtok</code> e a noção de que ele <b>modifica</b> a string original."},
+        {n:1273,t:"Justificador",d:4,pede:"Distribuir espaços para justificar linhas de texto numa largura fixa.",treina:"Manipulação pesada de buffer. É o mais difícil desta lista."}
+      ]
+    }
+  ]
+},
+
+/* ---------------------------------------------------------- */
+"java-lang": {
+  nome: "Java · Linguagem",
+  tint: "var(--steam)",
+  intro: "Objetivo: sintaxe e API na ponta dos dedos. A classe tem que se chamar <code>Main</code> e ser pública, senão o juiz nem compila.",
+  secoes: [
+    {
+      idx:"2.1", titulo:"O esqueleto e a formatação",
+      nota:"Decore este molde. Noventa por cento dos problemas do beecrowd cabem nele.",
+      callout:"<pre>import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner entrada = new Scanner(System.in);\n        int valor = entrada.nextInt();\n        System.out.println(valor);\n    } // end main\n} // end class Main</pre><b>Decimais:</b> <code>System.out.printf(\"%.2f%n\", x)</code>. Se o problema exige ponto e não vírgula, use <code>printf(Locale.US, ...)</code> — sem isso, o juiz devolve <i>wrong answer</i> num código correto.",
+      itens:[
+        {n:1000,t:"Hello World",d:1,pede:"Imprimir uma frase fixa.",treina:"Classe <code>Main</code> pública, assinatura do <code>main</code>."},
+        {n:1001,t:"Extremamente Básico",d:1,pede:"Ler dois inteiros e imprimir a soma no formato <code>X = 10</code>.",treina:"<code>nextInt()</code> e concatenação com <code>+</code> — sem <code>&amp;</code>, sem <code>%d</code>."},
+        {n:1002,t:"Área do Círculo",d:1,pede:"Ler o raio e calcular a área.",treina:"<code>printf(\"%.4f%n\")</code>. O <code>%n</code> é a quebra de linha portável."},
+        {n:1006,t:"Média 2",d:1,pede:"Três notas com pesos 2, 3 e 5.",treina:"Aritmética em <code>double</code> e arredondamento na saída."},
+        {n:1010,t:"Cálculo Simples",d:1,pede:"Dois produtos com código, quantidade e preço.",treina:"<code>nextInt()</code> e <code>nextDouble()</code> na mesma leitura."},
+        {n:1017,t:"Gasto de Combustível",d:1,pede:"Tempo, velocidade e consumo de 12 km/l.",treina:"<code>7 / 2</code> dá <code>3</code> em Java também. Escreva <code>7 / 2.0</code>."}
+      ]
+    },
+    {
+      idx:"2.2", titulo:"Condicionais, laços e a primeira exceção",
+      nota:"Sintaxe quase idêntica à de C. A diferença aparece no tratamento de erro.",
+      callout:"<b>Diferença crítica:</b> em Java, dividir inteiro por zero lança <code>ArithmeticException</code> e derruba o programa com <i>runtime error</i> no juiz. Isso é melhor que C — o erro é alto e claro em vez de silencioso. Mas você ainda precisa testar o divisor antes.",
+      itens:[
+        {n:1035,t:"Teste de Seleção 1",d:1,pede:"Quatro inteiros e um conjunto de condições.",treina:"Operadores lógicos e precedência."},
+        {n:1038,t:"Lanche",d:1,pede:"Código do item e quantidade.",treina:"<code>switch</code>. Se estiver em Java 14+, experimente <code>case 1 -&gt; ...</code> sem <code>break</code>."},
+        {n:1043,t:"Triângulo",d:2,pede:"Perímetro ou área conforme os lados formem ou não um triângulo.",treina:"<code>if</code>/<code>else</code> com condição composta."},
+        {n:1064,t:"Positivos e Média",d:1,pede:"Seis valores; contar os positivos e tirar a média deles.",treina:"Acumulador e contador no mesmo laço, espaço O(1)."},
+        {n:1073,t:"Quadrado de Pares",d:1,pede:"Imprimir cada número par até N junto com seu quadrado.",treina:"<code>for</code> com passo 2 e saída tabulada."},
+        {n:1116,t:"Dividindo X por Y",d:2,pede:"N divisões, tratando o divisor zero.",treina:"Sua primeira exceção real. Trate com <code>if</code>, não com <code>try/catch</code> — é mais rápido e mais claro."},
+        {n:1131,t:"Grenais",d:2,pede:"Ler placares até o usuário escolher parar; contabilizar vitórias e empates.",treina:"Laço de menu com múltiplos contadores."}
+      ]
+    },
+    {
+      idx:"2.3", titulo:"Leitura até EOF em Java",
+      nota:"O equivalente do <code>scanf(...) == 2</code> que você já usa em C.",
+      callout:"<pre>Scanner entrada = new Scanner(System.in);\n\nwhile (entrada.hasNextInt()) {\n    int a = entrada.nextInt();\n    int b = entrada.nextInt();\n    System.out.println(a + b);\n} // end while</pre><b>Sobre desempenho:</b> <code>Scanner</code> é lento. Enquanto a entrada for pequena, tudo bem. Quando começar a tomar <i>time limit exceeded</i>, troque por <code>BufferedReader</code> + <code>StringTokenizer</code> e acumule a saída num <code>StringBuilder</code>.",
+      itens:[
+        {n:1132,t:"Múltiplos de 13",d:2,pede:"Somar o intervalo excluindo múltiplos de 13.",treina:"<code>hasNextInt()</code> como condição de parada."},
+        {n:1133,t:"Rest of a Division",d:2,pede:"Filtrar por resto da divisão dentro do intervalo.",treina:"EOF com dois valores por caso."},
+        {n:1026,t:"Carrega ou não Carrega",d:3,pede:"Soma binária descartando o carry.",treina:"<code>a ^ b</code>. Java não tem <code>unsigned</code>: use <code>Integer.parseUnsignedInt</code> e <code>Integer.toUnsignedString</code>.",destaque:true},
+        {n:1149,t:"Soma de Alarmante",d:2,pede:"Somar N termos a partir de A, repetindo até o fim da entrada.",treina:"Laço dentro de laço com EOF externo."}
+      ]
+    },
+    {
+      idx:"2.4", titulo:"Arrays em Java",
+      nota:"Array em Java é objeto: tem <code>.length</code> (atributo, sem parênteses) e vem zerado de fábrica.",
+      callout:"<b>Pare de reinventar:</b> <code>Arrays.fill(v, 0)</code> preenche, <code>Arrays.copyOf(v, n)</code> copia, <code>Arrays.toString(v)</code> imprime tudo para depurar e <code>Arrays.sort(v)</code> ordena em O(n log n). Escrever um <code>for</code> para copiar vetor é o sinal mais claro de que você está programando C com sintaxe de Java.",
+      itens:[
+        {n:1173,t:"Preenchimento de Vetor I",d:1,pede:"Preencher 10 posições dobrando o valor a cada passo.",treina:"<code>new int[10]</code> e <code>.length</code> sem parênteses."},
+        {n:1175,t:"Inversão de Vetor",d:2,pede:"Ler 20 valores e imprimir invertidos.",treina:"Troca de posições. Compare com a versão em C — é idêntica."},
+        {n:1176,t:"Fibonacci em Vetor",d:3,pede:"Vários casos, cada um pedindo o N-ésimo termo de Fibonacci.",treina:"Memoização: calcule a tabela <b>uma vez</b> e responda cada consulta em O(1). Use <code>long</code>, pois <code>int</code> estoura por volta do 47º termo."},
+        {n:1180,t:"Menor e Posição",d:2,pede:"Menor valor e a posição dele.",treina:"Rastrear índice, não só valor."},
+        {n:1181,t:"Linha na Matriz",d:2,pede:"Matriz 12×12, soma ou média de uma linha.",treina:"<code>double[][]</code> — em Java é um vetor de vetores, não um bloco contíguo como em C."},
+        {n:1187,t:"Área Superior",d:3,pede:"Região triangular superior da matriz.",treina:"Condições combinadas sobre <code>i</code> e <code>j</code>."}
+      ]
+    },
+    {
+      idx:"2.5", titulo:"Strings — onde Java te devolve o tempo",
+      nota:"Depois do sofrimento com <code>char[]</code> em C, esta seção é a recompensa.",
+      callout:"<b>A regra mais importante de Java:</b> <code>resultado += caractere</code> dentro de um laço é <b>O(n²)</b> — <code>String</code> é imutável, então cada <code>+=</code> aloca um objeto novo e copia tudo. Use <code>StringBuilder</code>, que é O(n) amortizado. Esse é <i>o</i> erro clássico de quem vem de C, porque em C você escreve direto no buffer e o custo não aparece.",
+      itens:[
+        {n:1234,t:"Dancing Sentence",d:3,pede:"Alternar maiúsculas e minúsculas ao longo de cada palavra.",treina:"<code>toCharArray()</code>, <code>Character.toUpperCase()</code>, montagem com <code>StringBuilder</code>."},
+        {n:1238,t:"Combiner",d:3,pede:"Intercalar os caracteres de duas strings.",treina:"<code>charAt()</code> e índices independentes."},
+        {n:1272,t:"Mensagem Oculta",d:3,pede:"Recuperar a mensagem a partir dos tokens do texto.",treina:"<code>split()</code> — que devolve um array pronto, ao contrário do <code>strtok</code> de C, que destrói o original."},
+        {n:1607,t:"Avance as Letras",d:2,pede:"Deslocar cada letra N posições no alfabeto.",treina:"Aritmética com <code>char</code> e o cuidado com a volta ao início (<code>% 26</code>)."}
+      ]
+    }
+  ]
+},
+
+/* ---------------------------------------------------------- */
+"c-algo": {
+  nome: "C · Algoritmo",
+  tint: "var(--bean)",
+  intro: "Aqui você <b>constrói</b> a estrutura. Não existe biblioteca para salvar você — e é exatamente por isso que esta lista ensina mais do que a versão em Java.",
+  secoes: [
+    {
+      idx:"3.1", titulo:"Matemática e otimização de laço",
+      nota:"O primeiro tipo de sacada: perceber que o laço óbvio faz trabalho demais.",
+      callout:"<b>Por que testar divisores só até √n:</b> se <code>n = a × b</code>, um dos fatores é obrigatoriamente ≤ √n. Então basta varrer até a raiz para achar todos os pares. Isso derruba a complexidade de O(n) para <b>O(√n)</b> — a diferença entre passar e tomar <i>time limit</i>.",
+      itens:[
+        {n:1071,t:"Soma de Ímpares Consecutivos I",d:2,pede:"Somar os ímpares estritamente entre dois valores.",treina:"Existe fórmula fechada para essa soma. Faça com laço primeiro, depois derive a fórmula O(1)."},
+        {n:1164,t:"Número Perfeito",d:3,pede:"Verificar se N é igual à soma dos próprios divisores.",treina:"O laço ingênuo é O(n). Passar para O(√n) somando os divisores aos pares."},
+        {n:1165,t:"Número Primo",d:3,pede:"Dizer se cada valor lido é primo.",treina:"Mesma otimização, agora com parada antecipada no primeiro divisor."},
+        {n:1221,t:"Primo Rápido",d:4,pede:"Muitas consultas de primalidade com tempo apertado.",treina:"O(√n) por consulta já não basta. Pré-calcule com o <b>Crivo de Eratóstenes</b>: O(n log log n) uma vez, depois O(1) por consulta.",destaque:true}
+      ]
+    },
+    {
+      idx:"3.2", titulo:"Recursão e a árvore de chamadas",
+      nota:"Recursão só faz sentido quando você consegue desenhar a árvore. Estes dois problemas forçam isso.",
+      callout:"<b>Traço mental do 1029:</b><pre>fib(5)\n├── fib(4)\n│   ├── fib(3)\n│   │   ├── fib(2) ...\n│   │   └── fib(1)\n│   └── fib(2)\n└── fib(3)   ← recalculado do zero!</pre>O <code>fib(3)</code> aparece duas vezes, o <code>fib(2)</code> três vezes. É por isso que a versão recursiva ingênua é O(2ⁿ) enquanto a iterativa é O(n). Repare que o número de chamadas tem relação direta com a própria sequência — e essa é a sacada do problema.",
+      itens:[
+        {n:1151,t:"Fibonacci Fácil",d:2,pede:"Imprimir os N primeiros termos da sequência.",treina:"Versão iterativa com dois acumuladores: O(n) tempo, <b>O(1) espaço</b>. Não crie vetor se só precisa imprimir."},
+        {n:1029,t:"Fibonacci, Quantas Chamadas?",d:4,pede:"Imprimir o N-ésimo termo e quantas chamadas a versão recursiva ingênua faria.",treina:"Está classificado em Paradigmas, não em Iniciante. Você precisa <b>entender</b> a árvore de recursão, não só escrevê-la.",destaque:true}
+      ]
+    },
+    {
+      idx:"3.3", titulo:"Pilha construída na mão",
+      nota:"Vetor mais um índice de topo. Vinte linhas, e é a base de metade das provas de AEDs.",
+      callout:"<b>O molde inteiro:</b><pre>char pilha[MAX];\nint topo = -1;\n\n/* empilhar */ pilha[++topo] = c;\n/* desempilhar */ c = pilha[topo--];\n/* vazia? */ (topo == -1)\n/* topo */ pilha[topo]</pre>Todas as operações em <b>O(1)</b>. Guarde este trecho — ele resolve os quatro problemas abaixo com pouquíssima alteração.",
+      itens:[
+        {n:1068,t:"Balanço de Parênteses I",d:3,pede:"Dizer se uma expressão tem os parênteses corretamente balanceados.",treina:"O caso de uso canônico de pilha. Cuide de dois erros: fechar sem ter aberto, e sobrar aberto no fim."},
+        {n:1069,t:"Diamantes e Areia",d:3,pede:"Contar quantos diamantes estão corretamente encaixados em um trecho.",treina:"Mesma pilha, contagem diferente — mostra que a estrutura é reutilizável."},
+        {n:1077,t:"Infixa para Posfixa",d:4,pede:"Converter uma expressão da notação infixa para a posfixa.",treina:"Pilha com <b>precedência</b> de operadores (algoritmo shunting-yard). É o problema clássico de compiladores."},
+        {n:1162,t:"Organizador de Vagões",d:4,pede:"Dizer se uma ordem de vagões pode ser obtida usando um desvio.",treina:"Pilha em um problema onde ela não é óbvia. A dificuldade é <b>reconhecer</b> que é pilha.",destaque:true}
+      ]
+    },
+    {
+      idx:"3.4", titulo:"Fila construída na mão",
+      nota:"Dois índices em vez de um. A parte chata é o vetor circular.",
+      callout:"<b>Por que circular:</b> com <code>inicio</code> e <code>fim</code> avançando sempre para a direita, o vetor se esgota mesmo com espaço livre no começo. A solução é o resto: <code>fim = (fim + 1) % MAX</code>. Aí você precisa de um contador separado para distinguir fila vazia de fila cheia, já que nos dois casos <code>inicio == fim</code>.",
+      itens:[
+        {n:1110,t:"Jogando Cartas Fora",d:3,pede:"Descartar a carta do topo, mover a seguinte para o fim, repetir até sobrar uma.",treina:"Fila com remoção e reinserção. O enunciado descreve literalmente as operações."},
+        {n:1548,t:"Fila do Recreio",d:3,pede:"Organizar uma fila seguindo a regra de posicionamento dada.",treina:"Fila com regra de inserção condicional — não é FIFO puro."}
+      ]
+    },
+    {
+      idx:"3.5", titulo:"Ordenação, busca e o limite do O(n²)",
+      nota:"A seção mais valiosa da lista. Aqui a escolha do algoritmo decide entre passar e não passar.",
+      callout:"<b>Deixe o 1088 por último e reserve tempo para ele.</b> É o problema onde você é obrigado a perceber sozinho que o algoritmo óbvio não serve. Contar inversões testando todos os pares é O(n²) e estoura o tempo; a solução é adaptar o <b>merge sort</b> — cada vez que um elemento da metade direita passa na frente, você soma de uma vez todos os que sobraram na esquerda. Resultado: O(n log n). Derivar isso vale mais do que dez exercícios de sintaxe.",
+      itens:[
+        {n:1042,t:"Sort Simples",d:2,pede:"Imprimir três valores ordenados e depois na ordem original.",treina:"Ordenação manual de três elementos. Faça com <code>if</code> uma vez para entender, e note que guardar a ordem original exige cópia."},
+        {n:1025,t:"Onde está o Mármore?",d:4,pede:"Muitas consultas perguntando se um valor está na coleção e em que posição.",treina:"Força bruta é O(n) por consulta e estoura. Ordene uma vez com <code>qsort</code> e responda cada consulta em <b>O(log n)</b> com busca binária.",destaque:true},
+        {n:1023,t:"Estiagem",d:4,pede:"Consumo de água por casa, com média e saída agrupada por consumo.",treina:"Volume de entrada alto: exige contagem por frequência (ordenação O(n)) e I/O rápido em vez de <code>scanf</code> ingênuo."},
+        {n:1088,t:"Bolhas e Baldes",d:5,pede:"Determinar a paridade do número de trocas que o bubble sort faria.",treina:"Contagem de inversões. O(n²) dá <i>time limit</i>; merge sort adaptado resolve em O(n log n).",destaque:true}
+      ]
+    }
+  ]
+},
+
+/* ---------------------------------------------------------- */
+"java-algo": {
+  nome: "Java · Algoritmo",
+  tint: "var(--steam)",
+  intro: "Aqui você <b>escolhe</b> a estrutura em vez de construí-la. É a habilidade complementar à lista de C — e saber escolher exige entender o que cada estrutura custa.",
+  secoes: [
+    {
+      idx:"4.1", titulo:"Ordenação com critério",
+      nota:"Em C você escreveria uma função de comparação para o <code>qsort</code>. Em Java você compõe um <code>Comparator</code>. Compare as duas versões: é a melhor forma de sentir o que uma biblioteca te dá.",
+      callout:"<pre>Arrays.sort(camisetas, Comparator\n    .comparingInt(Camiseta::getTamanho)\n    .thenComparing(Camiseta::getCor));</pre><b>Detalhe que importa:</b> <code>Arrays.sort</code> em objetos usa TimSort, que é <b>estável</b> — elementos equivalentes mantêm a ordem original. Em vetores de primitivos usa quicksort dual-pivot, que <b>não</b> é estável. Quando o desempate importa, essa diferença decide o resultado.",
+      itens:[
+        {n:1259,t:"Pares e Ímpares",d:4,pede:"Ordenar os pares em ordem crescente e, em seguida, os ímpares em ordem decrescente.",treina:"Critério de ordenação composto. Dá para fazer com dois vetores ou com um <code>Comparator</code> esperto — tente os dois.",destaque:true},
+        {n:1244,t:"Ordenação por Tamanho",d:3,pede:"Ordenar palavras pelo comprimento, mantendo a ordem original no empate.",treina:"Aqui a <b>estabilidade</b> do TimSort resolve o desempate de graça."},
+        {n:1258,t:"Camisetas",d:4,pede:"Ordenar registros por mais de um campo.",treina:"Classe própria com <code>Comparator</code> encadeado — seu primeiro problema orientado a objetos de verdade."}
+      ]
+    },
+    {
+      idx:"4.2", titulo:"Hash e contagem",
+      nota:"A estrutura mais mal usada por iniciante. O ponto desta seção é saber quando <b>não</b> usar.",
+      callout:"<b>A lição do 1245:</b> os tamanhos de sapato ficam num intervalo pequeno e conhecido, então um vetor de contadores resolve. <code>HashMap</code> é O(1) <i>amortizado</i>, mas com constante alta: calcula hash, trata colisão, faz autoboxing de <code>Integer</code>. Vetor indexado é O(1) <b>de verdade</b>, com acesso direto à memória. Quando a chave é um inteiro num intervalo pequeno, vetor ganha sempre — e por larga margem.",
+      itens:[
+        {n:1256,t:"Tabelas Hash",d:4,pede:"Implementar uma tabela hash com tratamento de colisão por encadeamento.",treina:"É quase uma aula: você constrói a estrutura antes de usar a pronta. Faça este <b>antes</b> de sair usando <code>HashMap</code>.",destaque:true},
+        {n:1257,t:"Array Hash",d:4,pede:"Aplicar uma função de hash sobre strings e contar valores distintos.",treina:"Função de hash sobre texto e o conceito de colisão."},
+        {n:1245,t:"Botas Perdidas",d:3,pede:"Contar quantos pares completos de botas dá para formar.",treina:"Contagem por frequência com vetor. Resista à vontade de usar <code>HashMap</code>."}
+      ]
+    },
+    {
+      idx:"4.3", titulo:"Escolher a estrutura certa",
+      nota:"Os mesmos problemas da lista de C, agora com a biblioteca. O foco muda de <i>como construir</i> para <i>qual escolher e por quê</i>.",
+      callout:"<b>Use <code>ArrayDeque</code>, não <code>Stack</code>.</b> <code>Stack</code> é classe legada, herda de <code>Vector</code> e é sincronizada — você paga o custo de travas que não precisa. O idiomático moderno é <code>Deque&lt;Integer&gt; pilha = new ArrayDeque&lt;&gt;();</code> com <code>push</code>, <code>pop</code> e <code>peek</code>. E o mesmo <code>ArrayDeque</code> serve de fila com <code>offer</code> e <code>poll</code>: uma estrutura, dois papéis.",
+      itens:[
+        {n:1068,t:"Balanço de Parênteses I",d:2,pede:"Verificar o balanceamento dos parênteses.",treina:"O mesmo problema da lista de C. Resolva nas duas linguagens e compare — o algoritmo é idêntico, o código não."},
+        {n:1110,t:"Jogando Cartas Fora",d:3,pede:"Descartar e reinserir cartas até sobrar uma.",treina:"<code>ArrayDeque</code> como fila. Sem índice circular, sem contador — a biblioteca cuida disso."},
+        {n:2929,t:"Menor da Pilha",d:4,pede:"Uma pilha que também informa o menor elemento a qualquer momento.",treina:"Percorrer para achar o mínimo é O(n) e estoura. A solução usa <b>duas pilhas</b> — a segunda guarda o mínimo até cada altura, tornando a consulta O(1).",destaque:true},
+        {n:1340,t:"Eu Posso Adivinhar a Estrutura de Dados!",d:5,pede:"Dada uma sequência de operações e resultados, dizer se o comportamento é de pilha, fila, heap, mais de uma ou nenhuma.",treina:"Simular as três em paralelo e eliminar as incompatíveis. Você só resolve se entender de verdade a diferença de comportamento entre elas.",destaque:true}
+      ]
+    },
+    {
+      idx:"4.4", titulo:"Onde Java ganha de C",
+      nota:"Duas situações em que a biblioteca padrão de Java economiza horas de trabalho.",
+      callout:"<b>Sobre o 1161:</b> fatoriais crescem rápido demais para caber em 64 bits — <code>20!</code> ainda cabe em <code>long</code>, <code>21!</code> já estoura. Em Java você troca por <code>BigInteger</code> e segue. Em C você teria que implementar aritmética de precisão arbitrária sobre um vetor de dígitos. Vale fazer nas duas linguagens só para sentir a diferença de esforço.",
+      itens:[
+        {n:1161,t:"Soma de Fatoriais",d:3,pede:"Somar os fatoriais de dois números que estouram qualquer tipo inteiro.",treina:"<code>BigInteger</code> com <code>multiply</code> e <code>add</code>. Atenção: as operações devolvem um objeto novo, não alteram o original.",destaque:true},
+        {n:1281,t:"Ida à Feira",d:4,pede:"Escolher combinações de compra respeitando as restrições dadas.",treina:"Estruturas ordenadas do <code>java.util</code> e raciocínio guloso."}
+      ]
+    }
+  ]
+}
+};
+
+/* ============================================================
+   Interface
+   ============================================================ */
+const conteudo = document.getElementById("content");
+const abas = [...document.querySelectorAll(".cell")];
+let listaAtual = "c-lang";
+let filtro = "all";
+
+const idDe = (lista, n) => lista + ":" + n;
+
+function todosItens(chave){
+  return LISTAS[chave].secoes.flatMap(s => s.itens);
+}
+
+function pontos(d){
+  let s = "";
+  for (let i = 1; i <= 5; i++) s += `<i class="${i <= d ? "on" : ""}"></i>`;
+  return `<span class="dots" title="Dificuldade ${d} de 5" aria-label="Dificuldade ${d} de 5">${s}</span>`;
+}
+
+function desenhar(){
+  const lista = LISTAS[listaAtual];
+  document.documentElement.style.setProperty("--tint", lista.tint);
+  document.getElementById("statusbar").style.setProperty("--tint", lista.tint);
+  document.getElementById("statusName").textContent = lista.nome;
+
+  conteudo.innerHTML = `<p class="section-note" style="margin-top:28px;font-size:14.5px">${lista.intro}</p>` +
+    lista.secoes.map(sec => `
+      <section class="section" style="--tint:${lista.tint}">
+        <div class="section-head">
+          <span class="section-idx">${sec.idx}</span>
+          <h2 class="section-title">${sec.titulo}</h2>
+        </div>
+        <p class="section-note">${sec.nota}</p>
+        ${sec.callout ? `<div class="callout">${sec.callout}</div>` : ""}
+        <div class="rows">
+          ${sec.itens.map(it => {
+            const id = idDe(listaAtual, it.n);
+            const feito = Progresso.marcado(id);
+            return `
+            <div class="row ${feito ? "done" : ""}" data-id="${id}">
+              <input type="checkbox" class="check" ${feito ? "checked" : ""}
+                     aria-label="Marcar problema ${it.n} — ${it.t} como resolvido">
+              <a class="r-id" href="https://judge.beecrowd.com/pt/problems/view/${it.n}"
+                 target="_blank" rel="noopener">${it.n}</a>
+              <div>
+                <p class="r-title">${it.t}</p>
+                <p class="r-ask">${it.pede}</p>
+                <p class="r-train"><b>Treina:</b> ${it.treina}</p>
+              </div>
+              <div class="r-side">
+                ${pontos(it.d)}
+                ${it.destaque ? `<span class="star">chave</span>` : ""}
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      </section>`).join("");
+
+  aplicarFiltro();
+  atualizarContadores();
+}
+
+function aplicarFiltro(){
+  conteudo.querySelectorAll(".row").forEach(linha => {
+    const feito = linha.classList.contains("done");
+    const mostrar = filtro === "all" || (filtro === "done" && feito) || (filtro === "todo" && !feito);
+    linha.classList.toggle("hidden", !mostrar);
+  });
+  conteudo.querySelectorAll(".section").forEach(sec => {
+    const visiveis = [...sec.querySelectorAll(".row")].some(r => !r.classList.contains("hidden"));
+    sec.style.display = visiveis ? "" : "none";
+  });
+  const nada = ![...conteudo.querySelectorAll(".row")].some(r => !r.classList.contains("hidden"));
+  const antigo = conteudo.querySelector(".empty");
+  if (antigo) antigo.remove();
+  if (nada){
+    const p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = filtro === "done"
+      ? "Nenhum problema marcado nesta lista ainda. Comece pelo primeiro."
+      : "Lista inteira concluída. Passe para a próxima frente.";
+    conteudo.appendChild(p);
+  }
+}
+
+function atualizarContadores(){
+  abas.forEach(aba => {
+    const chave = aba.dataset.list;
+    const itens = todosItens(chave);
+    const feitos = itens.filter(it => Progresso.marcado(idDe(chave, it.n))).length;
+    aba.querySelector("[data-done]").textContent = feitos;
+    aba.querySelector("[data-total]").textContent = itens.length;
+    aba.querySelector("[data-bar]").style.width = (feitos / itens.length * 100) + "%";
+  });
+  const itensAtual = todosItens(listaAtual);
+  const feitosAtual = itensAtual.filter(it => Progresso.marcado(idDe(listaAtual, it.n))).length;
+  document.getElementById("statusDone").textContent = feitosAtual;
+  document.getElementById("statusTotal").textContent = itensAtual.length;
+  document.getElementById("bigbar").style.width = (feitosAtual / itensAtual.length * 100) + "%";
+}
+
+/* eventos */
+conteudo.addEventListener("change", e => {
+  if (!e.target.classList.contains("check")) return;
+  const linha = e.target.closest(".row");
+  linha.classList.toggle("done", e.target.checked);
+  Progresso.alternar(linha.dataset.id, e.target.checked);
+  aplicarFiltro();
+  atualizarContadores();
+});
+
+abas.forEach(aba => aba.addEventListener("click", () => {
+  abas.forEach(o => o.setAttribute("aria-selected", String(o === aba)));
+  listaAtual = aba.dataset.list;
+  desenhar();
+  document.getElementById("statusbar").scrollIntoView({block:"start"});
+}));
+
+document.querySelectorAll(".filters button").forEach(botao => {
+  botao.addEventListener("click", () => {
+    filtro = botao.dataset.filter;
+    document.querySelectorAll(".filters button")
+      .forEach(o => o.setAttribute("aria-pressed", String(o === botao)));
+    aplicarFiltro();
+  });
+});
+
+document.getElementById("reset").addEventListener("click", () => {
+  if (!confirm("Isto desmarca todos os problemas das quatro listas. Continuar?")) return;
+  Progresso.limpar();
+  desenhar();
+});
+
+/* início */
+Progresso.carregar();
+desenhar();
+</script>
+</body>
+</html>

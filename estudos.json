@@ -25,6 +25,11 @@
     "descricao": "60 questões no formato das provas, divididas em três blocos: abstrações de controle, abstrações de dados e orientação a objetos com estruturas encadeadas. Gabarito comentado ao final."
   },
   {
+    "arquivo": "trilha-beecrowd-c-java.html",
+    "titulo": "beecrowd · Trilha de treino em C e Java",
+    "descricao": "Quatro listas de problemas separadas por eixo: linguagem (sintaxe e API) e algoritmo (sacada e complexidade), em C e em Java. Cada problema traz o que ele pede, o que treina e a dificuldade — com progresso salvo no navegador."
+  },
+  {
     "arquivo": "guia-integrais.html",
     "titulo": "Cálculo 2 · Guia de Integrais (Stewart)",
     "descricao": "Seções 4.9 a 8.5 na ordem da lista de exercícios: primitivas, integral definida e TFC, substituição, áreas e volumes, técnicas de integração, aplicações e modelagem por soma de Riemann."
