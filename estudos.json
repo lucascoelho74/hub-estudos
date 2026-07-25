@@ -27,7 +27,7 @@
   {
     "arquivo": "trilha-beecrowd-c-java.html",
     "titulo": "beecrowd · Trilha de treino em C e Java",
-    "descricao": "Quatro listas de problemas separadas por eixo: linguagem (sintaxe e API) e algoritmo (sacada e complexidade), em C e em Java. Cada problema traz o que ele pede, o que treina e a dificuldade — com progresso salvo no navegador."
+    "descricao": "Quatro listas de problemas separadas por eixo: linguagem (sintaxe e API) e algoritmo (sacada e complexidade), em C e em Java. Cada problema abre aqui mesmo com enunciado, formato de entrada e saída e exemplo, além do que ele treina e da dificuldade — com progresso salvo no navegador."
   },
   {
     "arquivo": "guia-integrais.html",
