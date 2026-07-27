@@ -1,5 +1,10 @@
 [
   {
+    "arquivo": "java-primeiros-passos.html",
+    "titulo": "Java · Primeiros passos",
+    "descricao": "O chão antes da POO: o que cada palavra do esqueleto faz, o que um import realmente é (e por que MyIO não é um), entrada e saída com Scanner e printf — incluindo o Locale que faz o juiz recusar código certo —, limites dos tipos, divisão inteira, == contra equals e StringBuilder."
+  },
+  {
     "arquivo": "resumo-java-interativo.html",
     "titulo": "Java · Resumo POO — AEDS II",
     "descricao": "Material de estudo."
