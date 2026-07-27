@@ -87,11 +87,12 @@ a{text-decoration:none;color:inherit}
 
   <div class="empty" id="empty">
     <b>Nenhum estudo listado ainda</b>
-    Adicione o arquivo em <code>estudos/</code> e registre no <code>estudos.json</code>.
+    Adicione o arquivo em <code>estudos/</code> e registre no <code>estudos.js</code>.
   </div>
 
 </div>
 
+<script src="estudos.js"></script>
 <script>
 (function(){
   var grid=document.getElementById('grid');
@@ -133,13 +134,17 @@ a{text-decoration:none;color:inherit}
     if(e.key==='Escape'){busca.value='';filtrar();busca.blur();}
   });
 
-  // carrega a lista de estudos
-  fetch('estudos.json?v='+Date.now())
-    .then(function(r){ if(!r.ok) throw new Error('sem json'); return r.json(); })
-    .then(function(data){ todos=Array.isArray(data)?data:[]; render(todos); })
-    .catch(function(){ todos=[]; render(todos);
-      empty.querySelector('b').textContent='Não consegui carregar a lista';
-    });
+  // A lista vem de estudos.js, carregado por <script> acima. Isso e de
+  // proposito: com fetch a pagina so funcionava servida por http, porque o
+  // navegador bloqueia fetch de arquivo local. Com <script> ela funciona
+  // igual no site e aberta direto do disco.
+  if (Array.isArray(window.ESTUDOS)) {
+    todos = window.ESTUDOS;
+  } else {
+    todos = [];
+    empty.querySelector('b').textContent = 'Não consegui carregar a lista';
+  }
+  render(todos);
 })();
 </script>
 </body>

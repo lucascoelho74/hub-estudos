@@ -1,4 +1,12 @@
-[
+/* ============================================================
+   Lista de estudos do hub — fonte unica.
+   E um .js em vez de .json de proposito: <script> funciona tambem
+   com a pagina aberta direto do disco (file://), onde o navegador
+   bloqueia fetch por CORS.
+   Para adicionar um estudo: coloque o arquivo em estudos/ e
+   acrescente um objeto nesta lista.
+   ============================================================ */
+window.ESTUDOS = [
   {
     "arquivo": "java-primeiros-passos.html",
     "titulo": "Java · Primeiros passos",
@@ -39,4 +47,4 @@
     "titulo": "Cálculo 2 · Guia de Integrais (Stewart)",
     "descricao": "Seções 4.9 a 8.5 na ordem da lista de exercícios: primitivas, integral definida e TFC, substituição, áreas e volumes, técnicas de integração, aplicações e modelagem por soma de Riemann."
   }
-]
+];
