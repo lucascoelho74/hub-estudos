@@ -228,6 +228,73 @@ h2.title .j{color:var(--steam)}
   border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px;color:var(--code-inline)
 }
 
+/* ---------- executor de codigo ---------- */
+.runner{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)}
+.runner-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.runner-top h4{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tint);margin:0;font-weight:600
+}
+.langs{display:flex;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px}
+.langs button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;background:none;border:0;
+  color:var(--fg-faint);padding:4px 11px;border-radius:5px;cursor:pointer;transition:all .14s
+}
+.langs button:hover{color:var(--fg-dim)}
+.langs button[aria-pressed="true"]{background:var(--panel-2);color:var(--tint);font-weight:600}
+.langs button:focus-visible{outline:2px solid var(--tint);outline-offset:1px}
+.code-area,.stdin-area{
+  width:100%;font-family:var(--mono);font-size:12.5px;line-height:1.55;
+  background:var(--code-bg);color:var(--code-fg);border:1px solid var(--line);
+  border-radius:8px;padding:10px 12px;outline:none;resize:vertical;tab-size:4;display:block
+}
+.code-area{min-height:170px}
+.stdin-area{min-height:96px}
+.code-area:focus,.stdin-area:focus{border-color:var(--tint)}
+.code-area::placeholder,.stdin-area::placeholder{color:var(--fg-faint)}
+.runner-io{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.io-lbl{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--fg-faint);margin:0 0 5px;font-weight:600
+}
+.runner-io pre{
+  font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--code-bg);
+  border:1px solid var(--line-soft);border-radius:8px;padding:10px 12px;margin:0;
+  overflow-x:auto;white-space:pre;color:var(--code-fg);min-height:96px
+}
+.runner-acts{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.btn-run{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--tint);border:0;color:var(--ink);font-weight:700;
+  padding:9px 16px;border-radius:8px;cursor:pointer;transition:opacity .14s
+}
+.btn-run:hover{opacity:.88}
+.btn-run:disabled{opacity:.45;cursor:default}
+.btn-run:focus-visible{outline:2px solid var(--crema);outline-offset:2px}
+.btn-ghost{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:1px solid var(--line);color:var(--fg-faint);
+  padding:8px 12px;border-radius:8px;cursor:pointer;transition:all .14s
+}
+.btn-ghost:hover{color:var(--fg);border-color:var(--line-2)}
+.run-status{font-family:var(--mono);font-size:11.5px;color:var(--crema)}
+.veredito{margin-top:12px;border-radius:8px;padding:11px 13px;font-size:13px;border:1px solid;color:var(--fg-dim)}
+.veredito b{color:var(--fg-strong);font-weight:600}
+.veredito.ok{background:var(--leaf-soft);border-color:rgba(127,174,95,.32)}
+.veredito.ok b{color:var(--leaf)}
+.veredito.dif,.veredito.err{background:var(--red-soft);border-color:rgba(211,119,106,.3)}
+.veredito.dif b,.veredito.err b{color:var(--red)}
+.veredito.info{background:var(--crema-soft);border-color:rgba(232,201,160,.25)}
+.veredito pre{
+  font-family:var(--mono);font-size:12px;line-height:1.6;background:var(--code-bg);
+  border:1px solid var(--line-soft);border-radius:6px;padding:9px 11px;margin:9px 0 0;
+  overflow-x:auto;white-space:pre;color:var(--code-fg)
+}
+.veredito pre .mk{color:var(--red);font-weight:700}
+.veredito pre .esp{color:var(--fg-faint)}
+.aviso-externo{font-size:11.5px;color:var(--fg-faint);margin:12px 0 0;line-height:1.5}
+.aviso-externo b{color:var(--fg-dim);font-weight:600}
+
 /* ---------- callout ---------- */
 .callout{
   background:linear-gradient(90deg,var(--bean-soft),transparent 80%);
@@ -266,6 +333,7 @@ h2.title .j{color:var(--steam)}
   .statusbar{gap:10px}
   .bigbar{order:5;flex-basis:100%}
   .p-cols{grid-template-columns:1fr;gap:12px}
+  .runner-io{grid-template-columns:1fr;gap:12px}
   .r-panel{padding:14px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -1043,8 +1111,107 @@ const LISTAS = {
 };
 
 /* ============================================================
-   Interface
+   Codigo do usuario: guardado por problema e linguagem.
    ============================================================ */
+const Codigos = (() => {
+  const CHAVE = "trilha-beecrowd-codigo-v1";
+  let cache = {};
+  try { cache = JSON.parse(localStorage.getItem(CHAVE) || "{}"); } catch(e){ cache = {}; }
+  const chave = (lang, n) => lang + ":" + n;
+  return {
+    ler: (lang, n) => cache[chave(lang, n)] || "",
+    gravar: (lang, n, texto) => {
+      cache[chave(lang, n)] = texto;
+      try { localStorage.setItem(CHAVE, JSON.stringify(cache)); } catch(e){ /* só memória */ }
+    }
+  };
+})();
+
+const MOLDES = {
+  c: '#include <stdio.h>\n\nint main() {\n\n    return 0;\n} /* end main */\n',
+  java: 'import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner entrada = new Scanner(System.in);\n\n    } // end main\n} // end class Main\n'
+};
+
+/* ============================================================
+   Execucao remota via wandbox.org. Nao existe compilador de C
+   nem JVM no navegador, entao compilar exige servico externo.
+   ============================================================ */
+const Executor = (() => {
+  let compiladores = null;
+
+  async function descobrir(){
+    if (compiladores) return compiladores;
+    const r = await fetch("https://wandbox.org/api/list.json");
+    if (!r.ok) throw new Error("o wandbox respondeu " + r.status + " ao listar compiladores.");
+    const lista = await r.json();
+    const c = lista.find(x => x.language === "C" && !/head/.test(x.name));
+    const j = lista.find(x => x.language === "Java");
+    if (!c || !j) throw new Error("o wandbox não está oferecendo C ou Java neste momento.");
+    compiladores = { c: c.name, java: j.name };
+    return compiladores;
+  }
+
+  /* O wandbox compila sempre num arquivo chamado prog.java, e Java exige que
+     uma classe public tenha o nome do arquivo. Removemos só o modificador na
+     cópia enviada — o seu código continua com "public class Main", que é o
+     que o beecrowd exige. */
+  const semPublic = (s) =>
+    s.replace(/^([ \t]*)public[ \t]+(?=(?:final[ \t]+|abstract[ \t]+)?(?:class|interface|enum|record)[ \t])/gm, "$1");
+
+  async function rodar(lang, codigo, stdin){
+    const comp = await descobrir();
+    const corpo = {
+      compiler: comp[lang],
+      code: lang === "java" ? semPublic(codigo) : codigo,
+      stdin: stdin,
+      options: "",
+      save: false
+    };
+    /* sqrt, pow e companhia precisam da libm ligada explicitamente no gcc */
+    if (lang === "c") corpo["compiler-option-raw"] = "-lm";
+
+    const r = await fetch("https://wandbox.org/api/compile.json", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(corpo)
+    });
+    if (!r.ok) throw new Error("o wandbox respondeu " + r.status + ".");
+    return r.json();
+  }
+
+  return { rodar };
+})();
+
+/* ============================================================
+   Comparacao de saida
+   ============================================================ */
+/* Ignora só as quebras de linha do fim, porque os exemplos guardados aqui
+   não as registram. Espaço no fim de cada linha continua contando. */
+function normalizar(s){
+  return String(s == null ? "" : s).replace(/\r\n/g, "\n").replace(/\n+$/, "");
+}
+
+function comparar(obtido, esperado){
+  const a = normalizar(obtido), b = normalizar(esperado);
+  if (a === b) return null;
+  const la = a.split("\n"), lb = b.split("\n");
+  for (let i = 0; i < Math.max(la.length, lb.length); i++){
+    if (la[i] === lb[i]) continue;
+    if (la[i] === undefined) return { linha:i+1, falta:true, esperado:lb[i] };
+    if (lb[i] === undefined) return { linha:i+1, sobra:true, obtido:la[i] };
+    let c = 0;
+    while (c < la[i].length && c < lb[i].length && la[i][c] === lb[i][c]) c++;
+    return { linha:i+1, coluna:c+1, obtido:la[i], esperado:lb[i] };
+  }
+  return { linha:0 };
+}
+
+/* deixa espaco no fim da linha visivel, que e a causa de metade dos
+   "presentation error" do juiz */
+function visivel(s){
+  return esc(s).replace(/ +$/, m => '<span class="esp">' + "·".repeat(m.length) + "</span>");
+}
+
 const conteudo = document.getElementById("content");
 const abas = [...document.querySelectorAll(".cell")];
 const btExpandir = document.getElementById("expandAll");
@@ -1069,6 +1236,53 @@ function pontos(d){
   return `<span class="dots" title="Dificuldade ${d} de 5" aria-label="Dificuldade ${d} de 5">${s}</span>`;
 }
 
+/* Exemplos abreviados com "…" no enunciado oficial (matrizes 12x12, listas
+   longas) não servem para comparar saída — nesses o executor roda sem veredito. */
+function exemploCompleto(p){
+  return !!(p.exI && p.exO) && !p.exI.includes("…") && !p.exO.includes("…");
+}
+/* "(sem entrada)" é rótulo do card, não dado para o stdin */
+function stdinDo(p){
+  return /^\(/.test(p.exI) ? "" : p.exI;
+}
+
+function blocoExecutor(n){
+  const p = PROBLEMAS[n];
+  const lang = listaAtual.indexOf("c-") === 0 ? "c" : "java";
+  const completo = exemploCompleto(p);
+  return `
+      <div class="runner" data-n="${n}" data-lang="${lang}" data-completo="${completo ? 1 : 0}">
+        <div class="runner-top">
+          <h4>Testar seu código</h4>
+          <span class="langs" role="group" aria-label="Linguagem do código">
+            <button type="button" data-lang="c" aria-pressed="${lang === "c"}">C</button>
+            <button type="button" data-lang="java" aria-pressed="${lang === "java"}">Java</button>
+          </span>
+        </div>
+        <textarea class="code-area" spellcheck="false" autocomplete="off"
+                  aria-label="Seu código para o problema ${n}"
+                  placeholder="Escreva ou cole sua solução aqui…">${esc(Codigos.ler(lang, n))}</textarea>
+        <div class="runner-io">
+          <div>
+            <p class="io-lbl">Entrada enviada ao programa</p>
+            <textarea class="stdin-area" spellcheck="false" autocomplete="off"
+                      aria-label="Entrada de teste">${esc(stdinDo(p))}</textarea>
+          </div>
+          <div>
+            <p class="io-lbl">Saída esperada</p>
+            <pre>${esc(p.exO || "—")}</pre>
+          </div>
+        </div>
+        <div class="runner-acts">
+          <button type="button" class="btn-run">Rodar e comparar</button>
+          <button type="button" class="btn-ghost btn-molde">Inserir molde</button>
+          <span class="run-status" role="status"></span>
+        </div>
+        <div class="veredito-wrap"></div>
+        <p class="aviso-externo">Não existe compilador de C nem JVM dentro do navegador, então para compilar o seu código é enviado ao serviço externo <b>wandbox.org</b>. E passar aqui <b>não</b> garante <i>accepted</i>: só o caso de exemplo é testado, e o juiz roda casos escondidos.${completo ? "" : " Neste problema o exemplo oficial está abreviado, então mostro a saída do seu programa sem dar veredito."}</p>
+      </div>`;
+}
+
 /* monta o painel com o enunciado reescrito */
 function painel(n){
   const p = PROBLEMAS[n];
@@ -1090,6 +1304,7 @@ function painel(n){
       ${exemplo}
       ${dica}
       ${aviso}
+      ${blocoExecutor(n)}
       <p class="p-cred">Problema <b>${n} · ${p.t}</b> do <b>beecrowd</b>.${autoria} Texto reescrito para este material de estudo; o enunciado oficial, os casos de teste e a submissão ficam no juiz.
         <a href="${URL_JUIZ(n)}" target="_blank" rel="noopener">Abrir original ↗</a></p>`;
 }
@@ -1202,7 +1417,108 @@ conteudo.addEventListener("change", e => {
   atualizarContadores();
 });
 
+function veredito(tipo, html){
+  return `<div class="veredito ${tipo}">${html}</div>`;
+}
+
+async function executar(bloco){
+  const n = bloco.dataset.n;
+  const lang = bloco.dataset.lang;
+  const completo = bloco.dataset.completo === "1";
+  const codigo = bloco.querySelector(".code-area").value;
+  const stdin = bloco.querySelector(".stdin-area").value;
+  const alvo = bloco.querySelector(".veredito-wrap");
+  const botao = bloco.querySelector(".btn-run");
+  const estado = bloco.querySelector(".run-status");
+
+  if (!codigo.trim()){
+    alvo.innerHTML = veredito("info", "Escreva ou cole o código antes de rodar.");
+    return;
+  }
+
+  botao.disabled = true;
+  estado.textContent = "compilando…";
+  alvo.innerHTML = "";
+
+  try{
+    const res = await Executor.rodar(lang, codigo, stdin);
+    const saida = res.program_output || "";
+    const erroExec = (res.program_error || "").trim();
+    const erroComp = (res.compiler_error || "").trim();
+    const status = String(res.status);
+
+    if (status !== "0"){
+      if (erroExec){
+        alvo.innerHTML = veredito("err", `<b>Erro de execução</b> (código ${esc(status)}). Compilou, mas quebrou rodando.<pre>${esc(erroExec)}</pre>`);
+      } else if (erroComp){
+        alvo.innerHTML = veredito("err", `<b>Não compilou.</b><pre>${esc(erroComp)}</pre>`);
+      } else {
+        alvo.innerHTML = veredito("err", `<b>Terminou com código ${esc(status)}</b>, sem mensagem de erro.`);
+      }
+      return;
+    }
+
+    const avisos = erroComp ? `<pre>${esc(erroComp)}</pre>` : "";
+
+    if (!completo){
+      alvo.innerHTML = veredito("info", `<b>Rodou sem erro.</b> O exemplo deste problema é abreviado, então não há o que comparar — confira à mão:<pre>${esc(saida) || "(saída vazia)"}</pre>${avisos}`);
+      return;
+    }
+
+    const d = comparar(saida, PROBLEMAS[n].exO);
+    if (!d){
+      alvo.innerHTML = veredito("ok", `<b>Saída idêntica à esperada.</b> Passou no caso de exemplo. Agora submeta no juiz, que é onde os casos escondidos rodam.${avisos}`);
+      return;
+    }
+
+    let detalhe;
+    if (d.falta){
+      detalhe = `Sua saída terminou antes da conta: falta a linha ${d.linha}.<pre>esperado  ${visivel(d.esperado)}\nobtido    <span class="mk">(acabou)</span></pre>`;
+    } else if (d.sobra){
+      detalhe = `Sua saída tem linha sobrando: a ${d.linha} não deveria existir.<pre>esperado  <span class="mk">(acabou)</span>\nobtido    ${visivel(d.obtido)}</pre>`;
+    } else {
+      const seta = " ".repeat(10 + d.coluna - 1) + "^";
+      detalhe = `Diverge na <b>linha ${d.linha}, coluna ${d.coluna}</b>.<pre>esperado  ${visivel(d.esperado)}\nobtido    ${visivel(d.obtido)}\n<span class="mk">${seta}</span></pre>`;
+    }
+    alvo.innerHTML = veredito("dif", `<b>Compilou e rodou, mas a saída difere.</b> ${detalhe}${avisos}<p style="margin:9px 0 0">Os pontos <span class="esp">·</span> marcam espaço no fim da linha, que o juiz também rejeita.</p>`);
+
+  }catch(err){
+    alvo.innerHTML = veredito("err", `<b>Não deu para compilar agora.</b> ${esc(err.message)} O serviço é externo, então isso acontece — tente de novo em alguns segundos.`);
+  }finally{
+    botao.disabled = false;
+    estado.textContent = "";
+  }
+}
+
 conteudo.addEventListener("click", e => {
+  /* troca de linguagem */
+  const btLang = e.target.closest(".langs button");
+  if (btLang){
+    const bloco = btLang.closest(".runner");
+    bloco.dataset.lang = btLang.dataset.lang;
+    bloco.querySelectorAll(".langs button").forEach(o => o.setAttribute("aria-pressed", String(o === btLang)));
+    bloco.querySelector(".code-area").value = Codigos.ler(btLang.dataset.lang, bloco.dataset.n);
+    bloco.querySelector(".veredito-wrap").innerHTML = "";
+    return;
+  }
+
+  /* molde da linguagem */
+  const btMolde = e.target.closest(".btn-molde");
+  if (btMolde){
+    const bloco = btMolde.closest(".runner");
+    const campo = bloco.querySelector(".code-area");
+    if (campo.value.trim() && !confirm("Isto substitui o código que está aí. Continuar?")) return;
+    campo.value = MOLDES[bloco.dataset.lang];
+    Codigos.gravar(bloco.dataset.lang, bloco.dataset.n, campo.value);
+    campo.focus();
+    return;
+  }
+
+  /* rodar */
+  const btRun = e.target.closest(".btn-run");
+  if (btRun){ executar(btRun.closest(".runner")); return; }
+
+  /* abrir e fechar o enunciado */
   const bt = e.target.closest(".r-title");
   if (!bt) return;
   const alvo = document.getElementById(bt.getAttribute("aria-controls"));
@@ -1210,6 +1526,24 @@ conteudo.addEventListener("click", e => {
   bt.setAttribute("aria-expanded", String(!aberto));
   alvo.hidden = aberto;
   bt.closest(".row").classList.toggle("aberta", !aberto);
+});
+
+/* guarda o codigo enquanto voce digita */
+conteudo.addEventListener("input", e => {
+  if (!e.target.classList.contains("code-area")) return;
+  const bloco = e.target.closest(".runner");
+  Codigos.gravar(bloco.dataset.lang, bloco.dataset.n, e.target.value);
+});
+
+/* Tab indenta em vez de sair do campo */
+conteudo.addEventListener("keydown", e => {
+  if (e.key !== "Tab" || !e.target.classList.contains("code-area")) return;
+  e.preventDefault();
+  const t = e.target, i = t.selectionStart, f = t.selectionEnd;
+  t.value = t.value.slice(0, i) + "    " + t.value.slice(f);
+  t.selectionStart = t.selectionEnd = i + 4;
+  const bloco = t.closest(".runner");
+  Codigos.gravar(bloco.dataset.lang, bloco.dataset.n, t.value);
 });
 
 btExpandir.addEventListener("click", () => {
