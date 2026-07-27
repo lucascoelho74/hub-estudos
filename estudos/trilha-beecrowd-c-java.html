@@ -243,15 +243,18 @@ h2.title .j{color:var(--steam)}
 .langs button:hover{color:var(--fg-dim)}
 .langs button[aria-pressed="true"]{background:var(--panel-2);color:var(--tint);font-weight:600}
 .langs button:focus-visible{outline:2px solid var(--tint);outline-offset:1px}
-.code-area,.stdin-area{
+.code-area,.stdin-area,.saida-area{
   width:100%;font-family:var(--mono);font-size:12.5px;line-height:1.55;
   background:var(--code-bg);color:var(--code-fg);border:1px solid var(--line);
   border-radius:8px;padding:10px 12px;outline:none;resize:vertical;tab-size:4;display:block
 }
 .code-area{min-height:170px}
 .stdin-area{min-height:96px}
-.code-area:focus,.stdin-area:focus{border-color:var(--tint)}
-.code-area::placeholder,.stdin-area::placeholder{color:var(--fg-faint)}
+.saida-area{min-height:110px}
+.code-area:focus,.stdin-area:focus,.saida-area:focus{border-color:var(--tint)}
+.code-area::placeholder,.stdin-area::placeholder,.saida-area::placeholder{color:var(--fg-faint)}
+.manual{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.manual .btn-ghost{margin-top:10px}
 .runner-io{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
 .io-lbl{
   font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
@@ -1276,7 +1279,15 @@ function blocoExecutor(n){
         <div class="runner-acts">
           <button type="button" class="btn-run">Rodar e comparar</button>
           <button type="button" class="btn-ghost btn-molde">Inserir molde</button>
+          <button type="button" class="btn-ghost btn-manual" aria-expanded="false">Conferir saída colada</button>
           <span class="run-status" role="status"></span>
+        </div>
+        <div class="manual" hidden>
+          <p class="io-lbl">Saída que o seu programa imprimiu</p>
+          <textarea class="saida-area" spellcheck="false" autocomplete="off"
+                    aria-label="Saída do seu programa"
+                    placeholder="Rode o código na sua máquina e cole aqui a saída…"></textarea>
+          <button type="button" class="btn-ghost btn-conferir">Comparar com a esperada</button>
         </div>
         <div class="veredito-wrap"></div>
         <p class="aviso-externo">Não existe compilador de C nem JVM dentro do navegador, então para compilar o seu código é enviado ao serviço externo <b>wandbox.org</b>. E passar aqui <b>não</b> garante <i>accepted</i>: só o caso de exemplo é testado, e o juiz roda casos escondidos.${completo ? "" : " Neste problema o exemplo oficial está abreviado, então mostro a saída do seu programa sem dar veredito."}</p>
@@ -1421,6 +1432,25 @@ function veredito(tipo, html){
   return `<div class="veredito ${tipo}">${html}</div>`;
 }
 
+/* Compara a saída com a esperada e monta o veredito. Serve tanto para o
+   resultado da compilação remota quanto para a saída colada à mão. */
+function conferir(n, saida, tituloDiferenca, extra){
+  const d = comparar(saida, PROBLEMAS[n].exO);
+  if (!d){
+    return veredito("ok", `<b>Saída idêntica à esperada.</b> Passou no caso de exemplo. Agora submeta no juiz, que é onde os casos escondidos rodam.${extra || ""}`);
+  }
+  let detalhe;
+  if (d.falta){
+    detalhe = `Sua saída terminou antes da conta: falta a linha ${d.linha}.<pre>esperado  ${visivel(d.esperado)}\nobtido    <span class="mk">(acabou)</span></pre>`;
+  } else if (d.sobra){
+    detalhe = `Sua saída tem linha sobrando: a ${d.linha} não deveria existir.<pre>esperado  <span class="mk">(acabou)</span>\nobtido    ${visivel(d.obtido)}</pre>`;
+  } else {
+    const seta = " ".repeat(10 + d.coluna - 1) + "^";
+    detalhe = `Diverge na <b>linha ${d.linha}, coluna ${d.coluna}</b>.<pre>esperado  ${visivel(d.esperado)}\nobtido    ${visivel(d.obtido)}\n<span class="mk">${seta}</span></pre>`;
+  }
+  return veredito("dif", `<b>${tituloDiferenca}</b> ${detalhe}${extra || ""}<p style="margin:9px 0 0">Os pontos <span class="esp">·</span> marcam espaço no fim da linha, que o juiz também rejeita.</p>`);
+}
+
 async function executar(bloco){
   const n = bloco.dataset.n;
   const lang = bloco.dataset.lang;
@@ -1465,25 +1495,10 @@ async function executar(bloco){
       return;
     }
 
-    const d = comparar(saida, PROBLEMAS[n].exO);
-    if (!d){
-      alvo.innerHTML = veredito("ok", `<b>Saída idêntica à esperada.</b> Passou no caso de exemplo. Agora submeta no juiz, que é onde os casos escondidos rodam.${avisos}`);
-      return;
-    }
-
-    let detalhe;
-    if (d.falta){
-      detalhe = `Sua saída terminou antes da conta: falta a linha ${d.linha}.<pre>esperado  ${visivel(d.esperado)}\nobtido    <span class="mk">(acabou)</span></pre>`;
-    } else if (d.sobra){
-      detalhe = `Sua saída tem linha sobrando: a ${d.linha} não deveria existir.<pre>esperado  <span class="mk">(acabou)</span>\nobtido    ${visivel(d.obtido)}</pre>`;
-    } else {
-      const seta = " ".repeat(10 + d.coluna - 1) + "^";
-      detalhe = `Diverge na <b>linha ${d.linha}, coluna ${d.coluna}</b>.<pre>esperado  ${visivel(d.esperado)}\nobtido    ${visivel(d.obtido)}\n<span class="mk">${seta}</span></pre>`;
-    }
-    alvo.innerHTML = veredito("dif", `<b>Compilou e rodou, mas a saída difere.</b> ${detalhe}${avisos}<p style="margin:9px 0 0">Os pontos <span class="esp">·</span> marcam espaço no fim da linha, que o juiz também rejeita.</p>`);
+    alvo.innerHTML = conferir(n, saida, "Compilou e rodou, mas a saída difere.", avisos);
 
   }catch(err){
-    alvo.innerHTML = veredito("err", `<b>Não deu para compilar agora.</b> ${esc(err.message)} O serviço é externo, então isso acontece — tente de novo em alguns segundos.`);
+    alvo.innerHTML = veredito("err", `<b>Não deu para compilar agora.</b> ${esc(err.message)} O serviço é externo, então isso acontece. Você pode tentar de novo em alguns segundos, ou rodar o código na sua máquina e usar <b>Conferir saída colada</b> — a comparação é feita aqui mesmo, sem depender de ninguém.`);
   }finally{
     botao.disabled = false;
     estado.textContent = "";
@@ -1517,6 +1532,35 @@ conteudo.addEventListener("click", e => {
   /* rodar */
   const btRun = e.target.closest(".btn-run");
   if (btRun){ executar(btRun.closest(".runner")); return; }
+
+  /* abrir o campo de saída colada */
+  const btManual = e.target.closest(".btn-manual");
+  if (btManual){
+    const bloco = btManual.closest(".runner");
+    const caixa = bloco.querySelector(".manual");
+    caixa.hidden = !caixa.hidden;
+    btManual.setAttribute("aria-expanded", String(!caixa.hidden));
+    if (!caixa.hidden) bloco.querySelector(".saida-area").focus();
+    return;
+  }
+
+  /* comparar a saída colada, sem depender de serviço externo */
+  const btConf = e.target.closest(".btn-conferir");
+  if (btConf){
+    const bloco = btConf.closest(".runner");
+    const alvo = bloco.querySelector(".veredito-wrap");
+    if (bloco.dataset.completo !== "1"){
+      alvo.innerHTML = veredito("info", "O exemplo oficial deste problema está abreviado, então não tenho a saída completa para comparar.");
+      return;
+    }
+    const colado = bloco.querySelector(".saida-area").value;
+    if (!colado.trim()){
+      alvo.innerHTML = veredito("info", "Cole a saída do seu programa antes de comparar.");
+      return;
+    }
+    alvo.innerHTML = conferir(bloco.dataset.n, colado, "A saída colada difere da esperada.");
+    return;
+  }
 
   /* abrir e fechar o enunciado */
   const bt = e.target.closest(".r-title");
