@@ -611,10 +611,11 @@ const PROBLEMAS = {
   exI:"6\n100 150 1.0 0\n90000 120000 5.5 3.5\n56700 72000 5.2 3.0\n123 2000 3.0 2.0\n100000 110000 1.5 0.5\n62422 484317 3.1 1.0", exO:"51 anos.\n16 anos.\n12 anos.\nMais de 1 seculo.\n10 anos.\n100 anos."},
 
 1161:{t:"Soma de Fatoriais",
-  en:"Ler dois números e somar seus fatoriais. Os valores crescem além de qualquer tipo inteiro nativo: <code>20!</code> ainda cabe em 64 bits, <code>21!</code> não. Em Java a saída é <code>BigInteger</code>; em C você teria que implementar aritmética de precisão arbitrária sobre um vetor de dígitos.",
-  ent:"Pares de inteiros M e N, um par por linha, até o fim da entrada.",
-  sai:"Uma linha por caso com o valor de <code>M! + N!</code>.",
-  exI:"2 3\n4 5", exO:"8\n144"},
+  en:"Ler pares M e N indefinidamente e imprimir <code>M! + N!</code>. O enunciado avisa que o resultado passa de 15 dígitos, e passa mesmo — mas repare no limite: como M e N vão só até <b>20</b>, o maior resultado possível é <code>20! + 20! = 4865804016353280000</code>, com 19 dígitos. Isso ainda cabe num inteiro de 64 bits com sinal, cujo teto é ≈ 9,22 × 10¹⁸. Ou seja: <code>long</code> em Java, <code>long long</code> em C, e pronto. O erro real aqui é usar <code>int</code>, que já estoura no 13º fatorial.",
+  ent:"Vários casos até o fim do arquivo. Cada caso tem dois inteiros M e N, com 0 ≤ M ≤ 20 e 0 ≤ N ≤ 20.",
+  sai:"Uma linha por caso com a soma dos dois fatoriais.",
+  dica:"<code>0! = 1</code>. Por isso a entrada <code>0 0</code> resulta em 2, e não em zero.",
+  exI:"4 4\n0 0\n0 2", exO:"48\n2\n3"},
 
 1162:{t:"Organizador de Vagões",
   en:"Uma ponte giratória perto da estação só comporta <b>dois vagões</b> por vez, e girá-la troca esses dois de lugar. Ou seja, a única operação disponível é <b>trocar dois vagões adjacentes</b>. Dada a ordem atual do trem, quantas trocas são necessárias para deixá-lo ordenado de 1 a L? Esse número é exatamente a quantidade de <b>inversões</b> da permutação — o mesmo conceito do 1088, mas aqui L ≤ 50, então o O(n²) ingênuo passa tranquilo.",
@@ -694,11 +695,12 @@ const PROBLEMAS = {
   sai:"Uma linha por caso com a cadeia combinada.",
   exI:"2\nTpo oCder\naa bb", exO:"TopCoder\nabab"},
 
-1244:{t:"Ordenação por Tamanho",
-  en:"Ordenar as palavras de uma frase pelo comprimento, da maior para a menor, mantendo a ordem original entre palavras de mesmo tamanho. Esse “manter a ordem no empate” é exatamente a definição de ordenação <b>estável</b> — em Java o <code>Arrays.sort</code> de objetos já é estável e resolve isso de graça.",
-  ent:"A primeira linha traz a quantidade de casos; cada linha seguinte é uma frase.",
-  sai:"Uma linha por caso com as palavras reordenadas, separadas por espaço.",
-  exI:"1\nthe quick brown fox", exO:"quick brown the fox"},
+1244:{t:"Ordenação por Tamanho", autor:"TopCoder",
+  en:"Ordenar um conjunto de strings pelo comprimento, da maior para a menor. Quando duas têm o mesmo tamanho, elas devem <b>manter a ordem original</b> — e isso é exatamente a definição de ordenação <b>estável</b>. Em Java o <code>Arrays.sort</code> sobre objetos usa TimSort, que já é estável, então o desempate sai de graça; em C o <code>qsort</code> não garante isso, e você precisa carregar o índice original no comparador.",
+  ent:"A primeira linha traz N, o número de casos. Cada caso é uma linha com 1 a 50 strings, cada uma de 1 a 50 caracteres entre letras, números e espaços.",
+  sai:"Uma linha por caso com as strings reordenadas, separadas por um espaço em branco.",
+  exI:"4\nTop Coder comp Wedn at midnight\none three five\nI love Cpp\nsj a sa df r e w f d s a v c x z sd fd",
+  exO:"midnight Coder comp Wedn Top at\nthree five one\nlove Cpp I\nsj sa df fd a r e w f d s a v c x z"},
 
 1245:{t:"Botas Perdidas",
   en:"Um depósito com botas soltas, cada uma de um tamanho e de um pé (direito ou esquerdo). Contar quantos pares completos dá para formar. Como os tamanhos vivem num intervalo pequeno e conhecido, um vetor de contadores indexado pelo tamanho resolve — <code>HashMap</code> aqui é overhead puro.",
@@ -728,9 +730,9 @@ const PROBLEMAS = {
 
 1259:{t:"Pares e Ímpares",
   en:"Ler N valores e imprimir primeiro os <b>pares em ordem crescente</b> e depois os <b>ímpares em ordem decrescente</b>. Dá para resolver separando em dois vetores e ordenando cada um, ou com um único comparador que codifica os dois critérios — vale tentar as duas versões e comparar.",
-  ent:"A primeira linha traz N; seguem N inteiros, um por linha.",
-  sai:"Os N valores reordenados, um por linha.",
-  exI:"6\n4\n1\n5\n2\n3\n6", exO:"2\n4\n6\n5\n3\n1"},
+  ent:"A primeira linha traz N (1 &lt; N ≤ 10⁵), a quantidade de valores. Seguem N linhas, cada uma com um inteiro <b>não negativo</b>.",
+  sai:"Os N valores reordenados, um por linha: primeiro os pares em ordem crescente, depois os ímpares em ordem decrescente.",
+  exI:"10\n4\n32\n34\n543\n3456\n654\n567\n87\n6789\n98", exO:"4\n32\n34\n98\n654\n3456\n6789\n567\n543\n87"},
 
 1272:{t:"Mensagem Oculta", autor:"TopCoder",
   en:"A mensagem escondida num texto é formada pelas <b>primeiras letras de cada palavra</b>, na ordem em que aparecem. O texto tem só letras minúsculas e espaços — e as armadilhas estão todas nos espaços: pode haver mais de um entre palavras, o texto pode começar ou terminar com espaço, e pode ser <b>só</b> espaços (aí a mensagem é vazia). O ganho aqui é comparar as duas linguagens: em C você usa <code>strtok</code>, que <b>destrói</b> a string original ao trocar os separadores por terminadores; em Java o <code>split()</code> devolve um array novo e deixa o original intacto.",
@@ -1028,11 +1030,11 @@ const LISTAS = {
       ]
     },
     {
-      idx:"4.4", titulo:"Onde Java ganha de C",
-      nota:"Duas situações em que a biblioteca padrão de Java economiza horas de trabalho.",
-      callout:"<b>Sobre o 1161:</b> fatoriais crescem rápido demais para caber em 64 bits — <code>20!</code> ainda cabe em <code>long</code>, <code>21!</code> já estoura. Em Java você troca por <code>BigInteger</code> e segue. Em C você teria que implementar aritmética de precisão arbitrária sobre um vetor de dígitos. Vale fazer nas duas linguagens só para sentir a diferença de esforço.",
+      idx:"4.4", titulo:"Quando a biblioteca ajuda — e quando ela sobra",
+      nota:"Dois problemas que parecem pedir artilharia pesada. Só um pede de verdade — e distinguir os dois é a habilidade.",
+      callout:"<b>O 1161 é uma armadilha de reflexo.</b> Ele fala em “mais de 15 dígitos” e a mão coça para escrever <code>BigInteger</code>. Mas leia o limite: M e N vão até <b>20</b>, então o pior caso é <code>20! + 20! ≈ 4,87 × 10¹⁸</code> — e um inteiro de 64 bits com sinal aguenta até <code>9,22 × 10¹⁸</code>. Cabe em <code>long</code>, e cabe igualmente em <code>long long</code> no C: aqui Java não ganha nada. Já no <b>1281</b> a chave é uma <i>string</i> e o conjunto é aberto, então <code>HashMap&lt;String, Double&gt;</code> resolve em uma linha o que em C exigiria escrever a tabela hash antes de começar — aí sim a biblioteca economiza horas. <b>Estimar a ordem de grandeza antes de escolher a ferramenta</b> é o que separa os dois casos.",
       itens:[
-        {n:1161,d:3,pede:"Somar os fatoriais de dois números que estouram qualquer tipo inteiro.",treina:"<code>BigInteger</code> com <code>multiply</code> e <code>add</code>. Atenção: as operações devolvem um objeto novo, não alteram o original.",destaque:true},
+        {n:1161,d:2,pede:"Somar os fatoriais de dois valores até 20, lendo até o fim da entrada.",treina:"Estimar o tamanho do resultado <b>antes</b> de escolher o tipo. 19 dígitos ainda cabem em <code>long</code> — quem parte direto para <code>BigInteger</code> não conferiu o limite; quem usa <code>int</code> estoura já no 13º fatorial.",destaque:true},
         {n:1281,d:2,pede:"Somar a conta da feira consultando o preço de cada item pelo nome.",treina:"<code>HashMap&lt;String, Double&gt;</code>. Aqui a chave é texto e o intervalo é aberto — o caso oposto ao do 1245, onde vetor ganhava. Em C você teria que construir a tabela hash antes de começar."}
       ]
     }
