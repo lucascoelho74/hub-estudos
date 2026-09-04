@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publicar · Hub de Estudos</title>
+<link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="cabecalho" id="cabecalho"></header>
+
+<main class="conteudo conteudo-estreito">
+  <h1 class="titulo-pagina">Publicar estudo</h1>
+  <p class="subtitulo">Só monitores e professores. O arquivo vai para o Storage e o cadastro para o banco.</p>
+  <div class="aviso" id="aviso" hidden></div>
+
+  <form id="form">
+    <div class="campo"><label for="titulo">Título</label><input id="titulo" type="text" required maxlength="140"></div>
+    <div class="campo"><label for="descricao">Descrição</label><textarea id="descricao" maxlength="1000"></textarea></div>
+    <div class="campo"><label for="disciplina">Disciplina</label><select id="disciplina" required></select></div>
+    <div class="campo">
+      <label for="arquivo">Arquivo HTML</label>
+      <input id="arquivo" type="file" accept=".html,text/html" required>
+      <span class="dica">Até 5 MB. Links para ../tema.css e ../vendor/katex continuam funcionando.</span>
+    </div>
+    <button class="botao" type="submit" id="enviar">Publicar</button>
+  </form>
+
+  <section class="secao">
+    <h2>Importar estudos do repositório</h2>
+    <p class="discreto">Sobe para o Storage os estudos que ainda apontam para a pasta estudos/ do site e troca a URL no banco. Pode rodar de novo se algo falhar.</p>
+    <button class="botao botao-secundario" type="button" id="importar">Importar</button>
+    <pre class="registro" id="registro" hidden></pre>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/sessao.js"></script>
+<script>
+// Publicar: sobe o arquivo no bucket "estudos", pega a URL pública e registra
+// no banco com publicar_estudo (que confere o cargo de novo, no servidor).
+(async function () {
+  var aviso = document.getElementById('aviso'), form = document.getElementById('form');
+  var enviar = document.getElementById('enviar'), registro = document.getElementById('registro');
+  var LIMITE = 5 * 1024 * 1024;
+
+  var s = await exigirEquipe();
+  if (!s) return;
+  montarCabecalho();
+
+  try {
+    var disciplinas = await chamar('listar_disciplinas');
+    document.getElementById('disciplina').innerHTML = disciplinas.map(function (d) {
+      return '<option value="' + esc(d.sigla) + '">' + esc(d.sigla) + ' · ' + esc(d.nome) + '</option>';
+    }).join('');
+  } catch (e) { mostrarAviso(aviso, e.message); }
+
+  // Sobe um HTML e devolve a URL pública. upsert permite repetir a importação.
+  async function subir(caminho, texto, sobrescrever) {
+    var r = await db.storage.from('estudos').upload(caminho, new Blob([texto], { type: 'text/html' }), { upsert: !!sobrescrever });
+    if (r.error) throw new Error(traduzirErro(r.error));
+    return db.storage.from('estudos').getPublicUrl(caminho).data.publicUrl;
+  }
+
+  form.addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var titulo = document.getElementById('titulo').value.trim();
+    var arquivo = document.getElementById('arquivo').files[0];
+    if (!arquivo) return mostrarAviso(aviso, 'Escolha o arquivo HTML.');
+    if (arquivo.size > LIMITE) return mostrarAviso(aviso, 'Arquivo maior que 5 MB.');
+    if (!/\.html?$/i.test(arquivo.name)) return mostrarAviso(aviso, 'O arquivo precisa ser .html');
+    enviar.disabled = true;
+    mostrarAviso(aviso, '');
+    try {
+      var url = await subir(Date.now() + '-' + slug(titulo) + '.html', await arquivo.text(), false);
+      var novo = await chamar('publicar_estudo', {
+        titulo: titulo,
+        descricao: document.getElementById('descricao').value.trim(),
+        disciplina_sigla: document.getElementById('disciplina').value,
+        arquivo_url: url
+      });
+      location.href = 'estudo.html?id=' + novo;
+    } catch (e) {
+      mostrarAviso(aviso, e.message);
+      enviar.disabled = false;
+    }
+  });
+
+  function registrar(linha) { registro.hidden = false; registro.textContent += linha + '\n'; }
+
+  document.getElementById('importar').addEventListener('click', async function () {
+    var botao = this;
+    botao.disabled = true;
+    registro.textContent = '';
+    try {
+      var lista = await chamar('estudos_para_importar');
+      if (!lista.length) registrar('Nada para importar: todos os estudos já estão no Storage.');
+      for (var i = 0; i < lista.length; i++) {
+        var item = lista[i];
+        try {
+          var r = await fetch(item.arquivo_url);
+          if (!r.ok) throw new Error('HTTP ' + r.status + ' ao ler ' + item.arquivo_url);
+          var url = await subir(item.id + '-' + item.arquivo_url.split('/').pop(), await r.text(), true);
+          await chamar('atualizar_arquivo', { estudo: item.id, nova_url: url });
+          registrar('ok    ' + item.titulo);
+        } catch (e) {
+          registrar('ERRO  ' + item.titulo + ': ' + e.message);
+        }
+      }
+      registrar('Concluído.');
+    } catch (e) {
+      registrar('ERRO  ' + e.message);
+    }
+    botao.disabled = false;
+  });
+})();
+</script>
+</body>
+</html>
