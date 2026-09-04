@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudo · Hub de Estudos</title>
+<link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="cabecalho" id="cabecalho"></header>
+
+<div class="barra-estudo" id="barra" hidden>
+  <a class="botao botao-secundario botao-pequeno" href="index.html">← voltar</a>
+  <h1 id="titulo"></h1>
+  <span class="selo selo-disciplina" id="disciplina"></span>
+  <span class="selo selo-revisado" id="selo-revisado" hidden>revisado</span>
+  <span class="discreto" id="autor"></span>
+  <div class="botoes">
+    <button class="coracao" id="favoritar" type="button" title="Favoritar">♥ 0</button>
+    <button class="botao botao-secundario botao-pequeno" id="estudando" type="button">Estudando</button>
+    <button class="botao botao-secundario botao-pequeno" id="concluido" type="button">Concluído</button>
+    <button class="botao botao-secundario botao-pequeno" id="revisar" type="button" hidden>Marcar revisado</button>
+    <button class="botao botao-perigo botao-pequeno" id="excluir" type="button" hidden>Excluir</button>
+  </div>
+</div>
+
+<main>
+  <div class="conteudo" id="area-aviso" hidden><div class="aviso" id="aviso" hidden></div></div>
+  <iframe class="quadro-estudo" id="quadro" title="Conteúdo do estudo" hidden></iframe>
+
+  <section class="comentarios" id="secao-comentarios" hidden>
+    <h2>Comentários e dúvidas</h2>
+    <div id="lista-comentarios"></div>
+    <form id="form-comentario" hidden>
+      <div class="campo"><label for="texto">Sua dúvida ou comentário</label><textarea id="texto" maxlength="2000" required></textarea></div>
+      <button class="botao" type="submit">Enviar</button>
+    </form>
+    <p class="discreto" id="entrar-para-comentar" hidden><a id="link-entrar" href="entrar.html">Entre</a> para comentar.</p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/sessao.js"></script>
+<script>
+// Página do estudo: painel_estudo traz tudo numa chamada; o HTML do estudo é
+// buscado (repositório ou Storage) e mostrado num iframe via srcdoc.
+(async function () {
+  var id = Number(parametro('id'));
+  var aviso = document.getElementById('aviso'), areaAviso = document.getElementById('area-aviso');
+  var quadro = document.getElementById('quadro'), lista = document.getElementById('lista-comentarios');
+  var s, estudo;
+
+  function avisar(msg) { areaAviso.hidden = false; mostrarAviso(aviso, msg); }
+
+  montarCabecalho();
+  s = await sessao();
+  document.getElementById('link-entrar').href = 'entrar.html?voltar=' + encodeURIComponent('estudo.html?id=' + id);
+  if (!id) return avisar('Estudo não encontrado. Volte ao início.');
+
+  var painel;
+  try { painel = await chamar('painel_estudo', { estudo: id }); } catch (e) { return avisar(e.message); }
+  if (!painel) return avisar('Estudo não encontrado. Volte ao início.');
+  estudo = painel.estudo;
+
+  document.title = estudo.titulo + ' · Hub de Estudos';
+  desenharBarra();
+  desenharComentarios(painel.comentarios);
+  carregarEstudo(estudo.arquivo_url);
+
+  // ---------- barra ----------
+  function desenharBarra() {
+    document.getElementById('titulo').textContent = estudo.titulo;
+    document.getElementById('disciplina').textContent = estudo.disciplina_sigla || 'geral';
+    document.getElementById('selo-revisado').hidden = !estudo.revisado;
+    document.getElementById('autor').textContent = (estudo.autor_nome ? 'por ' + estudo.autor_nome + ' · ' : '') + formatarData(estudo.publicado_em);
+    var fav = document.getElementById('favoritar');
+    fav.textContent = '♥ ' + estudo.total_favoritos;
+    fav.classList.toggle('coracao-ativo', !!estudo.favoritado);
+    document.getElementById('estudando').classList.toggle('botao-ativo', estudo.progresso === 'estudando');
+    document.getElementById('concluido').classList.toggle('botao-ativo', estudo.progresso === 'concluido');
+    var equipe = ehEquipe(s.perfil);
+    document.getElementById('revisar').hidden = !equipe;
+    document.getElementById('revisar').textContent = estudo.revisado ? 'Tirar revisão' : 'Marcar revisado';
+    document.getElementById('excluir').hidden = !equipe;
+    document.getElementById('barra').hidden = false;
+  }
+
+  function exigirUsuario() {
+    if (s.usuario) return true;
+    location.href = 'entrar.html?voltar=' + encodeURIComponent('estudo.html?id=' + id);
+    return false;
+  }
+
+  document.getElementById('favoritar').addEventListener('click', async function () {
+    if (!exigirUsuario()) return;
+    try {
+      estudo.favoritado = await chamar('alternar_favorito', { estudo: id });
+      estudo.total_favoritos += estudo.favoritado ? 1 : -1;
+      desenharBarra();
+    } catch (e) { avisar(e.message); }
+  });
+
+  // Clicar no status já ativo limpa o progresso.
+  async function mudarProgresso(status) {
+    if (!exigirUsuario()) return;
+    try {
+      estudo.progresso = await chamar('marcar_progresso', { estudo: id, novo_status: estudo.progresso === status ? null : status });
+      desenharBarra();
+    } catch (e) { avisar(e.message); }
+  }
+  document.getElementById('estudando').addEventListener('click', function () { mudarProgresso('estudando'); });
+  document.getElementById('concluido').addEventListener('click', function () { mudarProgresso('concluido'); });
+
+  document.getElementById('revisar').addEventListener('click', async function () {
+    try {
+      await chamar('marcar_revisado', { estudo: id, valor: !estudo.revisado });
+      estudo.revisado = !estudo.revisado;
+      desenharBarra();
+    } catch (e) { avisar(e.message); }
+  });
+
+  document.getElementById('excluir').addEventListener('click', async function () {
+    if (!confirm('Excluir "' + estudo.titulo + '"? Isso apaga também os comentários, favoritos e o arquivo.')) return;
+    try {
+      var caminho = await chamar('excluir_estudo', { estudo: id });
+      if (caminho) await db.storage.from('estudos').remove([decodeURIComponent(caminho)]);
+      location.href = 'index.html';
+    } catch (e) { avisar(e.message); }
+  });
+
+  // ---------- conteúdo ----------
+  // Os estudos usam ../tema.css e ../vendor/katex. Dentro de srcdoc não há
+  // "pasta atual", então trocamos ../ pela raiz absoluta do site. Não usamos
+  // <base> porque ela quebraria as âncoras href="#..." dos estudos.
+  async function carregarEstudo(url) {
+    var raiz = location.origin + location.pathname.replace(/[^/]*$/, '');
+    try {
+      var r = await fetch(url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var html = await r.text();
+      html = html.replace(/href="\.\.\/index\.html"/g, 'href="' + raiz + 'index.html" target="_top"');
+      html = html.replace(/(src|href)=(["'])\.\.\//g, '$1=$2' + raiz);
+      quadro.srcdoc = html;
+      quadro.hidden = false;
+    } catch (e) {
+      areaAviso.hidden = false;
+      aviso.className = 'aviso aviso-erro';
+      aviso.innerHTML = 'Não consegui carregar o conteúdo (' + esc(e.message) + '). <a href="' + esc(url) + '" target="_blank" rel="noopener">Abrir o arquivo direto</a>';
+      aviso.hidden = false;
+    }
+  }
+
+  // ---------- comentários ----------
+  function comentarioHtml(c) {
+    var selo = c.autor_cargo && c.autor_cargo !== 'aluno' ? '<span class="selo selo-' + esc(c.autor_cargo) + '">' + esc(c.autor_cargo) + '</span>' : '';
+    var apagar = (c.meu || ehEquipe(s.perfil)) ? '<button class="botao botao-perigo botao-pequeno" data-excluir="' + c.id + '" type="button">Excluir</button>' : '';
+    return '<div class="comentario" data-id="' + c.id + '"><div class="comentario-topo"><b>' + esc(c.autor_nome || 'alguém') + '</b>' + selo +
+      '<span class="discreto">' + formatarData(c.criado_em) + '</span></div><p>' + esc(c.texto) + '</p>' + apagar + '</div>';
+  }
+  function desenharComentarios(comentarios) {
+    lista.innerHTML = comentarios.length ? comentarios.map(comentarioHtml).join('') : '<p class="vazio">Nenhum comentário ainda. Seja a primeira pessoa a perguntar.</p>';
+    document.getElementById('form-comentario').hidden = !s.usuario;
+    document.getElementById('entrar-para-comentar').hidden = !!s.usuario;
+    document.getElementById('secao-comentarios').hidden = false;
+  }
+
+  document.getElementById('form-comentario').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var campo = document.getElementById('texto');
+    try {
+      var novo = await chamar('comentar', { estudo: id, texto: campo.value });
+      painel.comentarios.push(novo);
+      campo.value = '';
+      desenharComentarios(painel.comentarios);
+    } catch (e) { avisar(e.message); }
+  });
+
+  lista.addEventListener('click', async function (ev) {
+    var botao = ev.target.closest('[data-excluir]');
+    if (!botao) return;
+    try {
+      await chamar('excluir_comentario', { comentario: Number(botao.dataset.excluir) });
+      painel.comentarios = painel.comentarios.filter(function (c) { return c.id !== Number(botao.dataset.excluir); });
+      desenharComentarios(painel.comentarios);
+    } catch (e) { avisar(e.message); }
+  });
+})();
+</script>
+</body>
+</html>
