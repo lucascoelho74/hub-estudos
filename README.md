@@ -1,34 +1,67 @@
 # ☕ Hub de Estudos
 
-Site estático que reúne meus resumos e materiais interativos de estudo de Ciência da Computação em um só lugar.
+Plataforma de estudo colaborativa do curso de Ciência da Computação da PUC Minas.
+Alunos leem, favoritam, acompanham o progresso e tiram dúvidas; monitores e
+professores publicam e revisam os materiais. Prova de conceito do Trabalho
+Interdisciplinar 2.
 
-🔗 **Acesse:** https://lucascoelho74.github.io/hub-estudos/
-
-## Conteúdo
-
-- Java · Primeiros passos
-- Java · Resumo POO (AEDS II)
-- Java · Conceitos Interativos
-- Java · Para quem já sabe C/C++
-- C e C++ · Resumo AEDS I
-- C/C++ · Simulado Geral
-- beecrowd · Trilha de treino em C e Java
-- Cálculo 2 · Guia de Integrais
-
-## Rodando localmente
-
-É só abrir o `index.html` no navegador — funciona direto do disco, sem servidor.
+Feito com HTML, CSS e JavaScript puro no front (sem framework, sem build) e
+**Supabase** no backend (Postgres + Auth + Storage). Toda a lógica mora no
+banco, em funções SQL; as páginas só chamam essas funções e desenham o resultado.
 
 ## Estrutura
 
 ```
-index.html     # página inicial com busca
-estudos.js     # lista de estudos
-tema.css       # paleta compartilhada
-estudos/       # uma página HTML por estudo
-vendor/katex/  # KaTeX local, para as fórmulas
+index.html          catálogo com busca e filtro por disciplina
+entrar.html         login e cadastro (só e-mail da PUC)
+estudo.html         estudo + favoritar + progresso + comentários
+publicar.html       monitor/professor: publicar e importar estudos
+perfil.html         nome, cargo, favoritos, progresso
+tema.css            paleta (variáveis de cor)
+css/site.css        componentes do site
+js/config.js        URL e chave anon do projeto Supabase
+js/util.js          funções pequenas (esc, slug, avisos)
+js/supabase.js      cliente e chamar(): a ponte com o backend
+js/sessao.js        sessão, cabeçalho e guardas de página
+supabase/schema.sql todo o backend: tabelas, gatilhos, RLS, Storage, funções RPC, seed
+supabase/teste/     testes do backend num Postgres local
+estudos/            estudos originais; fonte da importação (pode apagar depois)
+vendor/katex/       KaTeX local, usado pelos estudos de matemática
 ```
 
-Para adicionar um estudo: coloque o arquivo em `estudos/` e registre no `estudos.js`.
+## Configurar o backend
 
-Feito com HTML, CSS e JavaScript puro — sem build e sem dependências.
+1. Crie um projeto em [supabase.com](https://supabase.com).
+2. **SQL Editor** → cole o conteúdo de `supabase/schema.sql` → **Run**.
+3. **Authentication → Providers → Email**: para a demonstração, desligue *Confirm email* (senão cada cadastro precisa clicar no link do e-mail).
+4. **Project Settings → API**: copie a *Project URL* e a chave *anon public* para `js/config.js`.
+5. Sirva a pasta: `python3 -m http.server 8000` e abra <http://localhost:8000>.
+6. Crie sua conta pelo site. Depois, no **Table Editor → perfis**, troque o seu `cargo` para `professor`.
+7. Em **Publicar → Importar estudos do repositório**, clique em *Importar*: os 8 estudos sobem para o Storage e o site deixa de depender da pasta `estudos/`.
+
+Para testar com um e-mail que não seja da PUC, insira o domínio na tabela `dominios_permitidos`.
+
+## Cargos
+
+| cargo | pode |
+|---|---|
+| visitante | ler os estudos e os comentários |
+| aluno | favoritar, marcar progresso, comentar, apagar os próprios comentários |
+| monitor / professor | tudo acima, mais publicar, marcar revisado, excluir estudos e comentários |
+
+O cargo começa como `aluno` e só muda pelo painel do Supabase.
+
+## Testar o backend localmente
+
+Precisa de Postgres 17 pelo Homebrew (`brew install postgresql@17`).
+
+```
+supabase/teste/rodar.sh          # sobe um Postgres na porta 5499, roda schema.sql e teste.sql
+supabase/teste/rodar.sh parar    # desliga
+```
+
+## Publicar
+
+É tudo estático: qualquer hospedagem de arquivos serve (GitHub Pages inclusive).
+Suba o repositório com o `js/config.js` preenchido. A chave anon é pública por
+desenho; quem protege os dados são as políticas RLS no banco.
