@@ -4,6 +4,8 @@
 // Arquivo único de propósito: dá para colar inteiro no editor do painel do Supabase.
 // As rotas entram na próxima tarefa; esta parte é só leitura e escrita de .ics.
 
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+
 export type Evento = {
   uid: string;
   titulo: string;
@@ -167,3 +169,107 @@ export function escreverCalendario(nome: string, eventos: Evento[], agora: Date 
   linhas.push("END:VCALENDAR");
   return linhas.map(dobrar).join("\r\n") + "\r\n";
 }
+
+// ---------- rotas ----------
+
+export type Fabrica = (jwt?: string) => SupabaseClient;
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
+
+// Com JWT: age como o usuário (RLS vale). Sem JWT: chave de serviço, só para a rota pública do feed.
+function cliente(jwt?: string): SupabaseClient {
+  const url = Deno.env.get("SUPABASE_URL") ?? "";
+  const chave = jwt ? Deno.env.get("SUPABASE_ANON_KEY") ?? "" : Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  return createClient(url, chave, {
+    global: { headers: jwt ? { Authorization: "Bearer " + jwt } : {} },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+function json(status: number, corpo: unknown): Response {
+  return new Response(JSON.stringify(corpo), { status, headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" } });
+}
+
+// Duas assinaturas (em vez de só `fabrica?: Fabrica`) porque `Deno.serve(tratar)` compara o tipo de
+// `tratar` com `ServeHandler` (2º parâmetro `ServeHandlerInfo`); com o parâmetro opcional único o
+// TypeScript exige que `Fabrica` seja compatível com `ServeHandlerInfo`, o que não é o caso.
+export function tratar(req: Request): Promise<Response>;
+export function tratar(req: Request, fabrica: Fabrica): Promise<Response>;
+export async function tratar(req: Request, fabrica: Fabrica = cliente): Promise<Response> {
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+  const url = new URL(req.url);
+  const rota = url.pathname.replace(/\/+$/, "").split("/").pop();
+  if (rota === "importar" && req.method === "POST") return await importar(req, fabrica);
+  if (rota === "feed" && req.method === "GET") return await feed(url, fabrica);
+  return json(404, { erro: "Rota não encontrada" });
+}
+
+async function baixar(url: string): Promise<string> {
+  const LIMITE = 5 * 1024 * 1024;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "hub-estudos/1.0" } });
+    if (r.status !== 200) throw new Error("O Canvas respondeu " + r.status + " ao baixar o feed");
+    if (Number(r.headers.get("content-length") ?? 0) > LIMITE) throw new Error("Feed maior que 5 MB");
+    const texto = await r.text();
+    if (texto.length > LIMITE) throw new Error("Feed maior que 5 MB");
+    if (!/BEGIN:VCALENDAR/.test(texto)) throw new Error("A URL não devolveu um calendário (.ics)");
+    return texto;
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") throw new Error("O Canvas demorou mais de 20 s para responder");
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function importar(req: Request, fabrica: Fabrica): Promise<Response> {
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  if (!jwt) return json(401, { erro: "Faça login" });
+  const db = fabrica(jwt);
+  const { data: usuario, error: erroAuth } = await db.auth.getUser();
+  if (erroAuth || !usuario?.user) return json(401, { erro: "Faça login" });
+  const { data: config, error: erroConfig } = await db.rpc("calendario_config_minha");
+  if (erroConfig) return json(500, { erro: erroConfig.message });
+  const feedUrl = (config as { feed_url?: string | null } | null)?.feed_url ?? null;
+  if (!feedUrl) return json(400, { erro: "Salve a URL do feed primeiro" });
+  try {
+    const eventos = lerEventos(await baixar(feedUrl));
+    const { data: n, error } = await db.rpc("importar_eventos", { eventos });
+    if (error) throw new Error(error.message);
+    return json(200, { importados: n });
+  } catch (e) {
+    const msg = (e instanceof Error ? e.message : String(e)).slice(0, 500);
+    await db.rpc("registrar_erro_importacao", { msg });
+    return json(502, { erro: msg });
+  }
+}
+
+async function feed(url: URL, fabrica: Fabrica): Promise<Response> {
+  const token = (url.searchParams.get("token") ?? "").trim();
+  if (!/^[a-f0-9]{32}$/.test(token)) return json(400, { erro: "Token ausente ou inválido" });
+  const db = fabrica();
+  const { data, error } = await db.rpc("eventos_por_token", { token });
+  if (error) return json(500, { erro: error.message });
+  if (!data) return new Response("Calendário não encontrado", { status: 404, headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" } });
+  const dados = data as { nome?: string; eventos?: Evento[] };
+  const ics = escreverCalendario(dados.nome ?? "", dados.eventos ?? []);
+  return new Response(ics, {
+    status: 200,
+    headers: {
+      ...CORS,
+      "Content-Type": "text/calendar; charset=utf-8",
+      "Content-Disposition": 'inline; filename="hub-estudos.ics"',
+      "Cache-Control": "public, max-age=300",
+    },
+  });
+}
+
+// Em produção o Supabase executa este arquivo e a função sobe aqui.
+// Nos testes, HUB_TESTE=1 evita abrir servidor.
+if (!Deno.env.get("HUB_TESTE")) Deno.serve(tratar);

@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
-import { desdobrar, escreverCalendario, extrairCurso, lerData, lerEventos } from "./index.ts";
+import { desdobrar, escreverCalendario, extrairCurso, lerData, lerEventos, tratar } from "./index.ts";
 import type { Evento } from "./index.ts";
 
 // Amostra no formato do feed do Canvas (linhas dobradas, \, e \n escapados, prazo sem duração,
@@ -93,4 +93,57 @@ Deno.test("escapar e desescapar são inversos exatos, inclusive barra seguida de
   const relido = lerEventos(escreverCalendario("Ana", [original]))[0];
   assertEquals(relido.titulo, original.titulo);
   assertEquals(relido.descricao, original.descricao);
+});
+
+// Fábrica que explode se alguma rota tentar falar com o Supabase nos casos que devem parar antes.
+const semSupabase = () => { throw new Error("não deveria criar cliente"); };
+const BASE = "https://proj.supabase.co/functions/v1/calendario";
+
+Deno.test("tratar: OPTIONS responde 204 com CORS", async () => {
+  const r = await tratar(new Request(BASE + "/importar", { method: "OPTIONS" }), semSupabase);
+  assertEquals(r.status, 204);
+  assertEquals(r.headers.get("Access-Control-Allow-Origin"), "*");
+});
+
+Deno.test("tratar: importar sem Authorization dá 401", async () => {
+  const r = await tratar(new Request(BASE + "/importar", { method: "POST" }), semSupabase);
+  assertEquals(r.status, 401);
+  assertEquals((await r.json()).erro, "Faça login");
+});
+
+Deno.test("tratar: feed sem token ou com token inválido dá 400", async () => {
+  const r1 = await tratar(new Request(BASE + "/feed"), semSupabase);
+  assertEquals(r1.status, 400);
+  const r2 = await tratar(new Request(BASE + "/feed?token=abc"), semSupabase);
+  assertEquals(r2.status, 400);
+});
+
+Deno.test("tratar: rota desconhecida dá 404", async () => {
+  const r = await tratar(new Request(BASE + "/outra"), semSupabase);
+  assertEquals(r.status, 404);
+});
+
+Deno.test("tratar: feed com token válido devolve text/calendar", async () => {
+  const token = "0123456789abcdef0123456789abcdef";
+  const falso = () => ({
+    rpc: (nome: string, args: Record<string, unknown>) => {
+      assertEquals(nome, "eventos_por_token");
+      assertEquals(args.token, token);
+      return Promise.resolve({ data: { nome: "Ana", eventos: [{ uid: "e1", titulo: "Prova", descricao: "", inicio: "2026-09-10T10:00:00+00:00", fim: null, dia_inteiro: false, url: null, curso_codigo: null, curso_nome: "Cálculo II" }] }, error: null });
+    },
+  });
+  // deno-lint-ignore no-explicit-any
+  const r = await tratar(new Request(BASE + "/feed?token=" + token), falso as any);
+  assertEquals(r.status, 200);
+  assertMatch(r.headers.get("Content-Type") ?? "", /text\/calendar/);
+  const corpo = await r.text();
+  assertMatch(corpo, /SUMMARY:Prova \(Cálculo II\)/);
+  assertMatch(corpo, /DTSTART:20260910T100000Z/);
+});
+
+Deno.test("tratar: feed com token desconhecido dá 404", async () => {
+  const falso = () => ({ rpc: () => Promise.resolve({ data: null, error: null }) });
+  // deno-lint-ignore no-explicit-any
+  const r = await tratar(new Request(BASE + "/feed?token=0123456789abcdef0123456789abcdef"), falso as any);
+  assertEquals(r.status, 404);
 });
