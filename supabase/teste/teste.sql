@@ -120,3 +120,54 @@ select teste.espera_erro($$insert into comentarios (estudo_id, perfil_id, texto)
 select teste.confere((select public from storage.buckets where id = 'estudos'), 'bucket estudos é público');
 reset role;
 delete from favoritos;  -- limpa para as próximas tarefas
+
+-- ---------- Tarefa 4: RPC de leitura ----------
+-- Dados de apoio: aluna favorita e comenta o guia; monitor comenta também.
+insert into favoritos (perfil_id, estudo_id) values ('11111111-1111-1111-1111-111111111111', teste.id_estudo('guia-integrais.html'));
+insert into progresso (perfil_id, estudo_id, status) values ('11111111-1111-1111-1111-111111111111', teste.id_estudo('guia-integrais.html'), 'estudando');
+insert into comentarios (estudo_id, perfil_id, texto) values
+  (teste.id_estudo('guia-integrais.html'), '11111111-1111-1111-1111-111111111111', 'Dúvida na seção 5.5'),
+  (teste.id_estudo('guia-integrais.html'), '22222222-2222-2222-2222-222222222222', 'Respondi: veja o exemplo 3');
+
+select teste.entrar(null);
+set local role anon;
+select teste.confere((select count(*) from buscar_estudos()) = 8, 'busca vazia lista os 8');
+select teste.confere((select count(*) from buscar_estudos('calculo')) = 1, 'busca ignora acento (calculo acha Cálculo)');
+select teste.confere((select count(*) from buscar_estudos('JAVA')) = 5, 'busca ignora maiúsculas (4 títulos Java + trilha beecrowd)');
+select teste.confere((select count(*) from buscar_estudos('', 'AEDS1')) = 2, 'filtro por disciplina');
+select teste.confere((select count(*) from buscar_estudos('java', 'AEDS1')) = 0, 'busca e filtro juntos');
+select teste.confere((select count(*) from listar_disciplinas()) = 8, 'listar_disciplinas');
+select teste.confere((select count(*) from listar_dominios()) = 2, 'listar_dominios traz os 2 domínios');
+select teste.confere(meu_perfil() is null, 'anônimo não tem perfil');
+select teste.confere(painel_estudo(999999) is null, 'painel de estudo inexistente é nulo');
+select teste.espera_erro($$select * from estudos_para_importar()$$, 'anônimo não lista importação');
+reset role;
+
+-- Um estudo pela busca, do ponto de vista da aluna
+select teste.entrar('11111111-1111-1111-1111-111111111111');
+set local role authenticated;
+select teste.confere((select j ->> 'favoritado' from buscar_estudos('integrais') j) = 'true', 'busca marca favoritado');
+select teste.confere((select j ->> 'progresso' from buscar_estudos('integrais') j) = 'estudando', 'busca mostra progresso');
+select teste.confere((select (j ->> 'total_comentarios')::int from buscar_estudos('integrais') j) = 2, 'busca conta comentários');
+select teste.confere((select (j ->> 'total_favoritos')::int from buscar_estudos('integrais') j) = 1, 'busca conta favoritos');
+select teste.confere((select j ->> 'disciplina_sigla' from buscar_estudos('integrais') j) = 'CALC2', 'busca traz a sigla');
+select teste.confere((select j ->> 'favoritado' from buscar_estudos('simulado') j) = 'false', 'não favoritado vem false');
+
+-- Painel do estudo
+select teste.confere((painel_estudo(teste.id_estudo('guia-integrais.html')) -> 'estudo' ->> 'titulo') like 'Cálculo 2%', 'painel traz o estudo');
+select teste.confere(json_array_length(painel_estudo(teste.id_estudo('guia-integrais.html')) -> 'comentarios') = 2, 'painel traz os comentários');
+select teste.confere((painel_estudo(teste.id_estudo('guia-integrais.html')) -> 'comentarios' -> 0 ->> 'meu') = 'true', 'primeiro comentário é meu');
+select teste.confere((painel_estudo(teste.id_estudo('guia-integrais.html')) -> 'comentarios' -> 1 ->> 'autor_cargo') = 'monitor', 'comentário do monitor traz o cargo');
+select teste.confere((painel_estudo(teste.id_estudo('guia-integrais.html')) -> 'comentarios' -> 1 ->> 'meu') = 'false', 'comentário do monitor não é meu');
+
+-- Meu perfil
+select teste.confere((meu_perfil() ->> 'cargo') = 'aluno', 'meu_perfil traz o cargo');
+select teste.confere(json_array_length(meu_perfil() -> 'favoritos') = 1, 'meu_perfil lista favoritos');
+select teste.confere((meu_perfil() -> 'progresso' -> 0 ->> 'status') = 'estudando', 'meu_perfil lista progresso');
+select teste.espera_erro($$select * from estudos_para_importar()$$, 'aluno não lista importação');
+reset role;
+
+select teste.entrar('22222222-2222-2222-2222-222222222222');
+set local role authenticated;
+select teste.confere((select count(*) from estudos_para_importar()) = 8, 'monitor lista os 8 para importar');
+reset role;

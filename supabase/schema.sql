@@ -210,6 +210,110 @@ create policy estudos_storage_inserir on storage.objects for insert to authentic
 create policy estudos_storage_editar on storage.objects for update to authenticated using (bucket_id = 'estudos' and public.sou_equipe()) with check (bucket_id = 'estudos' and public.sou_equipe());
 create policy estudos_storage_apagar on storage.objects for delete to authenticated using (bucket_id = 'estudos' and public.sou_equipe());
 
+-- ---------- RPC de leitura (a API do site) ----------
+-- Todas "security definer": precisam juntar perfis (nome/cargo do autor) sem
+-- expor a tabela inteira. Devolvem JSON já no formato que a página desenha.
+
+create or replace function estudo_json(estudo_id bigint)
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'id', e.id,
+    'titulo', e.titulo,
+    'descricao', e.descricao,
+    'disciplina_sigla', d.sigla,
+    'disciplina_nome', d.nome,
+    'autor_nome', p.nome,
+    'autor_cargo', p.cargo,
+    'revisado', e.revisado,
+    'publicado_em', e.publicado_em,
+    'arquivo_url', e.arquivo_url,
+    'total_favoritos', (select count(*) from favoritos f where f.estudo_id = e.id),
+    'total_comentarios', (select count(*) from comentarios c where c.estudo_id = e.id),
+    'favoritado', exists (select 1 from favoritos f where f.estudo_id = e.id and f.perfil_id = auth.uid()),
+    'progresso', (select pr.status from progresso pr where pr.estudo_id = e.id and pr.perfil_id = auth.uid())
+  )
+  from estudos e
+  left join disciplinas d on d.id = e.disciplina_id
+  left join perfis p on p.id = e.autor_id
+  where e.id = estudo_id;
+$$;
+
+create or replace function comentario_json(comentario_id bigint)
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'id', c.id,
+    'texto', c.texto,
+    'criado_em', c.criado_em,
+    'autor_nome', p.nome,
+    'autor_cargo', p.cargo,
+    'meu', coalesce(c.perfil_id = auth.uid(), false)
+  )
+  from comentarios c
+  left join perfis p on p.id = c.perfil_id
+  where c.id = comentario_id;
+$$;
+
+create or replace function listar_disciplinas()
+returns setof disciplinas language sql stable security definer set search_path = public as $$
+  select * from disciplinas order by periodo nulls last, sigla;
+$$;
+
+create or replace function listar_dominios()
+returns setof text language sql stable security definer set search_path = public as $$
+  select dominio from dominios_permitidos order by dominio;
+$$;
+
+-- Busca sem acento e sem maiúsculas, com filtro opcional por sigla da disciplina.
+create or replace function buscar_estudos(texto text default '', disciplina text default null)
+returns setof json language sql stable security definer set search_path = public, extensions as $$
+  select estudo_json(e.id)
+  from estudos e
+  left join disciplinas d on d.id = e.disciplina_id
+  where (coalesce(btrim(texto), '') = ''
+         or unaccent(e.titulo || ' ' || e.descricao) ilike '%' || unaccent(btrim(texto)) || '%')
+    and (coalesce(disciplina, '') = '' or d.sigla = disciplina)
+  order by e.publicado_em desc, e.id desc;
+$$;
+
+create or replace function painel_estudo(estudo bigint)
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'estudo', estudo_json(e.id),
+    'comentarios', coalesce(
+      (select json_agg(comentario_json(c.id) order by c.criado_em, c.id) from comentarios c where c.estudo_id = e.id),
+      '[]'::json)
+  )
+  from estudos e where e.id = estudo;
+$$;
+
+create or replace function meu_perfil()
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'id', p.id,
+    'nome', p.nome,
+    'email', p.email,
+    'cargo', p.cargo,
+    'favoritos', coalesce((
+      select json_agg(json_build_object('id', e.id, 'titulo', e.titulo, 'disciplina_sigla', d.sigla) order by f.criado_em desc)
+      from favoritos f join estudos e on e.id = f.estudo_id left join disciplinas d on d.id = e.disciplina_id
+      where f.perfil_id = p.id), '[]'::json),
+    'progresso', coalesce((
+      select json_agg(json_build_object('id', e.id, 'titulo', e.titulo, 'disciplina_sigla', d.sigla, 'status', pr.status) order by pr.atualizado_em desc)
+      from progresso pr join estudos e on e.id = pr.estudo_id left join disciplinas d on d.id = e.disciplina_id
+      where pr.perfil_id = p.id), '[]'::json)
+  )
+  from perfis p where p.id = auth.uid();
+$$;
+
+create or replace function estudos_para_importar()
+returns setof json language plpgsql stable security definer set search_path = public as $$
+begin
+  perform exigir_equipe();
+  return query
+    select json_build_object('id', e.id, 'titulo', e.titulo, 'arquivo_url', e.arquivo_url)
+    from estudos e where e.arquivo_url not ilike 'http%' order by e.id;
+end $$;
+
 -- ---------- seed ----------
 insert into dominios_permitidos (dominio) values ('sga.pucminas.br'), ('pucminas.br')
 on conflict do nothing;
