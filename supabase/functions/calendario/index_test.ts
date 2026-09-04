@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
-import { cliente, desdobrar, escolherFabrica, escreverCalendario, extrairCurso, lerData, lerEventos, tratar } from "./index.ts";
+import { cliente, desdobrar, escolherFabrica, escreverCalendario, extrairCurso, lerData, lerEventos, tratar, validarUrlFeed } from "./index.ts";
 import type { Evento } from "./index.ts";
 
 // Amostra no formato do feed do Canvas (linhas dobradas, \, e \n escapados, prazo sem duração,
@@ -162,4 +162,14 @@ Deno.test("tratar: um 2º argumento que não é função (como o info do Deno.se
   // deno-lint-ignore no-explicit-any
   const o = await tratar(new Request(BASE + "/importar", { method: "OPTIONS" }), { remoteAddr: {} } as any);
   assertEquals(o.status, 204);
+});
+
+Deno.test("validarUrlFeed aceita só https em *.instructure.com terminando em .ics", () => {
+  assertEquals(validarUrlFeed("https://pucminas.instructure.com/feeds/calendars/user_abc.ics"), true);
+  assertEquals(validarUrlFeed("https://canvas.instructure.com/feeds/calendars/x.ics"), true);
+  assertEquals(validarUrlFeed("http://pucminas.instructure.com/feeds/calendars/user_abc.ics"), false);
+  assertEquals(validarUrlFeed("https://evil.example/instructure.com/x.ics"), false);
+  assertEquals(validarUrlFeed("https://instructure.com.evil.example/x.ics"), false);
+  assertEquals(validarUrlFeed("https://pucminas.instructure.com/feeds/calendars/x.txt"), false);
+  assertEquals(validarUrlFeed("nada"), false);
 });

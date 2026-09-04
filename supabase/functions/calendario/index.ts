@@ -2,7 +2,6 @@
 //   POST /calendario/importar        usuário logado: baixa o feed do Canvas e grava os eventos
 //   GET  /calendario/feed?token=…    pública: devolve o calendário do usuário em .ics
 // Arquivo único de propósito: dá para colar inteiro no editor do painel do Supabase.
-// As rotas entram na próxima tarefa; esta parte é só leitura e escrita de .ics.
 
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
@@ -209,12 +208,23 @@ export async function tratar(req: Request, fabrica?: unknown): Promise<Response>
   return json(404, { erro: "Rota não encontrada" });
 }
 
+// Só baixa do Canvas (https e host *.instructure.com). Segunda barreira além do CHECK no banco.
+export function validarUrlFeed(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && /(^|\.)instructure\.com$/.test(u.hostname) && u.pathname.endsWith(".ics");
+  } catch {
+    return false;
+  }
+}
+
 async function baixar(url: string): Promise<string> {
+  if (!validarUrlFeed(url)) throw new Error("URL do feed inválida");
   const LIMITE = 5 * 1024 * 1024;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 20000);
   try {
-    const r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "hub-estudos/1.0" } });
+    const r = await fetch(url, { signal: ctrl.signal, redirect: "manual", headers: { "User-Agent": "hub-estudos/1.0" } });
     if (r.status !== 200) throw new Error("O Canvas respondeu " + r.status + " ao baixar o feed");
     if (Number(r.headers.get("content-length") ?? 0) > LIMITE) throw new Error("Feed maior que 5 MB");
     const texto = await r.text();
@@ -225,7 +235,7 @@ async function baixar(url: string): Promise<string> {
     if (e instanceof Error && e.name === "AbortError") throw new Error("O Canvas demorou mais de 20 s para responder");
     // Erros de fetch (DNS, conexão recusada, TLS) trazem a URL completa na mensagem — que carrega o
     // token secreto do Canvas. Só repropagamos sem alteração os erros que nós mesmos criamos acima.
-    if (e instanceof Error && /^(O Canvas respondeu|Feed maior|A URL não devolveu)/.test(e.message)) throw e;
+    if (e instanceof Error && /^(O Canvas respondeu|Feed maior|A URL não devolveu|URL do feed inválida)/.test(e.message)) throw e;
     throw new Error("Não consegui baixar o feed do Canvas (falha de rede ou DNS)");
   } finally {
     clearTimeout(timer);

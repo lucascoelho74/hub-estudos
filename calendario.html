@@ -132,11 +132,12 @@
 
   document.getElementById('form-feed').addEventListener('submit', async function (ev) {
     ev.preventDefault();
+    document.getElementById('salvar').disabled = true;
     try {
       await chamar('salvar_feed_url', { url: document.getElementById('feed').value.trim() });
-      await carregarConfig();
       await importar();
     } catch (e) { avisar(e.message); }
+    finally { document.getElementById('salvar').disabled = false; }
   });
   document.getElementById('atualizar').addEventListener('click', function () { if (config && config.feed_url) importar(); else avisar('Salve a URL do feed primeiro.'); });
   document.getElementById('novo-link').addEventListener('click', async function () {
@@ -172,8 +173,11 @@
     var lim = limitesGrade(atual);
     var seq = ++ultimoMes;
     try {
-      eventos = await chamar('listar_eventos', { de: lim.ini.toISOString(), ate: lim.fim.toISOString() });
+      // Folga de 1 dia de cada lado: dia inteiro é salvo à meia-noite UTC, que cai antes da
+      // meia-noite local (03:00Z no Brasil); a grade já filtra por chaveDia/chaveData.
+      var r = await chamar('listar_eventos', { de: new Date(lim.ini.getTime() - 86400000).toISOString(), ate: new Date(lim.fim.getTime() + 86400000).toISOString() });
       if (seq !== ultimoMes) return;
+      eventos = r;
     } catch (e) {
       if (seq !== ultimoMes) return;
       avisar(e.message); eventos = [];
