@@ -25,11 +25,10 @@ js/supabase.js      cliente e chamar(): a ponte com o backend
 js/sessao.js        sessão, cabeçalho e guardas de página
 supabase/schema.sql todo o backend: tabelas, gatilhos, RLS, Storage, funções RPC, seed
 supabase/teste/     testes do backend num Postgres local
-estudos/            estudos originais; fonte da importação (pode apagar depois)
 vendor/katex/       KaTeX local, usado pelos estudos de matemática
 ```
 
-`tema.css` e `vendor/katex/` precisam continuar na raiz do site mesmo depois de apagar `estudos/`, porque os estudos importados são reescritos para carregá-los a partir da raiz.
+`tema.css` e `vendor/katex/` precisam continuar na raiz do site, porque os estudos (que vivem no Storage) são reescritos para carregá-los a partir da raiz. Os arquivos originais dos 8 estudos foram removidos do repositório depois da importação; ficam no histórico do git (até o commit 8cdbf50).
 
 ## Configurar o backend
 
@@ -39,7 +38,7 @@ vendor/katex/       KaTeX local, usado pelos estudos de matemática
 4. **Project Settings → API**: copie a *Project URL* e a chave *anon public* para `js/config.js`.
 5. Sirva a pasta: `python3 -m http.server 8000` e abra <http://localhost:8000>.
 6. Crie sua conta pelo site. Depois, no **Table Editor → perfis**, troque o seu `cargo` para `professor`.
-7. Em **Publicar → Importar estudos do repositório**, clique em *Importar*: os 8 estudos sobem para o Storage e o site deixa de depender da pasta `estudos/`.
+7. Os 8 estudos já estão no Storage deste projeto. Se você criar um projeto Supabase do zero, o seed cadastra esses 8 com URL relativa `estudos/<arquivo>`: recupere a pasta `estudos/` do histórico do git (commit 8cdbf50), sirva o site e clique em **Publicar → Importar** para subi-los.
 
 Para testar com um e-mail que não seja da PUC, insira o domínio na tabela `dominios_permitidos`.
 
