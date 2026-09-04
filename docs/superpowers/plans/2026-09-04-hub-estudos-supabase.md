@@ -700,7 +700,7 @@ select teste.entrar(null);
 set local role anon;
 select teste.confere((select count(*) from buscar_estudos()) = 8, 'busca vazia lista os 8');
 select teste.confere((select count(*) from buscar_estudos('calculo')) = 1, 'busca ignora acento (calculo acha Cálculo)');
-select teste.confere((select count(*) from buscar_estudos('JAVA')) = 4, 'busca ignora maiúsculas');
+select teste.confere((select count(*) from buscar_estudos('JAVA')) = 5, 'busca ignora maiúsculas (4 títulos Java + trilha beecrowd)');
 select teste.confere((select count(*) from buscar_estudos('', 'AEDS1')) = 2, 'filtro por disciplina');
 select teste.confere((select count(*) from buscar_estudos('java', 'AEDS1')) = 0, 'busca e filtro juntos');
 select teste.confere((select count(*) from listar_disciplinas()) = 8, 'listar_disciplinas');
@@ -1111,7 +1111,7 @@ Expected: `OK: schema.sql e teste.sql passaram`
 - [ ] **Step 5: Rodar o schema duas vezes seguidas (idempotência)**
 
 Run: `PG="$(brew --prefix postgresql@17)/bin"; $PG/psql -h localhost -p 5499 -U postgres -v ON_ERROR_STOP=1 -q -d hub_teste -f supabase/schema.sql && echo "segunda execução OK"`
-Expected: `segunda execução OK` (nenhum erro de "already exists"; o seed não duplica: `select count(*) from estudos` continua 7 porque o teste apagou um).
+Expected: `segunda execução OK` (nenhum erro de "already exists"). Depois, `select count(*) from estudos` deve dar 8: o seed repõe só o estudo que o teste apagou (a checagem é por `arquivo_url`) e não duplica os outros 7.
 
 - [ ] **Step 6: Commit**
 
