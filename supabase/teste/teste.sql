@@ -80,3 +80,43 @@ select teste.confere((select count(*) from estudos where revisado) = 8, 'seed: e
 select teste.confere(teste.id_estudo('guia-integrais.html') is not null, 'seed: guia de integrais existe');
 select teste.confere((select d.sigla from estudos e join disciplinas d on d.id = e.disciplina_id where e.id = teste.id_estudo('guia-integrais.html')) = 'CALC2', 'seed: guia está em CALC2');
 select teste.espera_erro($$select exigir_estudo(999999)$$, 'exigir_estudo com id inexistente');
+
+-- ---------- Tarefa 3: RLS e Storage (acesso direto às tabelas) ----------
+-- "set local role" faz a sessão agir como o role da API; RLS passa a valer.
+select teste.entrar('11111111-1111-1111-1111-111111111111');
+set local role authenticated;
+select teste.confere((select count(*) from perfis) = 1, 'aluno só enxerga o próprio perfil');
+select teste.confere((select count(*) from dominios_permitidos) = 0, 'ninguém lê domínios direto');
+select teste.confere((select count(*) from estudos) = 8, 'aluno lê todos os estudos');
+select teste.confere((select count(*) from disciplinas) = 8, 'aluno lê disciplinas');
+select teste.espera_erro($$insert into estudos (titulo, arquivo_url) values ('x', 'y')$$, 'aluno não insere estudo direto');
+delete from estudos where id = 1;
+select teste.confere((select count(*) from estudos) = 8, 'aluno não apaga estudo direto');
+insert into favoritos (perfil_id, estudo_id) values ('11111111-1111-1111-1111-111111111111', teste.id_estudo('questoes-de-c.html'));
+select teste.espera_erro($$insert into favoritos (perfil_id, estudo_id) values ('22222222-2222-2222-2222-222222222222', 1)$$, 'aluno não favorita em nome de outro');
+insert into comentarios (estudo_id, perfil_id, texto) values (teste.id_estudo('questoes-de-c.html'), '11111111-1111-1111-1111-111111111111', 'comentário direto da aluna');
+select teste.espera_erro($$insert into comentarios (estudo_id, perfil_id, texto) values (1, '22222222-2222-2222-2222-222222222222', 'x')$$, 'aluno não comenta em nome de outro');
+select teste.espera_erro($$insert into storage.objects (bucket_id, name) values ('estudos', 'x.html')$$, 'aluno não sobe arquivo no bucket');
+reset role;
+
+select teste.entrar('22222222-2222-2222-2222-222222222222');
+set local role authenticated;
+insert into estudos (titulo, descricao, arquivo_url) values ('Direto do monitor', '', 'https://x/estudos/m.html');
+select teste.confere((select count(*) from estudos) = 9, 'monitor insere estudo direto');
+delete from estudos where titulo = 'Direto do monitor';
+insert into storage.objects (bucket_id, name) values ('estudos', 'm.html');
+select teste.confere((select count(*) from storage.objects) = 1, 'monitor sobe arquivo no bucket');
+delete from storage.objects where name = 'm.html';
+delete from comentarios where texto = 'comentário direto da aluna';
+select teste.confere((select count(*) from comentarios) = 0, 'equipe apaga comentário alheio direto');
+reset role;
+
+select teste.entrar(null);
+set local role anon;
+select teste.confere((select count(*) from estudos) = 8, 'anônimo lê estudos');
+select teste.confere((select count(*) from perfis) = 0, 'anônimo não lê perfis');
+select teste.confere((select count(*) from favoritos) = 0, 'anônimo não lê favoritos');
+select teste.espera_erro($$insert into comentarios (estudo_id, perfil_id, texto) values (1, '11111111-1111-1111-1111-111111111111', 'x')$$, 'anônimo não comenta');
+select teste.confere((select public from storage.buckets where id = 'estudos'), 'bucket estudos é público');
+reset role;
+delete from favoritos;  -- limpa para as próximas tarefas

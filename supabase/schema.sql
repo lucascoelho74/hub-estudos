@@ -148,6 +148,68 @@ drop trigger if exists proteger_cargo on perfis;
 create trigger proteger_cargo before update on perfis
   for each row execute function perfis_proteger_cargo();
 
+-- ---------- RLS (defesa em profundidade para acesso direto) ----------
+-- O caminho oficial do site são as funções RPC. Estas políticas limitam o que
+-- a chave anon consegue fazer direto nas tabelas.
+alter table dominios_permitidos enable row level security;
+alter table perfis enable row level security;
+alter table disciplinas enable row level security;
+alter table estudos enable row level security;
+alter table favoritos enable row level security;
+alter table progresso enable row level security;
+alter table comentarios enable row level security;
+
+-- Apaga políticas antigas para o arquivo poder ser rodado de novo.
+do $$ declare p record; begin
+  for p in select policyname, tablename from pg_policies
+           where schemaname = 'public'
+             and tablename in ('dominios_permitidos','perfis','disciplinas','estudos','favoritos','progresso','comentarios')
+  loop execute format('drop policy %I on public.%I', p.policyname, p.tablename); end loop;
+end $$;
+
+-- dominios_permitidos: sem política = ninguém acessa direto (só via funções definer).
+
+create policy perfis_ler_proprio on perfis for select to authenticated using (id = auth.uid());
+create policy perfis_editar_proprio on perfis for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+
+create policy disciplinas_ler on disciplinas for select to anon, authenticated using (true);
+create policy disciplinas_equipe_inserir on disciplinas for insert to authenticated with check (sou_equipe());
+create policy disciplinas_equipe_editar on disciplinas for update to authenticated using (sou_equipe()) with check (sou_equipe());
+create policy disciplinas_equipe_apagar on disciplinas for delete to authenticated using (sou_equipe());
+
+create policy estudos_ler on estudos for select to anon, authenticated using (true);
+create policy estudos_equipe_inserir on estudos for insert to authenticated with check (sou_equipe());
+create policy estudos_equipe_editar on estudos for update to authenticated using (sou_equipe()) with check (sou_equipe());
+create policy estudos_equipe_apagar on estudos for delete to authenticated using (sou_equipe());
+
+create policy favoritos_ler_proprios on favoritos for select to authenticated using (perfil_id = auth.uid());
+create policy favoritos_inserir_proprios on favoritos for insert to authenticated with check (perfil_id = auth.uid());
+create policy favoritos_apagar_proprios on favoritos for delete to authenticated using (perfil_id = auth.uid());
+
+create policy progresso_ler_proprio on progresso for select to authenticated using (perfil_id = auth.uid());
+create policy progresso_inserir_proprio on progresso for insert to authenticated with check (perfil_id = auth.uid());
+create policy progresso_editar_proprio on progresso for update to authenticated using (perfil_id = auth.uid()) with check (perfil_id = auth.uid());
+create policy progresso_apagar_proprio on progresso for delete to authenticated using (perfil_id = auth.uid());
+
+create policy comentarios_ler on comentarios for select to anon, authenticated using (true);
+create policy comentarios_inserir_proprio on comentarios for insert to authenticated with check (perfil_id = auth.uid());
+create policy comentarios_apagar on comentarios for delete to authenticated using (perfil_id = auth.uid() or sou_equipe());
+
+-- ---------- Storage ----------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('estudos', 'estudos', true, 5242880, array['text/html'])
+on conflict (id) do update
+  set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists estudos_storage_ler on storage.objects;
+drop policy if exists estudos_storage_inserir on storage.objects;
+drop policy if exists estudos_storage_editar on storage.objects;
+drop policy if exists estudos_storage_apagar on storage.objects;
+create policy estudos_storage_ler on storage.objects for select to anon, authenticated using (bucket_id = 'estudos');
+create policy estudos_storage_inserir on storage.objects for insert to authenticated with check (bucket_id = 'estudos' and public.sou_equipe());
+create policy estudos_storage_editar on storage.objects for update to authenticated using (bucket_id = 'estudos' and public.sou_equipe()) with check (bucket_id = 'estudos' and public.sou_equipe());
+create policy estudos_storage_apagar on storage.objects for delete to authenticated using (bucket_id = 'estudos' and public.sou_equipe());
+
 -- ---------- seed ----------
 insert into dominios_permitidos (dominio) values ('sga.pucminas.br'), ('pucminas.br')
 on conflict do nothing;
