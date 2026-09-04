@@ -1,0 +1,129 @@
+/* ============================================================
+   site.css — componentes compartilhados do Hub de Estudos.
+   Cores vêm SÓ do tema.css (variáveis). Aqui ficam forma, espaçamento
+   e layout. As páginas não têm <style> nem style="".
+   ============================================================ */
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+[hidden]{display:none!important}
+
+/* ---------- cabeçalho ---------- */
+.cabecalho{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--ink-2)}
+.cabecalho-marca{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:14px}
+.cabecalho-xicara{width:34px;height:34px}
+.cabecalho-links{display:flex;align-items:center;gap:18px;font-size:14px;color:var(--fg-dim)}
+.cabecalho-links a:hover{color:var(--fg-strong)}
+.cabecalho-usuario{color:var(--crema);font-weight:600}
+
+/* ---------- área de conteúdo ---------- */
+.conteudo{max-width:1080px;margin:0 auto;padding:28px 22px 90px}
+.conteudo-estreito{max-width:560px}
+.titulo-pagina{font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0 0 8px;font-weight:800;letter-spacing:-.02em}
+.titulo-pagina .destaque{background:linear-gradient(120deg,var(--crema),var(--bean) 55%,var(--steam));-webkit-background-clip:text;background-clip:text;color:transparent}
+.subtitulo{color:var(--fg-dim);margin:0 0 24px}
+.secao{margin-top:36px}
+.secao h2{font-size:18px;margin:0 0 12px}
+.discreto{color:var(--fg-faint);font-size:13px}
+
+/* ---------- botões ---------- */
+.botao{display:inline-flex;align-items:center;gap:8px;background:var(--bean);color:var(--ink);border:1px solid var(--bean);border-radius:var(--radius-sm);padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer;transition:filter .15s,transform .15s}
+.botao:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.botao:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.botao-secundario{background:var(--panel-2);color:var(--fg);border-color:var(--line-2)}
+.botao-perigo{background:transparent;color:var(--red);border-color:var(--red)}
+.botao-pequeno{padding:6px 12px;font-size:13px}
+.botao-ativo{background:var(--steam);border-color:var(--steam);color:var(--ink)}
+.botoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* ---------- formulários ---------- */
+.campo{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.campo label{font-size:13px;color:var(--fg-dim);letter-spacing:.04em}
+.campo input,.campo textarea,.campo select{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:var(--radius-sm);padding:11px 13px;font:inherit;font-size:14.5px;outline:none;transition:border-color .18s,box-shadow .18s}
+.campo input:focus,.campo textarea:focus,.campo select:focus{border-color:var(--bean);box-shadow:0 0 0 3px var(--bean-soft)}
+.campo textarea{min-height:110px;resize:vertical}
+.campo input[type=file]{padding:9px}
+.dica{font-size:12px;color:var(--fg-faint)}
+
+/* ---------- avisos ---------- */
+.aviso{border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;margin:0 0 16px;border:1px solid var(--line)}
+.aviso-erro{background:var(--red-soft);border-color:var(--red);color:var(--fg-strong)}
+.aviso-ok{background:var(--leaf-soft);border-color:var(--leaf);color:var(--fg-strong)}
+.aviso-topo{margin:0;border-radius:0;text-align:center}
+.aviso a{color:var(--crema);text-decoration:underline}
+
+/* ---------- busca e filtros ---------- */
+.barra{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px}
+.busca{position:relative;flex:1;min-width:220px}
+.busca input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:12px 14px 12px 40px;font:inherit;font-size:14.5px;outline:none}
+.busca input:focus{border-color:var(--bean);box-shadow:0 0 0 3px var(--bean-soft)}
+.busca svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--fg-faint);fill:none;stroke-width:2}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.chip{background:var(--panel);border:1px solid var(--line);color:var(--fg-dim);border-radius:999px;padding:6px 13px;font-size:13px;cursor:pointer;font-family:var(--mono)}
+.chip:hover{border-color:var(--line-2);color:var(--fg)}
+.chip-ativo{background:var(--bean-soft);border-color:var(--bean);color:var(--crema)}
+.contagem{font-family:var(--mono);font-size:13px;color:var(--fg-faint)}
+.contagem b{color:var(--crema)}
+
+/* ---------- cards ---------- */
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;transition:transform .16s,border-color .16s,box-shadow .16s}
+.card:hover{transform:translateY(-3px);border-color:var(--bean);box-shadow:var(--shadow)}
+.card-topo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.card-selos{display:flex;gap:6px;flex-wrap:wrap}
+.card-titulo{font-size:17px;font-weight:700;margin:0 0 6px;line-height:1.25}
+.card-titulo a:hover{color:var(--crema)}
+.card-descricao{font-size:13.5px;color:var(--fg-dim);margin:0 0 14px;flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card-rodape{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--fg-faint);font-family:var(--mono)}
+.card-rodape a:hover{color:var(--crema)}
+
+/* ---------- selos ---------- */
+.selo{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:6px;border:1px solid var(--line-2);color:var(--fg-dim);background:var(--panel-2)}
+.selo-disciplina{color:var(--bean);border-color:var(--bean);background:var(--bean-soft)}
+.selo-revisado{color:var(--leaf);border-color:var(--leaf);background:var(--leaf-soft)}
+.selo-monitor{color:var(--steam);border-color:var(--steam);background:var(--steam-soft)}
+.selo-professor{color:var(--rose);border-color:var(--rose);background:var(--rose-soft)}
+.selo-progresso{color:var(--crema);border-color:var(--crema);background:var(--crema-soft)}
+
+/* ---------- favoritar ---------- */
+.coracao{background:none;border:1px solid var(--line);color:var(--fg-faint);border-radius:8px;padding:4px 9px;cursor:pointer;font-size:14px;line-height:1;font-family:var(--mono)}
+.coracao:hover{border-color:var(--rose);color:var(--rose)}
+.coracao-ativo{color:var(--rose);border-color:var(--rose);background:var(--rose-soft)}
+
+/* ---------- página do estudo ---------- */
+.barra-estudo{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 22px;border-bottom:1px solid var(--line);background:var(--ink-2)}
+.barra-estudo h1{font-size:17px;margin:0;flex:1;min-width:200px}
+.quadro-estudo{display:block;width:100%;height:calc(100vh - 150px);min-height:480px;border:0;background:var(--ink)}
+.comentarios{max-width:860px;margin:0 auto;padding:30px 22px 90px}
+.comentario{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px}
+.comentario-topo{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-dim);margin-bottom:6px;flex-wrap:wrap}
+.comentario-topo b{color:var(--fg)}
+.comentario-topo .discreto{margin-left:auto}
+.comentario p{margin:0;white-space:pre-wrap}
+.comentario .botao{margin-top:8px}
+
+/* ---------- abas (página entrar) ---------- */
+.abas{display:flex;border-bottom:1px solid var(--line);margin-bottom:22px}
+.aba{background:none;border:0;border-bottom:2px solid transparent;color:var(--fg-dim);padding:10px 16px;cursor:pointer;font-size:14px}
+.aba-ativa{color:var(--crema);border-bottom-color:var(--bean)}
+
+/* ---------- listas do perfil ---------- */
+.lista{list-style:none;margin:0;padding:0}
+.lista li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.lista li a{flex:1}
+.lista li a:hover{color:var(--crema)}
+.vazio{color:var(--fg-faint);padding:20px 0;text-align:center}
+
+/* ---------- registro da importação ---------- */
+.registro{font-family:var(--mono);font-size:13px;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;max-height:260px;overflow:auto;white-space:pre-wrap;color:var(--code-fg);margin:12px 0 0}
+
+/* ---------- telas pequenas ---------- */
+@media (max-width:640px){
+  .cabecalho{flex-direction:column;align-items:flex-start}
+  .grade{grid-template-columns:1fr}
+  .quadro-estudo{height:70vh}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
