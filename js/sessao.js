@@ -27,6 +27,7 @@
     if (!el) return;
     var s = await sessao();
     var links = '<a href="index.html">Início</a>';
+    if (s.usuario) links += '<a href="calendario.html">Calendário</a>';
     if (ehEquipe(s.perfil)) links += '<a href="publicar.html">Publicar</a>';
     if (s.usuario) links += '<a href="perfil.html" class="cabecalho-usuario">' + esc(s.perfil ? s.perfil.nome : s.usuario.email) + '</a>';
     else links += '<a href="entrar.html" class="botao botao-pequeno">Entrar</a>';

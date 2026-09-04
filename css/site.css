@@ -120,10 +120,38 @@ button{font:inherit}
 /* ---------- registro da importação ---------- */
 .registro{font-family:var(--mono);font-size:13px;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;max-height:260px;overflow:auto;white-space:pre-wrap;color:var(--code-fg);margin:12px 0 0}
 
+/* ---------- calendário ---------- */
+.calendario-topo{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}
+.calendario-topo h2{margin:0;font-size:20px;flex:1;min-width:160px;text-transform:capitalize}
+.grade-mes{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dia-semana{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-faint);text-align:center;padding:4px 0}
+.dia{min-height:88px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:6px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.dia-fora{opacity:.45}
+.dia-hoje{border-color:var(--bean);box-shadow:0 0 0 2px var(--bean-soft)}
+.dia-numero{font-family:var(--mono);font-size:12px;color:var(--fg-dim)}
+.dia-hoje .dia-numero{color:var(--bean);font-weight:700}
+.chip-evento{display:block;font-size:11px;line-height:1.3;background:var(--steam-soft);border-left:2px solid var(--steam);color:var(--fg);padding:2px 5px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip-evento:hover{background:var(--bean-soft);border-left-color:var(--bean)}
+.chip-evento-mais{font-size:11px;color:var(--fg-faint)}
+.dia-grupo{margin-top:18px}
+.dia-grupo h3{font-size:14px;margin:0 0 8px;color:var(--crema);font-family:var(--mono);text-transform:capitalize}
+.evento{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+.evento-topo{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.evento-hora{font-family:var(--mono);font-size:12px;color:var(--fg-faint);min-width:56px}
+.evento-titulo{font-weight:600;flex:1;min-width:200px}
+.evento details{margin-top:6px;font-size:13.5px;color:var(--fg-dim);white-space:pre-wrap}
+.evento details summary{cursor:pointer;color:var(--fg-faint);font-size:12.5px;white-space:normal}
+.evento .botoes{margin-top:8px}
+.link-feed{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.link-feed code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:12px;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--code-fg)}
+
 /* ---------- telas pequenas ---------- */
 @media (max-width:640px){
   .cabecalho{flex-direction:column;align-items:flex-start}
   .grade{grid-template-columns:1fr}
   .quadro-estudo{height:70vh}
+  .grade-mes{gap:2px}
+  .dia{min-height:52px;padding:4px}
+  .chip-evento{font-size:0;height:4px;padding:0;border-left:0;background:var(--steam);border-radius:2px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

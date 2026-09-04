@@ -31,6 +31,34 @@
     return r.data;
   };
 
+  // urlFuncao('feed') → endereço da rota na Edge Function "calendario".
+  window.urlFuncao = function (rota) {
+    return (cfg.SUPABASE_URL || '') + '/functions/v1/calendario/' + rota;
+  };
+
+  // chamarFuncao('importar') → JSON da Edge Function, autenticado com o JWT da sessão.
+  // opcoes: { method: 'POST' | 'GET', body: objeto }. Erro vira Error em português.
+  window.chamarFuncao = async function (rota, opcoes) {
+    if (!window.db) throw new Error('Backend não configurado: preencha js/config.js');
+    var s = await db.auth.getSession();
+    var token = s.data && s.data.session ? s.data.session.access_token : null;
+    if (!token) throw new Error('Faça login para continuar');
+    var r;
+    try {
+      r = await fetch(urlFuncao(rota), {
+        method: (opcoes && opcoes.method) || 'POST',
+        headers: { Authorization: 'Bearer ' + token, apikey: cfg.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: opcoes && opcoes.body ? JSON.stringify(opcoes.body) : undefined
+      });
+    } catch (e) {
+      throw new Error('Sem conexão com a função do calendário. Ela já foi publicada no Supabase?');
+    }
+    var corpo = null;
+    try { corpo = await r.json(); } catch (e) { corpo = null; }
+    if (!r.ok) throw new Error((corpo && corpo.erro) || ('A função do calendário respondeu ' + r.status));
+    return corpo;
+  };
+
   if (!window.db) {
     document.addEventListener('DOMContentLoaded', function () {
       var faixa = document.createElement('div');
