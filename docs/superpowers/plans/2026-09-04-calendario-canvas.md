@@ -633,10 +633,11 @@ function dobrar(linha: string): string {
   return partes.join("\r\n ");
 }
 
-const dataIcs = (iso: string) => iso.replace(/[-:]/g, "").replace(/\.\d{3}/, "");   // 20260807T100000Z
-const diaIcs = (iso: string) => iso.slice(0, 10).replace(/-/g, "");                  // 20260807
+// Normaliza pelo Date porque o banco devolve "+00:00" e o parser devolve "Z".
+const dataIcs = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");   // 20260807T100000Z
+const diaIcs = (iso: string) => new Date(iso).toISOString().slice(0, 10).replace(/-/g, "");                  // 20260807
 function diaSeguinte(iso: string): string {
-  const d = new Date(iso.slice(0, 10) + "T00:00:00Z");
+  const d = new Date(new Date(iso).toISOString().slice(0, 10) + "T00:00:00Z");
   d.setUTCDate(d.getUTCDate() + 1);
   return diaIcs(d.toISOString());
 }
