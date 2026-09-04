@@ -376,3 +376,15 @@ select teste.confere(
   and json_array_length(eventos_por_token((select token_feed from calendario_config where perfil_id = '11111111-1111-1111-1111-111111111111')) -> 'eventos') = 1,
   'service_role lê nome e eventos pelo token');
 reset role;
+
+-- ---------- Calendário: restrições diretas na tabela ----------
+select teste.entrar('11111111-1111-1111-1111-111111111111');
+set local role authenticated;
+select teste.espera_erro($$update calendario_config set feed_url = 'https://evil.example/x.ics' where perfil_id = auth.uid()$$, 'update direto com URL fora do Canvas é recusado pelo CHECK');
+select teste.espera_erro($$update calendario_config set token_feed = 'abc' where perfil_id = auth.uid()$$, 'token fora do padrão hex é recusado pelo CHECK');
+select teste.confere((select feed_url from calendario_config where perfil_id = auth.uid()) like 'https://pucminas.instructure.com/%', 'feed_url intacta');
+do $$ declare n int; begin
+  n := importar_eventos(('[{"uid":"' || repeat('u', 400) || '","titulo":"UID longo","inicio":"2026-11-03T10:00:00Z"}]')::json);
+  perform teste.confere(n = 1 and (select max(length(uid)) from eventos) = 255, 'uid cortado em 255');
+end $$;
+reset role;

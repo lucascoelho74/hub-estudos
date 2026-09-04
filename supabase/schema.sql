@@ -435,6 +435,14 @@ create table if not exists calendario_config (
   atualizado_em timestamptz not null default now()
 );
 
+-- Segunda barreira: o RLS "for all" deixa a dona fazer UPDATE direto na tabela
+-- (fora da função salvar_feed_url), então a validação também mora aqui.
+alter table calendario_config drop constraint if exists calendario_config_feed_url_canvas;
+alter table calendario_config add constraint calendario_config_feed_url_canvas
+  check (feed_url is null or feed_url ~ '^https://[a-z0-9.-]+\.instructure\.com/feeds/calendars/[A-Za-z0-9_.-]+\.ics$');
+alter table calendario_config drop constraint if exists calendario_config_token_hex;
+alter table calendario_config add constraint calendario_config_token_hex check (token_feed ~ '^[a-f0-9]{32}$');
+
 create table if not exists eventos (
   id bigint generated always as identity primary key,
   perfil_id uuid not null references perfis(id) on delete cascade,
@@ -529,7 +537,7 @@ begin
     select distinct on (uid) * from itens order by uid, ord desc
   )
   insert into public.eventos (perfil_id, uid, titulo, descricao, inicio, fim, dia_inteiro, url, curso_codigo, curso_nome)
-  select auth.uid(), btrim(uid),
+  select auth.uid(), left(btrim(uid), 255),
          left(coalesce(nullif(btrim(titulo), ''), '(sem título)'), 300),
          left(coalesce(descricao, ''), 4000),
          inicio,
