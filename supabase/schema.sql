@@ -424,6 +424,91 @@ begin
   update perfis set nome = btrim(novo_nome) where id = auth.uid();
 end $$;
 
+-- ---------- Calendário do Canvas ----------
+-- Calendário pessoal: cada usuário importa o próprio feed do Canvas e só ele vê.
+create table if not exists calendario_config (
+  perfil_id uuid primary key references perfis(id) on delete cascade,
+  feed_url text,                                   -- URL pessoal do Canvas (segredo do dono)
+  token_feed text not null unique default encode(extensions.gen_random_bytes(16), 'hex'),
+  ultima_importacao timestamptz,
+  ultimo_erro text,
+  atualizado_em timestamptz not null default now()
+);
+
+create table if not exists eventos (
+  id bigint generated always as identity primary key,
+  perfil_id uuid not null references perfis(id) on delete cascade,
+  uid text not null,
+  titulo text not null check (length(titulo) between 1 and 300),
+  descricao text not null default '' check (length(descricao) <= 4000),
+  inicio timestamptz not null,
+  fim timestamptz,
+  dia_inteiro boolean not null default false,
+  url text check (url is null or url ~ '^https://'),
+  curso_codigo text,
+  curso_nome text,
+  atualizado_em timestamptz not null default now(),
+  unique (perfil_id, uid)
+);
+
+alter table calendario_config enable row level security;
+alter table eventos enable row level security;
+do $$ declare p record; begin
+  for p in select policyname, tablename from pg_policies
+           where schemaname = 'public' and tablename in ('calendario_config', 'eventos')
+  loop execute format('drop policy %I on public.%I', p.policyname, p.tablename); end loop;
+end $$;
+create policy calendario_config_proprio on calendario_config for all to authenticated
+  using (perfil_id = auth.uid()) with check (perfil_id = auth.uid());
+create policy eventos_proprios on eventos for all to authenticated
+  using (perfil_id = auth.uid()) with check (perfil_id = auth.uid());
+
+-- Cria a config do usuário na primeira visita e devolve o estado.
+create or replace function calendario_config_minha()
+returns json language plpgsql set search_path = public as $$
+declare c calendario_config; total int;
+begin
+  perform exigir_login();
+  insert into calendario_config (perfil_id) values (auth.uid()) on conflict (perfil_id) do nothing;
+  select * into c from calendario_config where perfil_id = auth.uid();
+  select count(*) into total from eventos where perfil_id = auth.uid();
+  return json_build_object(
+    'feed_url', c.feed_url, 'token_feed', c.token_feed, 'ultima_importacao', c.ultima_importacao,
+    'ultimo_erro', c.ultimo_erro, 'total_eventos', total);
+end $$;
+
+create or replace function salvar_feed_url(url text)
+returns void language plpgsql set search_path = public as $$
+begin
+  perform exigir_login();
+  if coalesce(btrim(url), '') !~ '^https://[a-z0-9.-]+\.instructure\.com/feeds/calendars/[A-Za-z0-9_.-]+\.ics$' then
+    raise exception 'URL do feed inválida: cole o link do calendário do Canvas';
+  end if;
+  insert into calendario_config (perfil_id, feed_url, ultimo_erro, atualizado_em)
+  values (auth.uid(), btrim(url), null, now())
+  on conflict (perfil_id) do update set feed_url = excluded.feed_url, ultimo_erro = null, atualizado_em = now();
+end $$;
+
+create or replace function registrar_erro_importacao(msg text)
+returns void language plpgsql set search_path = public as $$
+begin
+  perform exigir_login();
+  insert into calendario_config (perfil_id, ultimo_erro, atualizado_em)
+  values (auth.uid(), left(coalesce(msg, 'Erro desconhecido'), 500), now())
+  on conflict (perfil_id) do update set ultimo_erro = excluded.ultimo_erro, atualizado_em = now();
+end $$;
+
+create or replace function novo_token_feed()
+returns text language plpgsql set search_path = public as $$
+declare t text;
+begin
+  perform exigir_login();
+  perform calendario_config_minha();
+  update calendario_config set token_feed = encode(extensions.gen_random_bytes(16), 'hex'), atualizado_em = now()
+  where perfil_id = auth.uid() returning token_feed into t;
+  return t;
+end $$;
+
 -- ---------- seed ----------
 insert into dominios_permitidos (dominio) values ('sga.pucminas.br'), ('pucminas.br')
 on conflict do nothing;

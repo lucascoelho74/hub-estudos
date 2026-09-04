@@ -275,3 +275,44 @@ select teste.espera_erro($$select excluir_comentario((select id from comentarios
   'aluna não apaga comentário do monitor');
 select teste.confere((select count(*) from comentarios) = 1, 'comentário do monitor continua lá');
 reset role;
+
+-- ---------- Calendário: config e feed ----------
+select teste.entrar('11111111-1111-1111-1111-111111111111');
+set local role authenticated;
+do $$
+declare c json; c2 json; t1 text; t2 text;
+begin
+  c := calendario_config_minha();
+  perform teste.confere((c ->> 'feed_url') is null and length(c ->> 'token_feed') = 32 and (c ->> 'total_eventos') = '0', 'config criada na primeira chamada');
+  c2 := calendario_config_minha();
+  perform teste.confere((c ->> 'token_feed') = (c2 ->> 'token_feed'), 'segunda chamada reaproveita o token');
+  perform teste.espera_erro('select salvar_feed_url(''https://exemplo.com/x.ics'')', 'URL fora do Canvas é recusada');
+  perform teste.espera_erro('select salvar_feed_url(''javascript:alert(1)'')', 'URL com esquema inválido é recusada');
+  perform teste.espera_erro('select salvar_feed_url(''https://pucminas.instructure.com/feeds/calendars/user_abc.ics?x=1'')', 'URL com query é recusada');
+  perform salvar_feed_url('  https://pucminas.instructure.com/feeds/calendars/user_abc123.ics  ');
+  perform teste.confere((calendario_config_minha() ->> 'feed_url') = 'https://pucminas.instructure.com/feeds/calendars/user_abc123.ics', 'feed_url salva e aparada');
+  perform registrar_erro_importacao(repeat('e', 600));
+  perform teste.confere(length(calendario_config_minha() ->> 'ultimo_erro') = 500, 'erro cortado em 500');
+  perform salvar_feed_url('https://pucminas.instructure.com/feeds/calendars/user_abc123.ics');
+  perform teste.confere((calendario_config_minha() ->> 'ultimo_erro') is null, 'salvar feed limpa o erro');
+  t1 := calendario_config_minha() ->> 'token_feed';
+  t2 := novo_token_feed();
+  perform teste.confere(t2 <> t1 and length(t2) = 32 and (calendario_config_minha() ->> 'token_feed') = t2, 'novo token substitui o antigo');
+end $$;
+reset role;
+
+select teste.entrar('22222222-2222-2222-2222-222222222222');
+set local role authenticated;
+select teste.confere((select count(*) from calendario_config) = 0, 'outro usuário não vê config alheia');
+select teste.confere(length(calendario_config_minha() ->> 'token_feed') = 32, 'cada usuário tem a própria config');
+select teste.confere((select count(*) from calendario_config) = 1, 'e só enxerga a sua');
+-- RLS filtra o update para 0 linhas sem erro; o confere depois do reset role prova que nada mudou
+update calendario_config set feed_url = 'https://x.instructure.com/feeds/calendars/a.ics' where perfil_id = '11111111-1111-1111-1111-111111111111';
+reset role;
+select teste.confere((select feed_url from calendario_config where perfil_id = '11111111-1111-1111-1111-111111111111') = 'https://pucminas.instructure.com/feeds/calendars/user_abc123.ics', 'config da aluna intacta');
+
+select teste.entrar(null);
+set local role anon;
+select teste.espera_erro($$select calendario_config_minha()$$, 'anônimo não tem config');
+select teste.confere((select count(*) from calendario_config) = 0, 'anônimo não lê config');
+reset role;
