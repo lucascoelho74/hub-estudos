@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu perfil · Hub de Estudos</title>
+<link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="cabecalho" id="cabecalho"></header>
+
+<main class="conteudo conteudo-estreito">
+  <h1 class="titulo-pagina">Meu perfil</h1>
+  <p class="subtitulo"><span id="email"></span> · <span class="selo" id="cargo"></span></p>
+  <div class="aviso" id="aviso" hidden></div>
+
+  <form id="form-nome">
+    <div class="campo"><label for="nome">Nome</label><input id="nome" type="text" maxlength="80" required></div>
+    <div class="botoes">
+      <button class="botao" type="submit">Salvar nome</button>
+      <button class="botao botao-perigo" type="button" id="sair">Sair</button>
+    </div>
+  </form>
+
+  <section class="secao"><h2>Favoritos</h2><ul class="lista" id="favoritos"></ul></section>
+  <section class="secao"><h2>Progresso</h2><ul class="lista" id="progresso"></ul></section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/sessao.js"></script>
+<script>
+// Perfil: tudo vem de meu_perfil() (já carregado por sessao()).
+(async function () {
+  var aviso = document.getElementById('aviso');
+  var s = await exigirLogin();
+  if (!s) return;
+  montarCabecalho();
+  var p = s.perfil;
+  if (!p) return mostrarAviso(aviso, 'Não consegui carregar o perfil. Tente entrar de novo.');
+
+  document.getElementById('email').textContent = p.email;
+  var cargo = document.getElementById('cargo');
+  cargo.textContent = p.cargo;
+  if (p.cargo !== 'aluno') cargo.classList.add('selo-' + p.cargo);
+  document.getElementById('nome').value = p.nome;
+
+  function itemHtml(e, extra) {
+    return '<li><span class="selo selo-disciplina">' + esc(e.disciplina_sigla || 'geral') + '</span>' +
+      '<a href="estudo.html?id=' + e.id + '">' + esc(e.titulo) + '</a>' + (extra || '') + '</li>';
+  }
+  document.getElementById('favoritos').innerHTML = p.favoritos.length
+    ? p.favoritos.map(function (e) { return itemHtml(e); }).join('')
+    : '<li class="vazio">Nenhum favorito ainda.</li>';
+  document.getElementById('progresso').innerHTML = p.progresso.length
+    ? p.progresso.map(function (e) { return itemHtml(e, '<span class="selo selo-progresso">' + (e.status === 'concluido' ? 'concluído' : 'estudando') + '</span>'); }).join('')
+    : '<li class="vazio">Nenhum estudo em andamento.</li>';
+
+  document.getElementById('form-nome').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    try {
+      await chamar('atualizar_nome', { novo_nome: document.getElementById('nome').value });
+      limparSessao();
+      mostrarAviso(aviso, 'Nome salvo.', 'ok');
+      montarCabecalho();
+    } catch (e) { mostrarAviso(aviso, e.message); }
+  });
+  document.getElementById('sair').addEventListener('click', sair);
+})();
+</script>
+</body>
+</html>
