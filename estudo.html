@@ -47,7 +47,7 @@
 <script src="js/sessao.js"></script>
 <script>
 // Página do estudo: painel_estudo traz tudo numa chamada; o HTML do estudo é
-// buscado (repositório ou Storage) e mostrado num iframe via srcdoc.
+// buscado (repositório ou Storage) e mostrado num iframe via URL blob.
 (async function () {
   var id = Number(parametro('id'));
   var aviso = document.getElementById('aviso'), areaAviso = document.getElementById('area-aviso');
@@ -142,7 +142,7 @@
   });
 
   // ---------- conteúdo ----------
-  // Os estudos usam ../tema.css e ../vendor/katex. Dentro de srcdoc não há
+  // Os estudos usam ../tema.css e ../vendor/katex. Numa URL blob não há
   // "pasta atual", então trocamos ../ pela raiz absoluta do site. Não usamos
   // <base> porque ela quebraria as âncoras href="#..." dos estudos.
   async function carregarEstudo(url) {
@@ -153,7 +153,13 @@
       var html = await r.text();
       html = html.replace(/href="\.\.\/index\.html"/g, 'href="' + raiz + 'index.html" target="_top"');
       html = html.replace(/(src|href)=(["'])\.\.\//g, '$1=$2' + raiz);
-      quadro.srcdoc = html;
+      // Blob em vez de srcdoc: num documento about:srcdoc, links "#..." resolvem
+      // contra a URL da página-mãe e navegam o iframe. Uma URL blob: tem endereço
+      // próprio (mesma origem), então as âncoras dos estudos rolam no lugar.
+      var blob = new Blob([html], { type: 'text/html' });
+      var urlBlob = URL.createObjectURL(blob);
+      quadro.addEventListener('load', function () { URL.revokeObjectURL(urlBlob); }, { once: true });
+      quadro.src = urlBlob;
       quadro.hidden = false;
     } catch (e) {
       areaAviso.hidden = false;
