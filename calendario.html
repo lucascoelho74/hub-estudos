@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário · Hub de Estudos</title>
+<link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="cabecalho" id="cabecalho"></header>
+
+<main class="conteudo">
+  <h1 class="titulo-pagina">Calendário</h1>
+  <p class="subtitulo">Seus prazos do Canvas, aqui no hub e no seu app de calendário.</p>
+  <div class="aviso" id="aviso" hidden></div>
+
+  <section class="secao">
+    <h2>Fonte: feed do Canvas</h2>
+    <form id="form-feed">
+      <div class="campo">
+        <label for="feed">URL do feed do Canvas</label>
+        <input id="feed" type="url" placeholder="https://pucminas.instructure.com/feeds/calendars/user_….ics" required>
+        <details class="dica"><summary>Onde acho essa URL?</summary>No Canvas: Calendário → botão "Feed do calendário" (canto inferior direito) → copie o link que termina em .ics. Ele é pessoal: não compartilhe.</details>
+      </div>
+      <div class="botoes">
+        <button class="botao" type="submit" id="salvar">Salvar e importar</button>
+        <button class="botao botao-secundario" type="button" id="atualizar">Atualizar agora</button>
+        <span class="discreto" id="estado"></span>
+      </div>
+    </form>
+  </section>
+
+  <p class="vazio" id="sem-feed" hidden>Cole a URL do feed do Canvas para começar.</p>
+
+  <section class="secao" id="secao-mes" hidden>
+    <div class="calendario-topo">
+      <button class="botao botao-secundario botao-pequeno" type="button" id="anterior" title="Mês anterior">‹</button>
+      <h2 id="titulo-mes"></h2>
+      <button class="botao botao-secundario botao-pequeno" type="button" id="proximo" title="Próximo mês">›</button>
+      <button class="botao botao-secundario botao-pequeno" type="button" id="hoje">Hoje</button>
+    </div>
+    <div class="chips" id="cursos"></div>
+    <div class="grade-mes" id="grade"></div>
+  </section>
+
+  <section class="secao" id="secao-lista" hidden>
+    <h2>Eventos do mês</h2>
+    <div id="lista"></div>
+  </section>
+
+  <section class="secao" id="secao-assinar" hidden>
+    <h2>Assinar no seu app</h2>
+    <p class="discreto">Google Agenda, Apple Calendar e Outlook atualizam sozinhos a partir deste link. Ele é pessoal: quem tiver o link vê seus eventos.</p>
+    <div class="link-feed"><code id="link-https"></code><button class="botao botao-secundario botao-pequeno" type="button" data-copiar="link-https">Copiar</button></div>
+    <div class="link-feed"><code id="link-webcal"></code><button class="botao botao-secundario botao-pequeno" type="button" data-copiar="link-webcal">Copiar</button></div>
+    <ul class="lista">
+      <li>Google Agenda: Outras agendas → + → Por URL → cole o link https.</li>
+      <li>Apple Calendar: Arquivo → Nova assinatura de calendário → cole o link webcal.</li>
+      <li>Outlook: Adicionar calendário → Assinar da Web → cole o link https.</li>
+    </ul>
+    <p><button class="botao botao-perigo botao-pequeno" type="button" id="novo-link">Gerar novo link</button></p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/sessao.js"></script>
+<script src="js/ics.js"></script>
+<script>
+// Calendário pessoal: config e eventos vêm do banco; a importação roda na Edge Function.
+(async function () {
+  var aviso = document.getElementById('aviso'), estado = document.getElementById('estado');
+  var SEIS_HORAS = 6 * 60 * 60 * 1000;
+  var config = null, eventos = [], curso = '', atual = inicioDoMes(new Date());
+
+  var s = await exigirLogin();
+  if (!s) return;
+  montarCabecalho();
+
+  function inicioDoMes(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function avisar(msg, tipo) { mostrarAviso(aviso, msg, tipo); }
+  function mostrarBlocos(temFeed) {
+    document.getElementById('secao-mes').hidden = !temFeed;
+    document.getElementById('secao-lista').hidden = !temFeed;
+    document.getElementById('secao-assinar').hidden = !temFeed;
+    document.getElementById('sem-feed').hidden = temFeed;
+  }
+
+  // ---------- config e importação ----------
+  async function carregarConfig() {
+    config = await chamar('calendario_config_minha');
+    document.getElementById('feed').value = config.feed_url || '';
+    mostrarBlocos(!!config.feed_url);
+    desenharEstado();
+    desenharLinks();
+  }
+  function desenharEstado() {
+    if (config.ultimo_erro) {
+      estado.textContent = '';
+      avisar('A última importação falhou: ' + config.ultimo_erro);
+      return;
+    }
+    estado.textContent = config.ultima_importacao
+      ? 'Última importação: ' + new Date(config.ultima_importacao).toLocaleString('pt-BR') + ' · ' + config.total_eventos + ' evento(s)'
+      : 'Nenhuma importação ainda.';
+  }
+  function desenharLinks() {
+    var https = urlFuncao('feed') + '?token=' + config.token_feed;
+    document.getElementById('link-https').textContent = https;
+    document.getElementById('link-webcal').textContent = https.replace(/^https:/, 'webcal:');
+  }
+  async function importar() {
+    estado.textContent = 'Atualizando…';
+    avisar('');
+    document.getElementById('atualizar').disabled = true;
+    try {
+      var r = await chamarFuncao('importar');
+      await carregarConfig();
+      await carregarMes();
+      avisar(r.importados + ' evento(s) importados do Canvas.', 'ok');
+    } catch (e) {
+      try { await carregarConfig(); } catch (e2) { /* o aviso abaixo cobre */ }
+      if (!config || !config.ultimo_erro) avisar(e.message);
+      await carregarMes();
+    }
+    document.getElementById('atualizar').disabled = false;
+  }
+
+  document.getElementById('form-feed').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    try {
+      await chamar('salvar_feed_url', { url: document.getElementById('feed').value.trim() });
+      await carregarConfig();
+      await importar();
+    } catch (e) { avisar(e.message); }
+  });
+  document.getElementById('atualizar').addEventListener('click', function () { if (config && config.feed_url) importar(); else avisar('Salve a URL do feed primeiro.'); });
+  document.getElementById('novo-link').addEventListener('click', async function () {
+    if (!confirm('Gerar um novo link? O antigo deixa de funcionar nos apps que o assinaram.')) return;
+    try { await chamar('novo_token_feed'); await carregarConfig(); avisar('Novo link gerado. Atualize a assinatura nos seus apps.', 'ok'); }
+    catch (e) { avisar(e.message); }
+  });
+  document.querySelectorAll('[data-copiar]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var texto = document.getElementById(b.dataset.copiar).textContent;
+      navigator.clipboard.writeText(texto).then(function () {
+        b.textContent = 'Copiado';
+        setTimeout(function () { b.textContent = 'Copiar'; }, 1500);
+      }, function () { avisar('Não consegui copiar; selecione o link e copie à mão.'); });
+    });
+  });
+
+  // ---------- mês ----------
+  // A grade começa na segunda-feira anterior (ou igual) ao dia 1 e tem 5 ou 6 semanas.
+  function limitesGrade(mes) {
+    var ini = new Date(mes);
+    ini.setDate(ini.getDate() - ((ini.getDay() + 6) % 7));
+    var ultimo = new Date(mes.getFullYear(), mes.getMonth() + 1, 0);
+    var dias = Math.round((ultimo - ini) / 86400000) + 1;
+    var semanas = dias > 35 ? 6 : 5;
+    var fim = new Date(ini);
+    fim.setDate(fim.getDate() + semanas * 7);
+    return { ini: ini, fim: fim, semanas: semanas };
+  }
+  async function carregarMes() {
+    if (!config || !config.feed_url) return;
+    var lim = limitesGrade(atual);
+    try { eventos = await chamar('listar_eventos', { de: lim.ini.toISOString(), ate: lim.fim.toISOString() }); }
+    catch (e) { avisar(e.message); eventos = []; }
+    desenharCursos();
+    desenharGrade();
+    desenharLista();
+  }
+  function filtrados() { return eventos.filter(function (e) { return !curso || (e.curso_nome || '') === curso; }); }
+  function desenharCursos() {
+    var nomes = [];
+    eventos.forEach(function (e) { if (e.curso_nome && nomes.indexOf(e.curso_nome) < 0) nomes.push(e.curso_nome); });
+    nomes.sort();
+    if (curso && nomes.indexOf(curso) < 0) curso = '';
+    document.getElementById('cursos').innerHTML =
+      '<button class="chip' + (curso ? '' : ' chip-ativo') + '" type="button" data-curso="">todos</button>' +
+      nomes.map(function (n) { return '<button class="chip' + (curso === n ? ' chip-ativo' : '') + '" type="button" data-curso="' + esc(n) + '">' + esc(n) + '</button>'; }).join('');
+  }
+  function desenharGrade() {
+    var lim = limitesGrade(atual), hoje = chaveData(new Date());
+    var porDia = {};
+    filtrados().forEach(function (e) { var k = chaveDia(e); (porDia[k] = porDia[k] || []).push(e); });
+    var html = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(function (n) { return '<div class="dia-semana">' + n + '</div>'; }).join('');
+    var d = new Date(lim.ini);
+    for (var i = 0; i < lim.semanas * 7; i++) {
+      var k = chaveData(d), lista = porDia[k] || [], fora = d.getMonth() !== atual.getMonth();
+      html += '<div class="dia' + (fora ? ' dia-fora' : '') + (k === hoje ? ' dia-hoje' : '') + '">' +
+        '<span class="dia-numero">' + d.getDate() + '</span>' +
+        lista.slice(0, 3).map(function (e) { return '<a class="chip-evento" href="#ev-' + e.id + '" title="' + esc(tituloComCurso(e)) + '">' + esc(e.titulo) + '</a>'; }).join('') +
+        (lista.length > 3 ? '<span class="chip-evento-mais">+' + (lista.length - 3) + '</span>' : '') +
+        '</div>';
+      d.setDate(d.getDate() + 1);
+    }
+    document.getElementById('grade').innerHTML = html;
+    document.getElementById('titulo-mes').textContent = atual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  }
+  function eventoHtml(e) {
+    var selo = e.curso_nome ? '<span class="selo selo-disciplina">' + esc(e.curso_nome) + '</span>' : '';
+    var desc = e.descricao ? '<details><summary>descrição</summary>' + esc(e.descricao) + '</details>' : '';
+    var canvas = e.url ? '<a class="botao botao-secundario botao-pequeno" href="' + esc(e.url) + '" target="_blank" rel="noopener">abrir no Canvas</a>' : '';
+    return '<div class="evento" id="ev-' + e.id + '">' +
+      '<div class="evento-topo"><span class="evento-hora">' + esc(formatarHora(e)) + '</span><span class="evento-titulo">' + esc(e.titulo) + '</span>' + selo + '</div>' + desc +
+      '<div class="botoes">' + canvas +
+      '<a class="botao botao-secundario botao-pequeno" href="' + esc(linkGoogle(e)) + '" target="_blank" rel="noopener">Google</a>' +
+      '<a class="botao botao-secundario botao-pequeno" href="' + esc(linkOutlook(e)) + '" target="_blank" rel="noopener">Outlook</a>' +
+      '<button class="botao botao-secundario botao-pequeno" type="button" data-ics="' + e.id + '">Apple / .ics</button>' +
+      '</div></div>';
+  }
+  function desenharLista() {
+    var mesChave = chaveData(atual).slice(0, 7);
+    var doMes = filtrados().filter(function (e) { return chaveDia(e).slice(0, 7) === mesChave; });
+    if (!doMes.length) { document.getElementById('lista').innerHTML = '<p class="vazio">Nenhum evento neste mês.</p>'; return; }
+    var grupos = {}, ordem = [];
+    doMes.forEach(function (e) { var k = chaveDia(e); if (!grupos[k]) { grupos[k] = []; ordem.push(k); } grupos[k].push(e); });
+    document.getElementById('lista').innerHTML = ordem.map(function (k) {
+      var titulo = new Date(k + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+      return '<div class="dia-grupo"><h3>' + esc(titulo) + '</h3>' + grupos[k].map(eventoHtml).join('') + '</div>';
+    }).join('');
+  }
+
+  document.getElementById('lista').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-ics]');
+    if (!b) return;
+    var e = eventos.filter(function (x) { return String(x.id) === b.dataset.ics; })[0];
+    if (e) baixarIcs(e);
+  });
+  document.getElementById('cursos').addEventListener('click', function (ev) {
+    var c = ev.target.closest('.chip');
+    if (!c) return;
+    curso = c.dataset.curso;
+    desenharCursos(); desenharGrade(); desenharLista();
+  });
+  document.getElementById('anterior').addEventListener('click', function () { atual = new Date(atual.getFullYear(), atual.getMonth() - 1, 1); carregarMes(); });
+  document.getElementById('proximo').addEventListener('click', function () { atual = new Date(atual.getFullYear(), atual.getMonth() + 1, 1); carregarMes(); });
+  document.getElementById('hoje').addEventListener('click', function () { atual = inicioDoMes(new Date()); carregarMes(); });
+
+  // ---------- início ----------
+  try {
+    await carregarConfig();
+    if (config.feed_url) {
+      var velha = !config.ultima_importacao || (Date.now() - new Date(config.ultima_importacao).getTime()) > SEIS_HORAS;
+      if (velha) await importar(); else await carregarMes();
+    }
+  } catch (e) { avisar(e.message); }
+})();
+</script>
+</body>
+</html>
