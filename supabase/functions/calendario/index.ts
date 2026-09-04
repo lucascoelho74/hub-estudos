@@ -24,7 +24,8 @@ export function desdobrar(texto: string): string {
 }
 
 function desescapar(s: string): string {
-  return s.replace(/\\n/gi, "\n").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\");
+  // Uma passada só: cada sequência de escape é consumida uma vez, na ordem em que aparece.
+  return s.replace(/\\(\\|n|N|,|;)/g, (_, c: string) => (c === "n" || c === "N" ? "\n" : c));
 }
 
 // "DTSTART;VALUE=DATE:20260807" → { params: { VALUE: "DATE" }, valor: "20260807" }

@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
 import { desdobrar, escreverCalendario, extrairCurso, lerData, lerEventos } from "./index.ts";
+import type { Evento } from "./index.ts";
 
 // Amostra no formato do feed do Canvas (linhas dobradas, \, e \n escapados, prazo sem duração,
 // evento com duração, dia inteiro, TZID, evento sem UID).
@@ -82,4 +83,14 @@ Deno.test("escreverCalendario gera um .ics válido e relegível", () => {
     const sufixo = originais[i].curso_nome ? " (" + originais[i].curso_nome + ")" : "";
     assertEquals(r.titulo, originais[i].titulo + sufixo);
   });
+});
+
+Deno.test("escapar e desescapar são inversos exatos, inclusive barra seguida de n", () => {
+  const original: Evento = {
+    uid: "e-barra", titulo: "Vetor \\nabla f", descricao: "caminho C:\\Notas\\prova.pdf, ok; fim\nlinha 2",
+    inicio: "2026-09-10T10:00:00.000Z", fim: null, dia_inteiro: false, url: null, curso_codigo: null, curso_nome: null,
+  };
+  const relido = lerEventos(escreverCalendario("Ana", [original]))[0];
+  assertEquals(relido.titulo, original.titulo);
+  assertEquals(relido.descricao, original.descricao);
 });
