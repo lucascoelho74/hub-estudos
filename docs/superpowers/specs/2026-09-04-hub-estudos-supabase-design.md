@@ -120,7 +120,7 @@ Escrita (todas chamam `exigir_login()`; as de equipe chamam `exigir_equipe()`):
 - `publicar_estudo(titulo text, descricao text, disciplina_sigla text, arquivo_url text) returns bigint` — equipe; valida tamanhos e sigla; `autor_id = auth.uid()`.
 - `atualizar_arquivo(estudo bigint, nova_url text) returns void` — equipe.
 - `marcar_revisado(estudo bigint, valor boolean) returns void` — equipe.
-- `excluir_estudo(estudo bigint) returns void` — equipe; apaga a linha e, se `arquivo_url` apontar para o bucket `estudos`, apaga também o objeto em `storage.objects`.
+- `excluir_estudo(estudo bigint) returns text` — equipe; apaga a linha e devolve o caminho do objeto no bucket `estudos` (ou `null` se a URL não for do Storage). Apagar direto em `storage.objects` deixaria o arquivo órfão no Supabase, então quem remove o arquivo é a página, via API do Storage, com o caminho devolvido.
 - `atualizar_nome(novo_nome text) returns void` — usuário logado, 1–80 caracteres.
 
 Erros de negócio saem como `raise exception` com mensagem em português; o front mostra a mensagem como veio.
@@ -143,7 +143,7 @@ RLS ligado em todas as tabelas. As funções RPC são o caminho oficial; estas p
 
 - Bucket `estudos`, público para leitura, tipo permitido `text/html`, limite 5 MB por arquivo.
 - Políticas em `storage.objects`: select para todos; insert, update e delete só quando `bucket_id = 'estudos'` e `sou_equipe()`.
-- Nome do objeto: `<timestamp>-<slug do título>.html` na publicação; `<id>-<nome original>` na importação.
+- Nome do objeto dentro do bucket: `<timestamp>-<slug do título>.html` na publicação; `<id>-<nome original>.html` na importação.
 
 ### 3.8 Seed
 
@@ -190,13 +190,13 @@ Cada página tem um `<script>` próprio, curto, no padrão "chama a função, de
 
 ### 4.3 Páginas
 
-**index.html** — chama `listar_disciplinas()` e `buscar_estudos(texto, disciplina)`. Campo de busca (com atalho `/`), chips de disciplina (todas + uma por disciplina), grade de cards. Card: sigla da disciplina, título, descrição, autor, selo "revisado", contagens, botão de favoritar (coração) e selo do progresso. Favoritar sem login leva para `entrar.html`. A busca é refeita no servidor a cada mudança (com debounce de 250 ms).
+**index.html** — chama `listar_disciplinas()` e `buscar_estudos(texto, disciplina)`. Campo de busca (com atalho `/`), chips de disciplina (todas + uma por disciplina), grade de cards. Card: sigla da disciplina, título, descrição, autor, selo "revisado", contagens, botão de favoritar (coração) e selo do progresso. Favoritar sem login leva para `entrar.html`. A busca é refeita no servidor a cada mudança (com debounce de 250 ms). Se a URL trouxer `?aviso=so-equipe`, mostra o aviso "Só monitor ou professor pode publicar".
 
 **entrar.html** — duas abas: Entrar (e-mail, senha) e Cadastrar (nome, e-mail, senha). Cadastro valida o domínio no front antes de chamar `signUp` com `options.data.nome`. Se o projeto exigir confirmação de e-mail (`data.session` nulo), mostra "Confira seu e-mail". Depois de entrar, volta para `?voltar=` ou para o início.
 
-**estudo.html?id=N** — chama `painel_estudo(N)`. Barra superior: voltar, título, disciplina, autor, botões de favoritar e progresso (Estudando / Concluído / Limpar), e para equipe "Marcar revisado" e "Excluir". Abaixo, o estudo em um `<iframe>` de altura `calc(100vh - barra)`: o JS faz `fetch(arquivo_url)`, injeta `<base href="<origem do site>/estudos/">` logo após `<head>` e atribui a `srcdoc`. Assim `../tema.css` e `../vendor/katex/...` continuam resolvendo, tanto para arquivo do repositório quanto para o Storage. Abaixo do iframe, comentários: lista (autor, selo do cargo, data, botão excluir quando `meu` ou equipe) e formulário (só logado; anônimo vê link para entrar).
+**estudo.html?id=N** — chama `painel_estudo(N)`. Barra superior: voltar, título, disciplina, autor, botões de favoritar e progresso (Estudando / Concluído / Limpar), e para equipe "Marcar revisado" e "Excluir" (chama `excluir_estudo`, remove o arquivo do Storage com o caminho devolvido e volta ao início). Abaixo, o estudo em um `<iframe>` de altura `calc(100vh - barra)`: o JS faz `fetch(arquivo_url)`, injeta `<base href="<origem do site>/estudos/">` logo após `<head>` e atribui a `srcdoc`. Assim `../tema.css` e `../vendor/katex/...` continuam resolvendo, tanto para arquivo do repositório quanto para o Storage. Abaixo do iframe, comentários: lista (autor, selo do cargo, data, botão excluir quando `meu` ou equipe) e formulário (só logado; anônimo vê link para entrar).
 
-**publicar.html** — `exigirEquipe()`. Formulário: título, descrição, disciplina (de `listar_disciplinas()`), arquivo HTML (obrigatório, até 5 MB, `.html`). Fluxo: sobe o arquivo em `estudos/<timestamp>-<slug>.html`, pega a URL pública e chama `publicar_estudo(...)`. Sucesso redireciona para `estudo.html?id=<novo>`. Seção "Importar estudos do repositório": chama `estudos_para_importar()`; para cada um, `fetch(arquivo_url)` relativo, sobe em `estudos/<id>-<nome>.html`, chama `atualizar_arquivo`. Mostra progresso item a item e erros sem parar o lote.
+**publicar.html** — `exigirEquipe()`. Formulário: título, descrição, disciplina (de `listar_disciplinas()`), arquivo HTML (obrigatório, até 5 MB, `.html`). Fluxo: sobe o arquivo no bucket `estudos` como `<timestamp>-<slug>.html`, pega a URL pública e chama `publicar_estudo(...)`. Sucesso redireciona para `estudo.html?id=<novo>`. Seção "Importar estudos do repositório": chama `estudos_para_importar()`; para cada um, `fetch(arquivo_url)` relativo, sobe no bucket como `<id>-<nome>.html`, chama `atualizar_arquivo`. Mostra progresso item a item e erros sem parar o lote.
 
 **perfil.html** — `exigirLogin()`, `meu_perfil()`. Nome (editável via `atualizar_nome`), e-mail, cargo com selo, listas de favoritos e de progresso com links, botão Sair.
 
@@ -216,7 +216,7 @@ Cada página tem um `<script>` próprio, curto, no padrão "chama a função, de
 
 Não há Node, Docker nem CLI do Supabase na máquina. A validação é em duas camadas:
 
-1. **SQL localmente**: instalar Postgres via Homebrew, criar um banco de teste com stubs mínimos dos schemas `auth` (tabela `users`, funções `uid()` e `role()` lendo uma variável de sessão) e `storage` (tabela `objects`, `buckets`), rodar `schema.sql` inteiro e um `supabase/teste.sql` que simula usuários (aluno, monitor, anônimo) e confere: domínio recusado, perfil criado, aluno não publica, equipe publica, favoritar alterna, progresso faz upsert, comentário do outro não pode ser excluído por aluno, busca acha com e sem acento, `excluir_estudo` limpa `storage.objects`. O teste falha com `raise` se algo divergir.
+1. **SQL localmente**: instalar Postgres via Homebrew, criar um banco de teste com stubs mínimos dos schemas `auth` (tabela `users`, funções `uid()` e `role()` lendo uma variável de sessão) e `storage` (tabela `objects`, `buckets`), rodar `schema.sql` inteiro e um `supabase/teste.sql` que simula usuários (aluno, monitor, anônimo) e confere: domínio recusado, perfil criado, aluno não publica, equipe publica, favoritar alterna, progresso faz upsert, comentário do outro não pode ser excluído por aluno, busca acha com e sem acento, `excluir_estudo` devolve o caminho do objeto. O teste falha com `raise` se algo divergir.
 2. **Ponta a ponta no navegador**: servir com `python3 -m http.server 8000`, abrir no navegador integrado. Antes do Supabase existir: todas as páginas abrem e mostram o aviso de configuração. Depois de o Lucas criar o projeto, colar o `schema.sql` e preencher `js/config.js`: cadastrar aluno, entrar, buscar e filtrar, favoritar, marcar progresso, comentar, promover a professor pelo painel, publicar com upload, importar os 8 estudos, abrir um estudo importado do Storage (KaTeX e CSS funcionando), excluir estudo, sair.
 
 ## 7. Configuração (vai para o README)
