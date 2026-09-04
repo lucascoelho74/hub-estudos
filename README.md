@@ -17,14 +17,17 @@ entrar.html         login e cadastro (só e-mail da PUC)
 estudo.html         estudo + favoritar + progresso + comentários
 publicar.html       monitor/professor: publicar e importar estudos
 perfil.html         nome, cargo, favoritos, progresso
+calendario.html     feed do Canvas, grade do mês, botões por evento e assinatura
 tema.css            paleta (variáveis de cor)
 css/site.css        componentes do site
 js/config.js        URL e chave anon do projeto Supabase
 js/util.js          funções pequenas (esc, slug, avisos)
 js/supabase.js      cliente e chamar(): a ponte com o backend
 js/sessao.js        sessão, cabeçalho e guardas de página
+js/ics.js           helpers de data e .ics para Google/Outlook/Apple
 supabase/schema.sql todo o backend: tabelas, gatilhos, RLS, Storage, funções RPC, seed
 supabase/teste/     testes do backend num Postgres local
+supabase/functions/calendario/  Edge Function: importa o feed do Canvas e serve o .ics de assinatura
 vendor/katex/       KaTeX local, usado pelos estudos de matemática
 ```
 
@@ -56,13 +59,33 @@ O cargo começa como `aluno` e só muda pelo painel do Supabase.
 site dentro do iframe, então quem publica precisa ser de confiança; uma mitigação
 futura é o atributo `sandbox` no iframe.
 
+## Calendário do Canvas
+
+Cada aluno cola a URL do próprio feed do Canvas (Calendário → *Feed do calendário* → link `.ics`) na aba **Calendário**. O hub baixa o feed, guarda os eventos como calendário pessoal (só o dono vê), mostra a grade do mês e oferece:
+
+- botões **Google**, **Outlook** e **Apple / .ics** em cada evento;
+- um **link de assinatura** (`…/functions/v1/calendario/feed?token=…`) que Google Agenda, Apple Calendar e Outlook acompanham sozinhos. O link contém só um token aleatório; "Gerar novo link" invalida o antigo.
+
+A importação roda ao abrir a aba quando a última tem mais de 6 horas, ou pelo botão *Atualizar agora*.
+
+### Publicar a Edge Function
+
+O download do feed e o link de assinatura precisam de um trecho de servidor: a função `calendario` em `supabase/functions/calendario/index.ts`.
+
+1. Rode o `supabase/schema.sql` de novo no SQL Editor (o bloco do calendário é re-executável).
+2. No painel: **Edge Functions → Deploy a new function → Via Editor**, nome `calendario`, cole o conteúdo de `index.ts`, **desligue "Verify JWT"** (a rota do feed é pública; a rota de importar confere o login sozinha) e publique.
+3. Alternativa pela CLI: `brew install supabase/tap/supabase`, `supabase login`, `supabase functions deploy calendario --project-ref <ref> --no-verify-jwt`.
+
+Nenhum segredo novo: a função recebe `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` do próprio Supabase. A URL do feed do Canvas fica só na linha do dono em `calendario_config`.
+
 ## Testar o backend localmente
 
-Precisa de Postgres 17 pelo Homebrew (`brew install postgresql@17`).
+Precisa de Postgres 17 (`brew install postgresql@17`) e, para os testes da Edge Function, Deno 2 (`brew install deno`), ambos pelo Homebrew.
 
 ```
 supabase/teste/rodar.sh          # sobe um Postgres na porta 5499, roda schema.sql e teste.sql
 supabase/teste/rodar.sh parar    # desliga
+HUB_TESTE=1 deno test --allow-env supabase/functions/calendario/   # parser/gerador de .ics e rotas (precisa do Deno 2)
 ```
 
 ## Publicar
