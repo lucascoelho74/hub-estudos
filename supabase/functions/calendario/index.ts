@@ -181,7 +181,7 @@ const CORS = {
 };
 
 // Com JWT: age como o usuário (RLS vale). Sem JWT: chave de serviço, só para a rota pública do feed.
-function cliente(jwt?: string): SupabaseClient {
+export function cliente(jwt?: string): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL") ?? "";
   const chave = jwt ? Deno.env.get("SUPABASE_ANON_KEY") ?? "" : Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   return createClient(url, chave, {
@@ -194,17 +194,18 @@ function json(status: number, corpo: unknown): Response {
   return new Response(JSON.stringify(corpo), { status, headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" } });
 }
 
-// Duas assinaturas (em vez de só `fabrica?: Fabrica`) porque `Deno.serve(tratar)` compara o tipo de
-// `tratar` com `ServeHandler` (2º parâmetro `ServeHandlerInfo`); com o parâmetro opcional único o
-// TypeScript exige que `Fabrica` seja compatível com `ServeHandlerInfo`, o que não é o caso.
-export function tratar(req: Request): Promise<Response>;
-export function tratar(req: Request, fabrica: Fabrica): Promise<Response>;
-export async function tratar(req: Request, fabrica: Fabrica = cliente): Promise<Response> {
+// Deno.serve chama o handler como (req, info); só usamos a fábrica se for função de verdade.
+export function escolherFabrica(candidata: unknown): Fabrica {
+  return typeof candidata === "function" ? (candidata as Fabrica) : cliente;
+}
+
+export async function tratar(req: Request, fabrica?: unknown): Promise<Response> {
+  const f = escolherFabrica(fabrica);
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   const url = new URL(req.url);
   const rota = url.pathname.replace(/\/+$/, "").split("/").pop();
-  if (rota === "importar" && req.method === "POST") return await importar(req, fabrica);
-  if (rota === "feed" && req.method === "GET") return await feed(url, fabrica);
+  if (rota === "importar" && req.method === "POST") return await importar(req, f);
+  if (rota === "feed" && req.method === "GET") return await feed(url, f);
   return json(404, { erro: "Rota não encontrada" });
 }
 
@@ -222,7 +223,10 @@ async function baixar(url: string): Promise<string> {
     return texto;
   } catch (e) {
     if (e instanceof Error && e.name === "AbortError") throw new Error("O Canvas demorou mais de 20 s para responder");
-    throw e;
+    // Erros de fetch (DNS, conexão recusada, TLS) trazem a URL completa na mensagem — que carrega o
+    // token secreto do Canvas. Só repropagamos sem alteração os erros que nós mesmos criamos acima.
+    if (e instanceof Error && /^(O Canvas respondeu|Feed maior|A URL não devolveu)/.test(e.message)) throw e;
+    throw new Error("Não consegui baixar o feed do Canvas (falha de rede ou DNS)");
   } finally {
     clearTimeout(timer);
   }
@@ -232,7 +236,7 @@ async function importar(req: Request, fabrica: Fabrica): Promise<Response> {
   const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
   if (!jwt) return json(401, { erro: "Faça login" });
   const db = fabrica(jwt);
-  const { data: usuario, error: erroAuth } = await db.auth.getUser();
+  const { data: usuario, error: erroAuth } = await db.auth.getUser(jwt);
   if (erroAuth || !usuario?.user) return json(401, { erro: "Faça login" });
   const { data: config, error: erroConfig } = await db.rpc("calendario_config_minha");
   if (erroConfig) return json(500, { erro: erroConfig.message });
@@ -245,7 +249,11 @@ async function importar(req: Request, fabrica: Fabrica): Promise<Response> {
     return json(200, { importados: n });
   } catch (e) {
     const msg = (e instanceof Error ? e.message : String(e)).slice(0, 500);
-    await db.rpc("registrar_erro_importacao", { msg });
+    try {
+      await db.rpc("registrar_erro_importacao", { msg });
+    } catch {
+      // Melhor esforço: uma falha ao registrar o erro não pode mascarar o erro original da importação.
+    }
     return json(502, { erro: msg });
   }
 }
@@ -272,4 +280,4 @@ async function feed(url: URL, fabrica: Fabrica): Promise<Response> {
 
 // Em produção o Supabase executa este arquivo e a função sobe aqui.
 // Nos testes, HUB_TESTE=1 evita abrir servidor.
-if (!Deno.env.get("HUB_TESTE")) Deno.serve(tratar);
+if (!Deno.env.get("HUB_TESTE")) Deno.serve((req) => tratar(req));

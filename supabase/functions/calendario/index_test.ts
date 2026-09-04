@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
-import { desdobrar, escreverCalendario, extrairCurso, lerData, lerEventos, tratar } from "./index.ts";
+import { cliente, desdobrar, escolherFabrica, escreverCalendario, extrairCurso, lerData, lerEventos, tratar } from "./index.ts";
 import type { Evento } from "./index.ts";
 
 // Amostra no formato do feed do Canvas (linhas dobradas, \, e \n escapados, prazo sem duração,
@@ -146,4 +146,20 @@ Deno.test("tratar: feed com token desconhecido dá 404", async () => {
   // deno-lint-ignore no-explicit-any
   const r = await tratar(new Request(BASE + "/feed?token=0123456789abcdef0123456789abcdef"), falso as any);
   assertEquals(r.status, 404);
+});
+
+Deno.test("escolherFabrica: usa a fábrica só quando é função (Deno.serve passa info no 2º argumento)", () => {
+  const minha = () => { throw new Error("x"); };
+  assertEquals(escolherFabrica(minha), minha);
+  assertEquals(escolherFabrica({ remoteAddr: {} }), cliente);
+  assertEquals(escolherFabrica(undefined), cliente);
+});
+
+Deno.test("tratar: um 2º argumento que não é função (como o info do Deno.serve) não quebra o roteamento", async () => {
+  // deno-lint-ignore no-explicit-any
+  const r = await tratar(new Request(BASE + "/outra"), { remoteAddr: {} } as any);
+  assertEquals(r.status, 404);
+  // deno-lint-ignore no-explicit-any
+  const o = await tratar(new Request(BASE + "/importar", { method: "OPTIONS" }), { remoteAddr: {} } as any);
+  assertEquals(o.status, 204);
 });
