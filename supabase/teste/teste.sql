@@ -171,3 +171,94 @@ select teste.entrar('22222222-2222-2222-2222-222222222222');
 set local role authenticated;
 select teste.confere((select count(*) from estudos_para_importar()) = 8, 'monitor lista os 8 para importar');
 reset role;
+
+-- ---------- Tarefa 5: RPC de escrita ----------
+delete from favoritos; delete from progresso; delete from comentarios;  -- começa limpo
+
+select teste.entrar(null);
+set local role anon;
+select teste.espera_erro($$select alternar_favorito(1)$$, 'anônimo não favorita');
+select teste.espera_erro($$select comentar(1, 'oi')$$, 'anônimo não comenta');
+select teste.espera_erro($$select atualizar_nome('x')$$, 'anônimo não muda nome');
+reset role;
+
+-- Aluna
+select teste.entrar('11111111-1111-1111-1111-111111111111');
+set local role authenticated;
+do $$
+declare guia bigint := teste.id_estudo('guia-integrais.html'); c json;
+begin
+  perform teste.confere(alternar_favorito(guia) = true, 'favoritar liga');
+  perform teste.confere(alternar_favorito(guia) = false, 'favoritar de novo desliga');
+  perform teste.confere(alternar_favorito(guia) = true, 'favoritar liga outra vez');
+  perform teste.confere((select count(*) from favoritos) = 1, 'um favorito só');
+  perform teste.espera_erro('select alternar_favorito(999999)', 'favoritar estudo inexistente');
+
+  perform teste.confere(marcar_progresso(guia, 'estudando') = 'estudando', 'progresso estudando');
+  perform teste.confere(marcar_progresso(guia, 'concluido') = 'concluido', 'progresso concluído (upsert)');
+  perform teste.confere((select count(*) from progresso) = 1, 'upsert não duplica');
+  perform teste.confere((select status from progresso where estudo_id = guia) = 'concluido', 'status atualizado');
+  perform teste.confere(marcar_progresso(guia, null) is null, 'progresso nulo remove');
+  perform teste.confere((select count(*) from progresso) = 0, 'linha removida');
+  perform teste.espera_erro('select marcar_progresso(999999, ''estudando'')', 'progresso em estudo inexistente');
+
+  c := comentar(guia, '  Ótimo material!  ');
+  perform teste.confere((c ->> 'texto') = 'Ótimo material!', 'comentar apara espaços');
+  perform teste.confere((c ->> 'meu') = 'true', 'comentário devolvido é meu');
+  perform teste.confere((c ->> 'autor_nome') = 'Ana A.', 'comentário traz o autor');
+  perform teste.espera_erro('select comentar(' || guia || ', ''   '')', 'comentário vazio é recusado');
+  perform teste.espera_erro('select comentar(' || guia || ', repeat(''x'', 2001))', 'comentário longo é recusado');
+
+  perform teste.espera_erro('select publicar_estudo(''T'', ''D'', ''AEDS1'', ''https://x/y.html'')', 'aluno não publica');
+  perform teste.espera_erro('select marcar_revisado(' || guia || ', true)', 'aluno não revisa');
+  perform teste.espera_erro('select excluir_estudo(' || guia || ')', 'aluno não exclui estudo');
+  perform teste.espera_erro('select atualizar_arquivo(' || guia || ', ''https://x'')', 'aluno não troca arquivo');
+
+  perform teste.espera_erro('select atualizar_nome(''  '')', 'nome vazio é recusado');
+  perform atualizar_nome('Ana Silva');
+  perform teste.confere((meu_perfil() ->> 'nome') = 'Ana Silva', 'nome atualizado');
+end $$;
+reset role;
+
+-- Monitor
+select teste.entrar('22222222-2222-2222-2222-222222222222');
+set local role authenticated;
+do $$
+declare novo bigint; caminho text; guia bigint := teste.id_estudo('guia-integrais.html');
+begin
+  perform teste.espera_erro('select publicar_estudo('''', ''D'', ''AEDS1'', ''https://x/y.html'')', 'título vazio é recusado');
+  perform teste.espera_erro('select publicar_estudo(''T'', ''D'', ''NAOEXISTE'', ''https://x/y.html'')', 'disciplina inválida é recusada');
+  perform teste.espera_erro('select publicar_estudo(''T'', ''D'', ''AEDS1'', '''')', 'arquivo vazio é recusado');
+
+  novo := publicar_estudo('  Novo estudo  ', 'Descrição', 'DIW',
+    'https://proj.supabase.co/storage/v1/object/public/estudos/123-novo.html');
+  perform teste.confere((select titulo from estudos where id = novo) = 'Novo estudo', 'publicar apara o título');
+  perform teste.confere((select autor_id from estudos where id = novo) = auth.uid(), 'autor é quem publicou');
+  perform teste.confere((select revisado from estudos where id = novo) = false, 'novo estudo começa sem revisão');
+
+  perform marcar_revisado(novo, true);
+  perform teste.confere((select revisado from estudos where id = novo), 'marcar_revisado liga');
+  perform atualizar_arquivo(novo, 'https://proj.supabase.co/storage/v1/object/public/estudos/123-novo-v2.html');
+  perform teste.espera_erro('select atualizar_arquivo(999999, ''https://x'')', 'atualizar_arquivo de inexistente');
+
+  perform comentar(guia, 'Comentário do monitor');
+  -- equipe apaga comentário alheio
+  perform excluir_comentario((select id from comentarios where perfil_id = '11111111-1111-1111-1111-111111111111'));
+  perform teste.confere((select count(*) from comentarios where perfil_id = '11111111-1111-1111-1111-111111111111') = 0, 'equipe apaga comentário alheio');
+
+  caminho := excluir_estudo(novo);
+  perform teste.confere(caminho = '123-novo-v2.html', 'excluir devolve o caminho no bucket');
+  perform teste.confere(not exists (select 1 from estudos where id = novo), 'estudo apagado');
+  perform teste.confere(excluir_estudo(teste.id_estudo('questoes-de-c.html')) is null, 'estudo do repositório devolve null');
+  perform teste.espera_erro('select excluir_estudo(999999)', 'excluir inexistente dá erro');
+  perform teste.confere((select count(*) from estudos_para_importar()) = 7, 'sobraram 7 para importar');
+end $$;
+reset role;
+
+-- Aluna não apaga comentário do monitor
+select teste.entrar('11111111-1111-1111-1111-111111111111');
+set local role authenticated;
+select teste.espera_erro($$select excluir_comentario((select id from comentarios where perfil_id = '22222222-2222-2222-2222-222222222222'))$$,
+  'aluna não apaga comentário do monitor');
+select teste.confere((select count(*) from comentarios) = 1, 'comentário do monitor continua lá');
+reset role;

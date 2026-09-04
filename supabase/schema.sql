@@ -314,6 +314,114 @@ begin
     from estudos e where e.arquivo_url not ilike 'http%' order by e.id;
 end $$;
 
+-- ---------- RPC de escrita ----------
+-- Rodam como o chamador (security invoker, o padrão): a checagem de cargo é
+-- explícita aqui E as políticas RLS valem por baixo.
+-- "#variable_conflict use_variable": se um parâmetro tiver o mesmo nome de uma
+-- coluna, vale o parâmetro.
+
+create or replace function alternar_favorito(estudo bigint)
+returns boolean language plpgsql as $$
+begin
+  perform exigir_login();
+  perform exigir_estudo(estudo);
+  delete from favoritos where perfil_id = auth.uid() and estudo_id = estudo;
+  if found then return false; end if;
+  insert into favoritos (perfil_id, estudo_id) values (auth.uid(), estudo);
+  return true;
+end $$;
+
+create or replace function marcar_progresso(estudo bigint, novo_status status_progresso)
+returns status_progresso language plpgsql as $$
+begin
+  perform exigir_login();
+  perform exigir_estudo(estudo);
+  if novo_status is null then
+    delete from progresso where perfil_id = auth.uid() and estudo_id = estudo;
+    return null;
+  end if;
+  insert into progresso (perfil_id, estudo_id, status, atualizado_em)
+  values (auth.uid(), estudo, novo_status, now())
+  on conflict (perfil_id, estudo_id) do update set status = excluded.status, atualizado_em = now();
+  return novo_status;
+end $$;
+
+create or replace function comentar(estudo bigint, texto text)
+returns json language plpgsql as $$
+#variable_conflict use_variable
+declare novo_id bigint;
+begin
+  perform exigir_login();
+  perform exigir_estudo(estudo);
+  if length(btrim(coalesce(texto, ''))) < 1 then raise exception 'Escreva algo antes de enviar'; end if;
+  if length(btrim(texto)) > 2000 then raise exception 'Comentário muito longo (máximo 2000 caracteres)'; end if;
+  insert into comentarios (estudo_id, perfil_id, texto) values (estudo, auth.uid(), btrim(texto))
+  returning id into novo_id;
+  return comentario_json(novo_id);
+end $$;
+
+create or replace function excluir_comentario(comentario bigint)
+returns void language plpgsql as $$
+begin
+  perform exigir_login();
+  delete from comentarios where id = comentario and (perfil_id = auth.uid() or sou_equipe());
+  if not found then raise exception 'Comentário não encontrado ou sem permissão para excluir'; end if;
+end $$;
+
+create or replace function publicar_estudo(titulo text, descricao text, disciplina_sigla text, arquivo_url text)
+returns bigint language plpgsql as $$
+#variable_conflict use_variable
+declare did int; novo_id bigint;
+begin
+  perform exigir_equipe();
+  if length(btrim(coalesce(titulo, ''))) not between 1 and 140 then raise exception 'O título deve ter entre 1 e 140 caracteres'; end if;
+  if length(coalesce(descricao, '')) > 1000 then raise exception 'A descrição deve ter no máximo 1000 caracteres'; end if;
+  if coalesce(btrim(arquivo_url), '') = '' then raise exception 'Informe o arquivo do estudo'; end if;
+  select id into did from disciplinas where sigla = disciplina_sigla;
+  if did is null then raise exception 'Disciplina inválida'; end if;
+  insert into estudos (titulo, descricao, disciplina_id, autor_id, arquivo_url)
+  values (btrim(titulo), btrim(coalesce(descricao, '')), did, auth.uid(), btrim(arquivo_url))
+  returning id into novo_id;
+  return novo_id;
+end $$;
+
+create or replace function atualizar_arquivo(estudo bigint, nova_url text)
+returns void language plpgsql as $$
+begin
+  perform exigir_equipe();
+  if coalesce(btrim(nova_url), '') = '' then raise exception 'URL vazia'; end if;
+  update estudos set arquivo_url = btrim(nova_url) where id = estudo;
+  if not found then raise exception 'Estudo não encontrado'; end if;
+end $$;
+
+create or replace function marcar_revisado(estudo bigint, valor boolean)
+returns void language plpgsql as $$
+begin
+  perform exigir_equipe();
+  update estudos set revisado = coalesce(valor, false) where id = estudo;
+  if not found then raise exception 'Estudo não encontrado'; end if;
+end $$;
+
+-- Devolve o caminho do objeto no bucket (a página apaga o arquivo pela API do
+-- Storage; apagar direto em storage.objects deixaria o arquivo órfão).
+create or replace function excluir_estudo(estudo bigint)
+returns text language plpgsql as $$
+declare url text;
+begin
+  perform exigir_equipe();
+  delete from estudos where id = estudo returning arquivo_url into url;
+  if url is null then raise exception 'Estudo não encontrado'; end if;
+  return substring(url from '/storage/v1/object/public/estudos/(.+)$');
+end $$;
+
+create or replace function atualizar_nome(novo_nome text)
+returns void language plpgsql as $$
+begin
+  perform exigir_login();
+  if length(btrim(coalesce(novo_nome, ''))) not between 1 and 80 then raise exception 'O nome deve ter entre 1 e 80 caracteres'; end if;
+  update perfis set nome = btrim(novo_nome) where id = auth.uid();
+end $$;
+
 -- ---------- seed ----------
 insert into dominios_permitidos (dominio) values ('sga.pucminas.br'), ('pucminas.br')
 on conflict do nothing;

@@ -44,10 +44,14 @@ create table if not exists storage.objects (
 alter table storage.objects enable row level security;
 
 -- O Supabase concede tudo em public para os roles da API; replicamos.
-grant usage on schema public, storage, extensions to anon, authenticated, service_role;
+-- Também dá usage+execute em auth para anon/authenticated: no Supabase de
+-- verdade isso já vem pronto, e é o que permite auth.uid()/auth.role() serem
+-- chamados direto de dentro de funções "security invoker" e de políticas RLS.
+grant usage on schema public, storage, extensions, auth to anon, authenticated, service_role;
 grant all on all tables in schema public to anon, authenticated, service_role;
 grant all on all sequences in schema public to anon, authenticated, service_role;
 grant execute on all functions in schema extensions to anon, authenticated, service_role;
+grant execute on all functions in schema auth to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
