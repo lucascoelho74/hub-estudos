@@ -39,7 +39,7 @@
   var grade = document.getElementById('grade'), vazio = document.getElementById('vazio');
   var contador = document.getElementById('contador'), busca = document.getElementById('busca');
   var chips = document.getElementById('chips'), aviso = document.getElementById('aviso');
-  var disciplina = '', temporizador = null;
+  var disciplina = '', temporizador = null, ultimo = 0;
 
   montarCabecalho();
   var s = await sessao();
@@ -61,8 +61,10 @@
   }
 
   async function carregar() {
+    var seq = ++ultimo;
     try {
       var lista = await chamar('buscar_estudos', { texto: busca.value.trim(), disciplina: disciplina || null });
+      if (seq !== ultimo) return;
       grade.innerHTML = lista.map(cardHtml).join('');
       contador.textContent = lista.length;
       vazio.hidden = lista.length > 0;

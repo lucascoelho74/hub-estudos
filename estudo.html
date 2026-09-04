@@ -55,15 +55,21 @@
   var s, estudo;
 
   function avisar(msg) { areaAviso.hidden = false; mostrarAviso(aviso, msg); }
+  function naoEncontrado() {
+    areaAviso.hidden = false;
+    aviso.className = 'aviso aviso-erro';
+    aviso.innerHTML = 'Estudo não encontrado. <a href="index.html">Voltar ao início</a>';
+    aviso.hidden = false;
+  }
 
   montarCabecalho();
   s = await sessao();
   document.getElementById('link-entrar').href = 'entrar.html?voltar=' + encodeURIComponent('estudo.html?id=' + id);
-  if (!id) return avisar('Estudo não encontrado. Volte ao início.');
+  if (!id) return naoEncontrado();
 
   var painel;
   try { painel = await chamar('painel_estudo', { estudo: id }); } catch (e) { return avisar(e.message); }
-  if (!painel) return avisar('Estudo não encontrado. Volte ao início.');
+  if (!painel) return naoEncontrado();
   estudo = painel.estudo;
 
   document.title = estudo.titulo + ' · Hub de Estudos';
@@ -127,7 +133,10 @@
     if (!confirm('Excluir "' + estudo.titulo + '"? Isso apaga também os comentários, favoritos e o arquivo.')) return;
     try {
       var caminho = await chamar('excluir_estudo', { estudo: id });
-      if (caminho) await db.storage.from('estudos').remove([decodeURIComponent(caminho)]);
+      if (caminho) {
+        var r = await db.storage.from('estudos').remove([decodeURIComponent(caminho)]);
+        if (r.error) { avisar('Estudo excluído, mas o arquivo não foi removido do Storage: ' + traduzirErro(r.error)); return; }
+      }
       location.href = 'index.html';
     } catch (e) { avisar(e.message); }
   });

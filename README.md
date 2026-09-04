@@ -29,6 +29,8 @@ estudos/            estudos originais; fonte da importação (pode apagar depois
 vendor/katex/       KaTeX local, usado pelos estudos de matemática
 ```
 
+`tema.css` e `vendor/katex/` precisam continuar na raiz do site mesmo depois de apagar `estudos/`, porque os estudos importados são reescritos para carregá-los a partir da raiz.
+
 ## Configurar o backend
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
@@ -50,6 +52,10 @@ Para testar com um e-mail que não seja da PUC, insira o domínio na tabela `dom
 | monitor / professor | tudo acima, mais publicar, marcar revisado, excluir estudos e comentários |
 
 O cargo começa como `aluno` e só muda pelo painel do Supabase.
+
+**Risco aceito**: o HTML publicado por monitor/professor roda na mesma origem do
+site dentro do iframe, então quem publica precisa ser de confiança; uma mitigação
+futura é o atributo `sandbox` no iframe.
 
 ## Testar o backend localmente
 

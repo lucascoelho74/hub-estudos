@@ -75,8 +75,11 @@
     if (!/\.html?$/i.test(arquivo.name)) return mostrarAviso(aviso, 'O arquivo precisa ser .html');
     enviar.disabled = true;
     mostrarAviso(aviso, '');
+    var caminho = null;
     try {
-      var url = await subir(Date.now() + '-' + slug(titulo) + '.html', await arquivo.text(), false);
+      var nome = Date.now() + '-' + slug(titulo) + '.html';
+      var url = await subir(nome, await arquivo.text(), false);
+      caminho = nome;
       var novo = await chamar('publicar_estudo', {
         titulo: titulo,
         descricao: document.getElementById('descricao').value.trim(),
@@ -85,6 +88,7 @@
       });
       location.href = 'estudo.html?id=' + novo;
     } catch (e) {
+      if (caminho) { try { await db.storage.from('estudos').remove([caminho]); } catch (e2) { /* melhor esforço */ } }
       mostrarAviso(aviso, e.message);
       enviar.disabled = false;
     }

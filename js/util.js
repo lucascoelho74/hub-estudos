@@ -1,10 +1,10 @@
 // Funções pequenas usadas por todas as páginas.
 
-// Escapa texto para colocar dentro de innerHTML sem risco de injeção.
+// Escapa texto para colocar dentro de innerHTML (inclusive dentro de atributos) sem risco de injeção.
 window.esc = function (s) {
-  var d = document.createElement('div');
-  d.textContent = s == null ? '' : String(s);
-  return d.innerHTML;
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
 };
 
 // parametro('id') → valor de ?id=... na URL, ou null.
