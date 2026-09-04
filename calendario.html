@@ -75,6 +75,7 @@
   var aviso = document.getElementById('aviso'), estado = document.getElementById('estado');
   var SEIS_HORAS = 6 * 60 * 60 * 1000;
   var config = null, eventos = [], curso = '', atual = inicioDoMes(new Date());
+  var ultimoMes = 0;
 
   var s = await exigirLogin();
   if (!s) return;
@@ -146,6 +147,7 @@
   document.querySelectorAll('[data-copiar]').forEach(function (b) {
     b.addEventListener('click', function () {
       var texto = document.getElementById(b.dataset.copiar).textContent;
+      if (!navigator.clipboard) { avisar('Não consegui copiar; selecione o link e copie à mão.'); return; }
       navigator.clipboard.writeText(texto).then(function () {
         b.textContent = 'Copiado';
         setTimeout(function () { b.textContent = 'Copiar'; }, 1500);
@@ -168,8 +170,14 @@
   async function carregarMes() {
     if (!config || !config.feed_url) return;
     var lim = limitesGrade(atual);
-    try { eventos = await chamar('listar_eventos', { de: lim.ini.toISOString(), ate: lim.fim.toISOString() }); }
-    catch (e) { avisar(e.message); eventos = []; }
+    var seq = ++ultimoMes;
+    try {
+      eventos = await chamar('listar_eventos', { de: lim.ini.toISOString(), ate: lim.fim.toISOString() });
+      if (seq !== ultimoMes) return;
+    } catch (e) {
+      if (seq !== ultimoMes) return;
+      avisar(e.message); eventos = [];
+    }
     desenharCursos();
     desenharGrade();
     desenharLista();
@@ -194,7 +202,11 @@
       var k = chaveData(d), lista = porDia[k] || [], fora = d.getMonth() !== atual.getMonth();
       html += '<div class="dia' + (fora ? ' dia-fora' : '') + (k === hoje ? ' dia-hoje' : '') + '">' +
         '<span class="dia-numero">' + d.getDate() + '</span>' +
-        lista.slice(0, 3).map(function (e) { return '<a class="chip-evento" href="#ev-' + e.id + '" title="' + esc(tituloComCurso(e)) + '">' + esc(e.titulo) + '</a>'; }).join('') +
+        lista.slice(0, 3).map(function (e) {
+          return fora
+            ? '<span class="chip-evento" title="' + esc(tituloComCurso(e)) + '">' + esc(e.titulo) + '</span>'
+            : '<a class="chip-evento" href="#ev-' + e.id + '" title="' + esc(tituloComCurso(e)) + '">' + esc(e.titulo) + '</a>';
+        }).join('') +
         (lista.length > 3 ? '<span class="chip-evento-mais">+' + (lista.length - 3) + '</span>' : '') +
         '</div>';
       d.setDate(d.getDate() + 1);
