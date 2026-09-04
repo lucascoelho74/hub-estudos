@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar · Hub de Estudos</title>
+<link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="cabecalho" id="cabecalho"></header>
+
+<main class="conteudo conteudo-estreito">
+  <h1 class="titulo-pagina">Entrar</h1>
+  <p class="subtitulo">Use o e-mail da PUC. Quem ainda não tem conta cria uma na aba ao lado.</p>
+
+  <div class="abas">
+    <button class="aba aba-ativa" data-aba="entrar" type="button">Entrar</button>
+    <button class="aba" data-aba="cadastrar" type="button">Criar conta</button>
+  </div>
+  <div class="aviso" id="aviso" hidden></div>
+
+  <form id="form-entrar">
+    <div class="campo"><label for="email-entrar">E-mail</label><input id="email-entrar" type="email" required autocomplete="email"></div>
+    <div class="campo"><label for="senha-entrar">Senha</label><input id="senha-entrar" type="password" required autocomplete="current-password"></div>
+    <button class="botao" type="submit">Entrar</button>
+  </form>
+
+  <form id="form-cadastrar" hidden>
+    <div class="campo"><label for="nome">Nome</label><input id="nome" type="text" required maxlength="80" autocomplete="name"></div>
+    <div class="campo"><label for="email-cadastrar">E-mail da PUC</label><input id="email-cadastrar" type="email" required autocomplete="email"><span class="dica" id="dica-dominios">Só sga.pucminas.br e pucminas.br</span></div>
+    <div class="campo"><label for="senha-cadastrar">Senha</label><input id="senha-cadastrar" type="password" required minlength="6" autocomplete="new-password"><span class="dica">Mínimo de 6 caracteres</span></div>
+    <button class="botao" type="submit">Criar conta</button>
+  </form>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/sessao.js"></script>
+<script>
+// Login e cadastro. O domínio do e-mail é conferido aqui (mensagem amigável)
+// e de novo no banco (gatilho em auth.users), que é a garantia de verdade.
+(async function () {
+  var dominios = ['sga.pucminas.br', 'pucminas.br'];  // reserva; o backend manda a lista real
+  var aviso = document.getElementById('aviso');
+  var formEntrar = document.getElementById('form-entrar'), formCadastrar = document.getElementById('form-cadastrar');
+
+  montarCabecalho();
+  var s = await sessao();
+  if (s.usuario) { voltar(); return; }
+
+  try { var lista = await chamar('listar_dominios'); if (lista && lista.length) dominios = lista; } catch (e) { /* fica a reserva */ }
+  document.getElementById('dica-dominios').textContent = 'Só ' + dominios.join(' e ');
+
+  // Só aceita voltar para uma página relativa do próprio site.
+  function voltar() {
+    var destino = parametro('voltar') || 'index.html';
+    if (destino.indexOf('//') >= 0 || destino.indexOf(':') >= 0) destino = 'index.html';
+    location.href = destino;
+  }
+  function dominioOk(email) { return dominios.indexOf((email.split('@')[1] || '').toLowerCase()) >= 0; }
+
+  document.querySelectorAll('.aba').forEach(function (aba) {
+    aba.addEventListener('click', function () {
+      document.querySelectorAll('.aba').forEach(function (a) { a.classList.toggle('aba-ativa', a === aba); });
+      formEntrar.hidden = aba.dataset.aba !== 'entrar';
+      formCadastrar.hidden = aba.dataset.aba !== 'cadastrar';
+      mostrarAviso(aviso, '');
+    });
+  });
+
+  formEntrar.addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    if (!window.db) return mostrarAviso(aviso, 'Backend não configurado: preencha js/config.js');
+    var r = await db.auth.signInWithPassword({
+      email: document.getElementById('email-entrar').value.trim(),
+      password: document.getElementById('senha-entrar').value
+    });
+    if (r.error) return mostrarAviso(aviso, traduzirErro(r.error));
+    limparSessao();
+    voltar();
+  });
+
+  formCadastrar.addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var nome = document.getElementById('nome').value.trim();
+    var email = document.getElementById('email-cadastrar').value.trim();
+    var senha = document.getElementById('senha-cadastrar').value;
+    if (!dominioOk(email)) return mostrarAviso(aviso, 'Use um e-mail da PUC: ' + dominios.join(' ou '));
+    if (!window.db) return mostrarAviso(aviso, 'Backend não configurado: preencha js/config.js');
+    var r = await db.auth.signUp({ email: email, password: senha, options: { data: { nome: nome } } });
+    if (r.error) return mostrarAviso(aviso, traduzirErro(r.error));
+    if (!r.data.session) return mostrarAviso(aviso, 'Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre.', 'ok');
+    limparSessao();
+    voltar();
+  });
+})();
+</script>
+</body>
+</html>
