@@ -51,13 +51,13 @@
   var s = await sessao();
   if (s.usuario) { voltar(); return; }
 
-  try { var lista = await chamar('listar_dominios'); if (lista && lista.length) dominios = lista; } catch (e) { /* fica a reserva */ }
+  try { var lista = await chamar('listar_dominios'); if (lista && lista.length) dominios = lista.map(function (d) { return String(d).toLowerCase(); }); } catch (e) { /* fica a reserva */ }
   document.getElementById('dica-dominios').textContent = 'Só ' + dominios.join(' e ');
 
   // Só aceita voltar para uma página relativa do próprio site.
   function voltar() {
     var destino = parametro('voltar') || 'index.html';
-    if (destino.indexOf('//') >= 0 || destino.indexOf(':') >= 0) destino = 'index.html';
+    if (!/^[a-z0-9_-]+\.html(\?[\w=&%.-]*)?$/i.test(destino)) destino = 'index.html';
     location.href = destino;
   }
   function dominioOk(email) { return dominios.indexOf((email.split('@')[1] || '').toLowerCase()) >= 0; }
