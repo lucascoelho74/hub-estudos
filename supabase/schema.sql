@@ -509,6 +509,73 @@ begin
   return t;
 end $$;
 
+-- Substitui todos os eventos do usuário pelos recebidos (o feed do Canvas é a fonte da verdade).
+create or replace function importar_eventos(eventos json)
+returns integer language plpgsql set search_path = public as $$
+#variable_conflict use_variable
+declare n integer;
+begin
+  perform exigir_login();
+  if eventos is null or json_typeof(eventos) <> 'array' then raise exception 'Formato inválido: esperado um array de eventos'; end if;
+  delete from public.eventos where perfil_id = auth.uid();
+  with itens as (
+    select r.*, o.ord
+    from json_array_elements(eventos) with ordinality as o(item, ord),
+         json_to_record(o.item) as r(uid text, titulo text, descricao text, inicio timestamptz, fim timestamptz,
+                                     dia_inteiro boolean, url text, curso_codigo text, curso_nome text)
+    where coalesce(btrim(o.item ->> 'uid'), '') <> '' and o.item ->> 'inicio' is not null
+  ),
+  ultimos as (
+    select distinct on (uid) * from itens order by uid, ord desc
+  )
+  insert into public.eventos (perfil_id, uid, titulo, descricao, inicio, fim, dia_inteiro, url, curso_codigo, curso_nome)
+  select auth.uid(), btrim(uid),
+         left(coalesce(nullif(btrim(titulo), ''), '(sem título)'), 300),
+         left(coalesce(descricao, ''), 4000),
+         inicio,
+         case when fim is null or fim <= inicio then null else fim end,
+         coalesce(dia_inteiro, false),
+         case when url ~ '^https://' then url else null end,
+         nullif(btrim(curso_codigo), ''),
+         nullif(btrim(curso_nome), '')
+  from ultimos;
+  get diagnostics n = row_count;
+  update calendario_config set ultima_importacao = now(), ultimo_erro = null, atualizado_em = now() where perfil_id = auth.uid();
+  if not found then insert into calendario_config (perfil_id, ultima_importacao) values (auth.uid(), now()); end if;
+  return n;
+end $$;
+
+create or replace function listar_eventos(de timestamptz, ate timestamptz)
+returns setof json language plpgsql stable set search_path = public as $$
+begin
+  perform exigir_login();
+  return query
+    select json_build_object('id', e.id, 'uid', e.uid, 'titulo', e.titulo, 'descricao', e.descricao,
+                             'inicio', e.inicio, 'fim', e.fim, 'dia_inteiro', e.dia_inteiro, 'url', e.url,
+                             'curso_codigo', e.curso_codigo, 'curso_nome', e.curso_nome)
+    from eventos e
+    where e.perfil_id = auth.uid() and e.inicio >= de and e.inicio < ate
+    order by e.inicio, e.id;
+end $$;
+
+-- Rota pública do feed: o token é o segredo. Só a chave de serviço (dentro da Edge Function) chama.
+create or replace function eventos_por_token(token text)
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'nome', p.nome,
+    'eventos', coalesce((
+      select json_agg(json_build_object('uid', e.uid, 'titulo', e.titulo, 'descricao', e.descricao,
+                                        'inicio', e.inicio, 'fim', e.fim, 'dia_inteiro', e.dia_inteiro, 'url', e.url,
+                                        'curso_codigo', e.curso_codigo, 'curso_nome', e.curso_nome)
+                      order by e.inicio, e.id)
+      from eventos e where e.perfil_id = c.perfil_id), '[]'::json))
+  from calendario_config c
+  join perfis p on p.id = c.perfil_id
+  where length(token) = 32 and c.token_feed = token;
+$$;
+revoke execute on function eventos_por_token(text) from public, anon, authenticated;
+grant execute on function eventos_por_token(text) to service_role;
+
 -- ---------- seed ----------
 insert into dominios_permitidos (dominio) values ('sga.pucminas.br'), ('pucminas.br')
 on conflict do nothing;

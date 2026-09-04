@@ -29,8 +29,8 @@ create or replace function teste.id_estudo(arquivo text) returns bigint language
   select id from estudos where arquivo_url = 'estudos/' || arquivo
 $$;
 
-grant usage on schema teste to anon, authenticated;
-grant execute on all functions in schema teste to anon, authenticated;
+grant usage on schema teste to anon, authenticated, service_role;
+grant execute on all functions in schema teste to anon, authenticated, service_role;
 
 select teste.confere(true, 'helpers carregados');
 
@@ -315,4 +315,64 @@ select teste.entrar(null);
 set local role anon;
 select teste.espera_erro($$select calendario_config_minha()$$, 'anônimo não tem config');
 select teste.confere((select count(*) from calendario_config) = 0, 'anônimo não lê config');
+reset role;
+
+-- ---------- Calendário: importar, listar, token ----------
+select teste.entrar('11111111-1111-1111-1111-111111111111');
+set local role authenticated;
+do $$
+declare n int;
+begin
+  perform teste.espera_erro('select importar_eventos(''{"a":1}''::json)', 'importar recusa objeto');
+  perform teste.espera_erro('select importar_eventos(null::json)', 'importar recusa nulo');
+  n := importar_eventos('[
+    {"uid":"e1","titulo":"Prova 1","descricao":"d","inicio":"2026-09-10T10:00:00Z","fim":null,"dia_inteiro":false,"url":"https://pucminas.instructure.com/x","curso_codigo":"6166100","curso_nome":"Cálculo II"},
+    {"uid":"e2","titulo":"Dia inteiro","descricao":"","inicio":"2026-09-12T00:00:00Z","fim":null,"dia_inteiro":true,"url":null,"curso_codigo":null,"curso_nome":null},
+    {"uid":"e3","titulo":"Aula","descricao":"","inicio":"2026-10-01T12:00:00Z","fim":"2026-10-01T13:40:00Z","dia_inteiro":false,"url":"http://inseguro","curso_codigo":"","curso_nome":" "},
+    {"uid":"e1","titulo":"Prova 1 (versão nova)","descricao":"","inicio":"2026-09-11T10:00:00Z","fim":"2026-09-11T09:00:00Z","dia_inteiro":false,"url":null,"curso_codigo":"6166100","curso_nome":"Cálculo II"},
+    {"uid":"","titulo":"Sem uid","inicio":"2026-09-11T10:00:00Z"},
+    {"uid":"e5","titulo":"Sem início"}
+  ]'::json);
+  perform teste.confere(n = 3, 'importa 3: uid repetido vence o último; sem uid ou sem início são ignorados');
+  perform teste.confere((select titulo from eventos where uid = 'e1') = 'Prova 1 (versão nova)', 'último uid vence');
+  perform teste.confere((select fim from eventos where uid = 'e1') is null, 'fim anterior ao início vira nulo');
+  perform teste.confere((select url from eventos where uid = 'e3') is null, 'url http vira nula');
+  perform teste.confere((select curso_codigo from eventos where uid = 'e3') is null and (select curso_nome from eventos where uid = 'e3') is null, 'curso vazio vira nulo');
+  perform teste.confere((select fim from eventos where uid = 'e3') = '2026-10-01T13:40:00Z'::timestamptz, 'fim preservado');
+  perform teste.confere((select dia_inteiro from eventos where uid = 'e2'), 'dia inteiro preservado');
+  perform teste.confere((calendario_config_minha() ->> 'total_eventos') = '3' and (calendario_config_minha() ->> 'ultima_importacao') is not null, 'config registra a importação');
+  perform teste.confere((select count(*) from listar_eventos('2026-09-01T00:00:00Z', '2026-10-01T00:00:00Z')) = 2, 'listar respeita o intervalo');
+  perform teste.confere((select j ->> 'uid' from listar_eventos('2026-09-01T00:00:00Z', '2026-12-31T00:00:00Z') j limit 1) = 'e1', 'listar ordena por início');
+  perform teste.confere((select j ->> 'curso_nome' from listar_eventos('2026-09-01T00:00:00Z', '2026-09-30T00:00:00Z') j limit 1) = 'Cálculo II', 'listar traz o curso');
+  n := importar_eventos(('[{"uid":"e9","titulo":"' || repeat('x', 400) || '","inicio":"2026-11-01T10:00:00Z"}]')::json);
+  perform teste.confere(n = 1 and (select count(*) from eventos) = 1, 'reimportar substitui tudo');
+  perform teste.confere((select length(titulo) from eventos where uid = 'e9') = 300, 'título cortado em 300');
+  n := importar_eventos('[{"uid":"e10","titulo":"   ","inicio":"2026-11-02T10:00:00Z","descricao":null}]'::json);
+  perform teste.confere((select titulo from eventos where uid = 'e10') = '(sem título)' and (select descricao from eventos where uid = 'e10') = '', 'título vazio vira (sem título) e descrição nula vira vazia');
+  n := importar_eventos('[]'::json);
+  perform teste.confere(n = 0 and (select count(*) from eventos) = 0, 'array vazio limpa tudo');
+  n := importar_eventos('[{"uid":"e1","titulo":"Prova 1","inicio":"2026-09-10T10:00:00Z","curso_nome":"Cálculo II"}]'::json);
+  perform teste.espera_erro('select eventos_por_token(''' || (calendario_config_minha() ->> 'token_feed') || ''')', 'authenticated não executa eventos_por_token');
+end $$;
+reset role;
+
+select teste.entrar('22222222-2222-2222-2222-222222222222');
+set local role authenticated;
+select teste.confere((select count(*) from eventos) = 0, 'outro usuário não vê eventos alheios');
+select teste.confere((select count(*) from listar_eventos('2026-01-01', '2027-01-01')) = 0, 'listar só os próprios');
+reset role;
+
+select teste.entrar(null);
+set local role anon;
+select teste.espera_erro($$select eventos_por_token('00000000000000000000000000000000')$$, 'anon não executa eventos_por_token');
+select teste.espera_erro($$select * from listar_eventos('2026-01-01', '2027-01-01')$$, 'anônimo não lista');
+reset role;
+
+set local role service_role;
+select teste.confere(eventos_por_token('00000000000000000000000000000000') is null, 'token desconhecido devolve null');
+select teste.confere(eventos_por_token('curto') is null, 'token com tamanho errado devolve null');
+select teste.confere(
+  (eventos_por_token((select token_feed from calendario_config where perfil_id = '11111111-1111-1111-1111-111111111111')) ->> 'nome') = 'Ana Silva'
+  and json_array_length(eventos_por_token((select token_feed from calendario_config where perfil_id = '11111111-1111-1111-1111-111111111111')) -> 'eventos') = 1,
+  'service_role lê nome e eventos pelo token');
 reset role;
