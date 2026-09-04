@@ -21,7 +21,7 @@ create table if not exists dominios_permitidos (
 
 create table if not exists perfis (
   id uuid primary key references auth.users(id) on delete cascade,
-  nome text not null,
+  nome text not null check (length(nome) between 1 and 80),
   email text not null unique,
   cargo cargo not null default 'aluno',
   criado_em timestamptz not null default now()
@@ -87,13 +87,13 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 
 create or replace function exigir_login()
-returns void language plpgsql stable as $$
+returns void language plpgsql stable set search_path = public as $$
 begin
   if auth.uid() is null then raise exception 'Faça login para continuar'; end if;
 end $$;
 
 create or replace function exigir_equipe()
-returns void language plpgsql stable as $$
+returns void language plpgsql stable set search_path = public as $$
 begin
   perform exigir_login();
   if not sou_equipe() then raise exception 'Só monitor ou professor pode fazer isso'; end if;
@@ -126,7 +126,7 @@ begin
   insert into perfis (id, nome, email)
   values (
     new.id,
-    coalesce(nullif(btrim(new.raw_user_meta_data ->> 'nome'), ''), split_part(new.email, '@', 1)),
+    left(coalesce(nullif(btrim(new.raw_user_meta_data ->> 'nome'), ''), split_part(new.email, '@', 1)), 80),
     lower(new.email)
   );
   return new;
@@ -137,7 +137,7 @@ create trigger criar_perfil after insert on auth.users
 
 -- Cargo só muda pelo painel do Supabase (sem JWT). Sessão autenticada não pode.
 create or replace function perfis_proteger_cargo()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   if new.cargo is distinct from old.cargo and auth.role() = 'authenticated' then
     raise exception 'O cargo só pode ser alterado pelo painel do Supabase';
@@ -321,7 +321,7 @@ end $$;
 -- coluna, vale o parâmetro.
 
 create or replace function alternar_favorito(estudo bigint)
-returns boolean language plpgsql as $$
+returns boolean language plpgsql set search_path = public as $$
 begin
   perform exigir_login();
   perform exigir_estudo(estudo);
@@ -332,7 +332,7 @@ begin
 end $$;
 
 create or replace function marcar_progresso(estudo bigint, novo_status status_progresso)
-returns status_progresso language plpgsql as $$
+returns status_progresso language plpgsql set search_path = public as $$
 begin
   perform exigir_login();
   perform exigir_estudo(estudo);
@@ -347,7 +347,7 @@ begin
 end $$;
 
 create or replace function comentar(estudo bigint, texto text)
-returns json language plpgsql as $$
+returns json language plpgsql set search_path = public as $$
 #variable_conflict use_variable
 declare novo_id bigint;
 begin
@@ -361,7 +361,7 @@ begin
 end $$;
 
 create or replace function excluir_comentario(comentario bigint)
-returns void language plpgsql as $$
+returns void language plpgsql set search_path = public as $$
 begin
   perform exigir_login();
   delete from comentarios where id = comentario and (perfil_id = auth.uid() or sou_equipe());
@@ -369,7 +369,7 @@ begin
 end $$;
 
 create or replace function publicar_estudo(titulo text, descricao text, disciplina_sigla text, arquivo_url text)
-returns bigint language plpgsql as $$
+returns bigint language plpgsql set search_path = public as $$
 #variable_conflict use_variable
 declare did int; novo_id bigint;
 begin
@@ -377,6 +377,7 @@ begin
   if length(btrim(coalesce(titulo, ''))) not between 1 and 140 then raise exception 'O título deve ter entre 1 e 140 caracteres'; end if;
   if length(coalesce(descricao, '')) > 1000 then raise exception 'A descrição deve ter no máximo 1000 caracteres'; end if;
   if coalesce(btrim(arquivo_url), '') = '' then raise exception 'Informe o arquivo do estudo'; end if;
+  if not (btrim(arquivo_url) ~ '^https://' or btrim(arquivo_url) like 'estudos/%') then raise exception 'URL do arquivo inválida'; end if;
   select id into did from disciplinas where sigla = disciplina_sigla;
   if did is null then raise exception 'Disciplina inválida'; end if;
   insert into estudos (titulo, descricao, disciplina_id, autor_id, arquivo_url)
@@ -386,16 +387,17 @@ begin
 end $$;
 
 create or replace function atualizar_arquivo(estudo bigint, nova_url text)
-returns void language plpgsql as $$
+returns void language plpgsql set search_path = public as $$
 begin
   perform exigir_equipe();
   if coalesce(btrim(nova_url), '') = '' then raise exception 'URL vazia'; end if;
+  if not (btrim(nova_url) ~ '^https://' or btrim(nova_url) like 'estudos/%') then raise exception 'URL do arquivo inválida'; end if;
   update estudos set arquivo_url = btrim(nova_url) where id = estudo;
   if not found then raise exception 'Estudo não encontrado'; end if;
 end $$;
 
 create or replace function marcar_revisado(estudo bigint, valor boolean)
-returns void language plpgsql as $$
+returns void language plpgsql set search_path = public as $$
 begin
   perform exigir_equipe();
   update estudos set revisado = coalesce(valor, false) where id = estudo;
@@ -405,7 +407,7 @@ end $$;
 -- Devolve o caminho do objeto no bucket (a página apaga o arquivo pela API do
 -- Storage; apagar direto em storage.objects deixaria o arquivo órfão).
 create or replace function excluir_estudo(estudo bigint)
-returns text language plpgsql as $$
+returns text language plpgsql set search_path = public as $$
 declare url text;
 begin
   perform exigir_equipe();
@@ -415,7 +417,7 @@ begin
 end $$;
 
 create or replace function atualizar_nome(novo_nome text)
-returns void language plpgsql as $$
+returns void language plpgsql set search_path = public as $$
 begin
   perform exigir_login();
   if length(btrim(coalesce(novo_nome, ''))) not between 1 and 80 then raise exception 'O nome deve ter entre 1 e 80 caracteres'; end if;

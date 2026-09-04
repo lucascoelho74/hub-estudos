@@ -48,6 +48,12 @@ insert into auth.users (id, email, raw_user_meta_data) values
 select teste.confere((select nome from perfis where id = '11111111-1111-1111-1111-111111111111') = 'Ana Aluna', 'perfil criado com o nome do cadastro');
 select teste.confere((select nome from perfis where id = '33333333-3333-3333-3333-333333333333') = 'Prof', 'sem nome, usa a parte antes do @');
 select teste.confere((select cargo from perfis where id = '11111111-1111-1111-1111-111111111111') = 'aluno', 'cargo inicial é aluno');
+
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('44444444-4444-4444-4444-444444444444', 'longo@sga.pucminas.br', jsonb_build_object('nome', repeat('x', 100)));
+select teste.confere(length((select nome from perfis where id = '44444444-4444-4444-4444-444444444444')) = 80, 'nome longo é cortado em 80 no cadastro');
+delete from auth.users where id = '44444444-4444-4444-4444-444444444444';
+
 select teste.confere((select count(*) from perfis) = 3, 'um perfil por usuário');
 
 -- Promoção "pelo painel": sem JWT, auth.role() é nulo e o gatilho deixa passar.
@@ -215,6 +221,7 @@ begin
   perform teste.espera_erro('select atualizar_arquivo(' || guia || ', ''https://x'')', 'aluno não troca arquivo');
 
   perform teste.espera_erro('select atualizar_nome(''  '')', 'nome vazio é recusado');
+  perform teste.espera_erro('select atualizar_nome(repeat(''x'', 81))', 'nome com 81 caracteres é recusado');
   perform atualizar_nome('Ana Silva');
   perform teste.confere((meu_perfil() ->> 'nome') = 'Ana Silva', 'nome atualizado');
 end $$;
@@ -224,11 +231,17 @@ reset role;
 select teste.entrar('22222222-2222-2222-2222-222222222222');
 set local role authenticated;
 do $$
-declare novo bigint; caminho text; guia bigint := teste.id_estudo('guia-integrais.html');
+declare novo bigint; caminho text; guia bigint := teste.id_estudo('guia-integrais.html'); rel bigint;
 begin
   perform teste.espera_erro('select publicar_estudo('''', ''D'', ''AEDS1'', ''https://x/y.html'')', 'título vazio é recusado');
   perform teste.espera_erro('select publicar_estudo(''T'', ''D'', ''NAOEXISTE'', ''https://x/y.html'')', 'disciplina inválida é recusada');
   perform teste.espera_erro('select publicar_estudo(''T'', ''D'', ''AEDS1'', '''')', 'arquivo vazio é recusado');
+  perform teste.espera_erro('select publicar_estudo(''T'', ''D'', ''AEDS1'', ''javascript:alert(1)'')', 'URL com esquema inválido é recusada');
+  perform teste.espera_erro('select atualizar_arquivo(' || guia || ', ''javascript:alert(1)'')', 'atualizar_arquivo com esquema inválido é recusado');
+
+  rel := publicar_estudo('Rel', '', 'AEDS1', 'estudos/x.html');
+  perform teste.confere(rel > 0, 'URL relativa estudos/ é aceita');
+  perform excluir_estudo(rel);
 
   novo := publicar_estudo('  Novo estudo  ', 'Descrição', 'DIW',
     'https://proj.supabase.co/storage/v1/object/public/estudos/123-novo.html');
